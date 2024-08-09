@@ -1,2 +1,2 @@
-from .module import autoload
+from smartdiffusion.module import autoload
 autoload()
