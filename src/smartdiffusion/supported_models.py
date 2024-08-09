@@ -1,15 +1,15 @@
 import torch
-import smartdiffusion.model_base
-import smartdiffusion.utils
+from smartdiffusion import model_base
+from smartdiffusion import utils
 
-import smartdiffusion.sd1_clip
-import smartdiffusion.sdxl_clip
-import smartdiffusion.text_encoders.sd2_clip
-import smartdiffusion.text_encoders.sd3_clip
-import smartdiffusion.text_encoders.sa_t5
-import smartdiffusion.text_encoders.aura_t5
-import smartdiffusion.text_encoders.hydit
-import smartdiffusion.text_encoders.flux
+from smartdiffusion import sd1_clip
+from smartdiffusion import sdxl_clip
+from smartdiffusion.text_encoders import sd2_clip
+from smartdiffusion.text_encoders import sd3_clip
+from smartdiffusion.text_encoders import sa_t5
+from smartdiffusion.text_encoders import aura_t5
+from smartdiffusion.text_encoders import hydit
+from smartdiffusion.text_encoders import flux
 
 from smartdiffusion import supported_models_base
 from smartdiffusion import latent_formats
@@ -104,7 +104,7 @@ class SD20(supported_models_base.BASE):
         return state_dict
 
     def clip_target(self, state_dict={}):
-        return supported_models_base.ClipTarget(smartdiffusion.text_encoders.sd2_clip.SD2Tokenizer, smartdiffusion.text_encoders.sd2_clip.SD2ClipModel)
+        return supported_models_base.ClipTarget(sd2_clip.SD2Tokenizer, sd2_clip.SD2ClipModel)
 
 class SD21UnclipL(SD20):
     unet_config = {
@@ -534,7 +534,7 @@ class SD3(supported_models_base.BASE):
             t5 = True
             dtype_t5 = state_dict[t5_key].dtype
 
-        return supported_models_base.ClipTarget(smartdiffusion.text_encoders.sd3_clip.SD3Tokenizer, smartdiffusion.text_encoders.sd3_clip.sd3_clip(clip_l=clip_l, clip_g=clip_g, t5=t5, dtype_t5=dtype_t5))
+        return supported_models_base.ClipTarget(sd3_clip.SD3Tokenizer, sd3_clip.sd3_clip(clip_l=clip_l, clip_g=clip_g, t5=t5, dtype_t5=dtype_t5))
 
 class StableAudio(supported_models_base.BASE):
     unet_config = {
@@ -565,7 +565,7 @@ class StableAudio(supported_models_base.BASE):
         return utils.state_dict_prefix_replace(state_dict, replace_prefix)
 
     def clip_target(self, state_dict={}):
-        return supported_models_base.ClipTarget(smartdiffusion.text_encoders.sa_t5.SAT5Tokenizer, smartdiffusion.text_encoders.sa_t5.SAT5Model)
+        return supported_models_base.ClipTarget(sa_t5.SAT5Tokenizer, sa_t5.SAT5Model)
 
 class AuraFlow(supported_models_base.BASE):
     unet_config = {
@@ -588,7 +588,7 @@ class AuraFlow(supported_models_base.BASE):
         return out
 
     def clip_target(self, state_dict={}):
-        return supported_models_base.ClipTarget(smartdiffusion.text_encoders.aura_t5.AuraT5Tokenizer, smartdiffusion.text_encoders.aura_t5.AuraT5Model)
+        return supported_models_base.ClipTarget(aura_t5.AuraT5Tokenizer, aura_t5.AuraT5Model)
 
 class HunyuanDiT(supported_models_base.BASE):
     unet_config = {
@@ -614,7 +614,7 @@ class HunyuanDiT(supported_models_base.BASE):
         return out
 
     def clip_target(self, state_dict={}):
-        return supported_models_base.ClipTarget(smartdiffusion.text_encoders.hydit.HyditTokenizer, smartdiffusion.text_encoders.hydit.HyditModel)
+        return supported_models_base.ClipTarget(hydit.HyditTokenizer, hydit.HyditModel)
 
 class HunyuanDiT1(HunyuanDiT):
     unet_config = {
@@ -656,7 +656,7 @@ class Flux(supported_models_base.BASE):
         t5_key = "{}t5xxl.transformer.encoder.final_layer_norm.weight".format(pref)
         if t5_key in state_dict:
             dtype_t5 = state_dict[t5_key].dtype
-        return supported_models_base.ClipTarget(smartdiffusion.text_encoders.flux.FluxTokenizer, smartdiffusion.text_encoders.flux.flux_clip(dtype_t5=dtype_t5))
+        return supported_models_base.ClipTarget(flux.FluxTokenizer, flux.flux_clip(dtype_t5=dtype_t5))
 
 class FluxSchnell(Flux):
     unet_config = {
