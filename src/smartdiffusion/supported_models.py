@@ -11,10 +11,10 @@ import smartdiffusion.text_encoders.aura_t5
 import smartdiffusion.text_encoders.hydit
 import smartdiffusion.text_encoders.flux
 
-import smartdiffusion.supported_models_base
-import smartdiffusion.latent_formats
+from smartdiffusion import supported_models_base
+from smartdiffusion import latent_formats
 
-import smartdiffusion.diffusers_convert
+from smartdiffusion import diffusers_convert
 
 class SD15(supported_models_base.BASE):
     unet_config = {

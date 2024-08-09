@@ -2,7 +2,7 @@ from smartdiffusion import sd1_clip
 from transformers import BertTokenizer
 from smartdiffusion.text_encoders.spiece_tokenizer import SPieceTokenizer
 from smartdiffusion.text_encoders.bert import BertModel
-import smartdiffusion.text_encoders.t5
+from smartdiffusion.text_encoders import t5
 import os
 import torch
 

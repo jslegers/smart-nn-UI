@@ -32,9 +32,9 @@ from smartdiffusion.cli_args import args
 
 import importlib
 
-import smartdiffusion.folder_paths
-import smartdiffusion.latent_preview
-import smartdiffusion.node_helpers
+from smartdiffusion import folder_paths
+from smartdiffusion import latent_preview
+from smartdiffusion import node_helpers
 
 def before_node_execution():
     smartdiffusion.model_management.throw_exception_if_processing_interrupted()
