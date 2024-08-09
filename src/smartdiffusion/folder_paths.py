@@ -28,7 +28,7 @@ def download_huggingface_repo(repo_id, change_model_path = True, **kwargs):
     kwargs.setdefault('local_dir', os.path.join(repo_path))
     snapshot_download(repo_id, **kwargs)
     if change_model_path :
-        set_models_dir(repo_path)
+        set_models_directory(repo_path)
 
 def move_directory(*args, **kwargs):
     shutil.copytree(*args, **kwargs)
@@ -46,7 +46,7 @@ def create_directory(directory):
             return None
 
 
-def set_base_path(path = None):
+def set_base_directory(path = None):
     global base_path
     global temp_directory
     global output_directory
@@ -65,16 +65,14 @@ def set_base_path(path = None):
     input_directory = os.path.join(base_path, "input")
     user_directory = os.path.join(base_path, "user")
 
-    set_models_dir()
 
-
-def set_custom_nodes_dir(path = None):
+def set_custom_nodes_directory(path = None):
     global base_path
     global folder_names_and_paths
     folder_names_and_paths["custom_nodes"] = path or ([os.path.join(base_path, "custom_nodes")], set())
 
 
-def set_models_dir(path = None):
+def set_models_directory(path = None):
     global base_path
     global models_dir
     global folder_names_and_paths
@@ -101,7 +99,11 @@ def set_models_dir(path = None):
     folder_names_and_paths["photomaker"] = ([os.path.join(models_dir, "photomaker")], supported_pt_extensions)
     folder_names_and_paths["classifiers"] = ([os.path.join(models_dir, "classifiers")], {""})
 
-set_base_path()
+
+
+set_models_directory()
+set_custom_nodes_directory()
+set_base_directory()
 
 def set_output_directory(output_dir: str) -> None:
     global output_directory
