@@ -5,14 +5,14 @@ import torch
 import torch as th
 import torch.nn as nn
 
-from ..ldm.modules.diffusionmodules.util import (
+from smartdiffusion.ldm.modules.diffusionmodules.util import (
     zero_module,
     timestep_embedding,
 )
 
-from ..ldm.modules.attention import SpatialTransformer
-from ..ldm.modules.diffusionmodules.openaimodel import UNetModel, TimestepEmbedSequential, ResBlock, Downsample
-from ..ldm.util import exists
+from smartdiffusion.ldm.modules.attention import SpatialTransformer
+from smartdiffusion.ldm.modules.diffusionmodules.openaimodel import UNetModel, TimestepEmbedSequential, ResBlock, Downsample
+from smartdiffusion.ldm.util import exists
 from .control_types import UNION_CONTROLNET_TYPES
 from collections import OrderedDict
 import smartdiffusion.ops
@@ -434,4 +434,3 @@ class ControlNet(nn.Module):
         out_middle.append(self.middle_block_out(h, emb, context))
 
         return {"middle": out_middle, "output": out_output}
-
