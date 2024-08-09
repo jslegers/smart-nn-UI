@@ -1,5 +1,5 @@
 from smartdiffusion import sd1_clip
-import smartdiffusion.text_encoders.spiece_tokenizer import SPieceTokenizer
+from smartdiffusion.text_encoders.spiece_tokenizer import SPieceTokenizer
 import smartdiffusion.text_encoders.t5
 import os
 
