@@ -5,7 +5,7 @@ import smartdiffusion.ops
 import torch
 import traceback
 import zipfile
-from . import model_management
+import smartdiffusion.model_management
 import smartdiffusion.clip_model
 import json
 import logging

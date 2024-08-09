@@ -1,9 +1,9 @@
 import torch
-from . import model_base
-from . import utils
+import smartdiffusion.model_base
+import smartdiffusion.utils
 
-from . import sd1_clip
-from . import sdxl_clip
+import smartdiffusion.sd1_clip
+import smartdiffusion.sdxl_clip
 import smartdiffusion.text_encoders.sd2_clip
 import smartdiffusion.text_encoders.sd3_clip
 import smartdiffusion.text_encoders.sa_t5
@@ -11,10 +11,10 @@ import smartdiffusion.text_encoders.aura_t5
 import smartdiffusion.text_encoders.hydit
 import smartdiffusion.text_encoders.flux
 
-from . import supported_models_base
-from . import latent_formats
+import smartdiffusion.supported_models_base
+import smartdiffusion.latent_formats
 
-from . import diffusers_convert
+import smartdiffusion.diffusers_convert
 
 class SD15(supported_models_base.BASE):
     unet_config = {
