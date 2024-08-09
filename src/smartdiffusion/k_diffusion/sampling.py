@@ -6,9 +6,9 @@ from torch import nn
 import torchsde
 from tqdm.auto import trange, tqdm
 
-from . import utils
-from . import deis
-import smartdiffusion.model_patcher
+from smartdiffusion.k_diffusion import utils
+from smartdiffusion.k_diffusion import deis
+from smartdiffusion import model_patcher
 
 def append_zero(x):
     return torch.cat([x, x.new_zeros([1])])
