@@ -44,6 +44,7 @@ def create_directory(directory):
         except:
             logging.error(f"Failed to create directory {directory}")
             return None
+    return directory
 
 
 def set_base_directory(path = None):
@@ -101,9 +102,9 @@ def set_models_directory(path = None):
 
 
 
+set_base_directory()
 set_models_directory()
 set_custom_nodes_directory()
-set_base_directory()
 
 def set_output_directory(output_dir: str) -> None:
     global output_directory
@@ -243,7 +244,7 @@ def get_full_path(folder_name: str, filename: str) -> str | None:
     for x in folders[0]:
         full_path = os.path.join(x, filename)
         if os.path.isfile(full_path):
-            return create_directory(full_path)
+            return full_path
         elif os.path.islink(full_path):
             logging.warning("WARNING path {} exists but doesn't link anywhere, skipping.".format(full_path))
 
