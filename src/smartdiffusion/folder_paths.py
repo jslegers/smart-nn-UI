@@ -22,10 +22,10 @@ input_directory = ''
 user_directory = ''
 
 def download_huggingface_repo(repo_id, change_model_path = True, **kwargs):
-    global base_path
+    global models_dir
     repo_id_parts = PurePath(repo_id).parts
-    kwargs.setdefault('local_dir', os.path.join(base_path, repo_id_parts[0]))
     repo_path = create_directory(os.path.join(models_dir, *repo_id_parts))
+    kwargs.setdefault('local_dir', os.path.join(repo_path))
     snapshot_download(repo_id, **kwargs)
     if change_model_path :
         set_models_dir(repo_path)
