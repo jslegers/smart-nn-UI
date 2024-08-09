@@ -281,7 +281,7 @@ class LazyModule(ModuleType):
         )
 
 
-def AutoLoad(**kwargs):
+def autoLoad(**kwargs):
     module = get_caller_module()
     module_name = module.__name__
     # module_name = '.'.join(filter(None, [module.__package__, module.__name__]))
