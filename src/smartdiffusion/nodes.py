@@ -825,14 +825,14 @@ class UNETLoader:
 
     CATEGORY = "advanced/loaders"
 
-    def load_unet(self, unet_name, weight_dtype):
+    def load_unet(self, unet_name, weight_dtype, path = "unet"):
         dtype = None
         if weight_dtype == "fp8_e4m3fn":
             dtype = torch.float8_e4m3fn
         elif weight_dtype == "fp8_e5m2":
             dtype = torch.float8_e5m2
 
-        unet_path = folder_paths.get_full_path("unet", unet_name)
+        unet_path = folder_paths.get_full_path(path, unet_name)
         model = sd.load_unet(unet_path, dtype=dtype)
         return (model,)
 
