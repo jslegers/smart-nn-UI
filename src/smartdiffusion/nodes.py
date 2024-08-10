@@ -662,7 +662,7 @@ class VAELoader:
 
     @staticmethod
     def load_taesd(name):
-        sd = {}
+        taesd = {}
         approx_vaes = folder_paths.get_filename_list("vae_approx")
 
         encoder = next(filter(lambda a: a.startswith("{}_encoder.".format(name)), approx_vaes))
@@ -670,22 +670,22 @@ class VAELoader:
 
         enc = utils.load_torch_file(folder_paths.get_full_path("vae_approx", encoder))
         for k in enc:
-            sd["taesd_encoder.{}".format(k)] = enc[k]
+            taesd["taesd_encoder.{}".format(k)] = enc[k]
 
         dec = utils.load_torch_file(folder_paths.get_full_path("vae_approx", decoder))
         for k in dec:
-            sd["taesd_decoder.{}".format(k)] = dec[k]
+            taesd["taesd_decoder.{}".format(k)] = dec[k]
 
         if name == "taesd":
-            sd["vae_scale"] = torch.tensor(0.18215)
-            sd["vae_shift"] = torch.tensor(0.0)
+            taesd["vae_scale"] = torch.tensor(0.18215)
+            taesd["vae_shift"] = torch.tensor(0.0)
         elif name == "taesdxl":
-            sd["vae_scale"] = torch.tensor(0.13025)
-            sd["vae_shift"] = torch.tensor(0.0)
+            taesd["vae_scale"] = torch.tensor(0.13025)
+            taesd["vae_shift"] = torch.tensor(0.0)
         elif name == "taesd3":
-            sd["vae_scale"] = torch.tensor(1.5305)
-            sd["vae_shift"] = torch.tensor(0.0609)
-        return sd
+            taesd["vae_scale"] = torch.tensor(1.5305)
+            taesd["vae_shift"] = torch.tensor(0.0609)
+        return taesd
 
     @classmethod
     def INPUT_TYPES(s):
@@ -698,11 +698,11 @@ class VAELoader:
     #TODO: scale factor?
     def load_vae(self, vae_name):
         if vae_name in ["taesd", "taesdxl", "taesd3"]:
-            sd = self.load_taesd(vae_name)
+            vae = self.load_taesd(vae_name)
         else:
             vae_path = folder_paths.get_full_path("vae", vae_name)
-            sd = utils.load_torch_file(vae_path)
-        vae = sd.VAE(sd=sd)
+            vae = utils.load_torch_file(vae_path)
+        vae = sd.VAE(sd=vae)
         return (vae,)
 
 class ControlNetLoader:
