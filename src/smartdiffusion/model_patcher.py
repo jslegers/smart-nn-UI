@@ -1,16 +1,35 @@
+"""
+    This file is part of ComfyUI.
+    Copyright (C) 2024 Comfy
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import torch
 import copy
 import inspect
 import logging
 import uuid
+import collections
 
-import smartdiffusion.utils
-import smartdiffusion.model_management
+from smartdiffusion import utils
+from smartdiffusion import model_management
 from smartdiffusion.types import UnetWrapperFunction
 
 
 def weight_decompose(dora_scale, weight, lora_diff, alpha, strength):
-    dora_scale = smartdiffusion.model_management.cast_to_device(dora_scale, weight.device, torch.float32)
+    dora_scale = model_management.cast_to_device(dora_scale, weight.device, torch.float32)
     lora_diff *= alpha
     weight_calc = weight + lora_diff.type(weight.dtype)
     weight_norm = (
@@ -63,12 +82,27 @@ def set_model_options_pre_cfg_function(model_options, pre_cfg_function, disable_
         model_options["disable_cfg1_optimization"] = True
     return model_options
 
+def wipe_lowvram_weight(m):
+    if hasattr(m, "prev_smartdiffusion_cast_weights"):
+        m.smartdiffusion_cast_weights = m.prev_smartdiffusion_cast_weights
+        del m.prev_smartdiffusion_cast_weights
+    m.weight_function = None
+    m.bias_function = None
+
+class LowVramPatch:
+    def __init__(self, key, model_patcher):
+        self.key = key
+        self.model_patcher = model_patcher
+    def __call__(self, weight):
+        return self.model_patcher.calculate_weight(self.model_patcher.patches[self.key], weight, self.key)
+
+
 class ModelPatcher:
     def __init__(self, model, load_device, offload_device, size=0, weight_inplace_update=False):
         self.size = size
         self.model = model
         if not hasattr(self.model, 'device'):
-            logging.info("Model doesn't have a device attribute.")
+            logging.debug("Model doesn't have a device attribute.")
             self.model.device = offload_device
         elif self.model.device is None:
             self.model.device = offload_device
@@ -82,15 +116,28 @@ class ModelPatcher:
         self.load_device = load_device
         self.offload_device = offload_device
         self.weight_inplace_update = weight_inplace_update
-        self.model_lowvram = False
-        self.lowvram_patch_counter = 0
         self.patches_uuid = uuid.uuid4()
+
+        if not hasattr(self.model, 'model_loaded_weight_memory'):
+            self.model.model_loaded_weight_memory = 0
+
+        if not hasattr(self.model, 'lowvram_patch_counter'):
+            self.model.lowvram_patch_counter = 0
+
+        if not hasattr(self.model, 'model_lowvram'):
+            self.model.model_lowvram = False
 
     def model_size(self):
         if self.size > 0:
             return self.size
-        self.size = smartdiffusion.model_management.module_size(self.model)
+        self.size = model_management.module_size(self.model)
         return self.size
+
+    def loaded_size(self):
+        return self.model.model_loaded_weight_memory
+
+    def lowvram_patch_counter(self):
+        return self.model.lowvram_patch_counter
 
     def clone(self):
         n = ModelPatcher(self.model, self.load_device, self.offload_device, self.size, weight_inplace_update=self.weight_inplace_update)
@@ -192,7 +239,7 @@ class ModelPatcher:
             if name in self.object_patches_backup:
                 return self.object_patches_backup[name]
             else:
-                return smartdiffusion.utils.get_attr(self.model, name)
+                return utils.get_attr(self.model, name)
 
     def model_patches_to(self, device):
         to = self.model_options["transformer_options"]
@@ -243,7 +290,7 @@ class ModelPatcher:
         return list(p)
 
     def get_key_patches(self, filter_prefix=None):
-        smartdiffusion.model_management.unload_model_clones(self)
+        model_management.unload_model_clones(self)
         model_sd = self.model_state_dict()
         p = {}
         for k in model_sd:
@@ -265,30 +312,30 @@ class ModelPatcher:
                     sd.pop(k)
         return sd
 
-    def patch_weight_to_device(self, key, device_to=None):
+    def patch_weight_to_device(self, key, device_to=None, inplace_update=False):
         if key not in self.patches:
             return
 
-        weight = smartdiffusion.utils.get_attr(self.model, key)
+        weight = utils.get_attr(self.model, key)
 
-        inplace_update = self.weight_inplace_update
+        inplace_update = self.weight_inplace_update or inplace_update
 
         if key not in self.backup:
-            self.backup[key] = weight.to(device=self.offload_device, copy=inplace_update)
+            self.backup[key] = collections.namedtuple('Dimension', ['weight', 'inplace_update'])(weight.to(device=self.offload_device, copy=inplace_update), inplace_update)
 
         if device_to is not None:
-            temp_weight = smartdiffusion.model_management.cast_to_device(weight, device_to, torch.float32, copy=True)
+            temp_weight = model_management.cast_to_device(weight, device_to, torch.float32, copy=True)
         else:
             temp_weight = weight.to(torch.float32, copy=True)
         out_weight = self.calculate_weight(self.patches[key], temp_weight, key).to(weight.dtype)
         if inplace_update:
-            smartdiffusion.utils.copy_to_param(self.model, key, out_weight)
+            utils.copy_to_param(self.model, key, out_weight)
         else:
-            smartdiffusion.utils.set_attr_param(self.model, key, out_weight)
+            utils.set_attr_param(self.model, key, out_weight)
 
     def patch_model(self, device_to=None, patch_weights=True):
         for k in self.object_patches:
-            old = smartdiffusion.utils.set_attr(self.model, k, self.object_patches[k])
+            old = utils.set_attr(self.model, k, self.object_patches[k])
             if k not in self.object_patches_backup:
                 self.object_patches_backup[k] = old
 
@@ -304,28 +351,23 @@ class ModelPatcher:
             if device_to is not None:
                 self.model.to(device_to)
                 self.model.device = device_to
+                self.model.model_loaded_weight_memory = self.model_size()
 
         return self.model
 
-    def patch_model_lowvram(self, device_to=None, lowvram_model_memory=0, force_patch_weights=False):
-        self.patch_model(device_to, patch_weights=False)
-
-        logging.info("loading in lowvram mode {}".format(lowvram_model_memory/(1024 * 1024)))
-        class LowVramPatch:
-            def __init__(self, key, model_patcher):
-                self.key = key
-                self.model_patcher = model_patcher
-            def __call__(self, weight):
-                return self.model_patcher.calculate_weight(self.model_patcher.patches[self.key], weight, self.key)
-
+    def lowvram_load(self, device_to=None, lowvram_model_memory=0, force_patch_weights=False):
         mem_counter = 0
         patch_counter = 0
+        lowvram_counter = 0
         for n, m in self.model.named_modules():
             lowvram_weight = False
             if hasattr(m, "smartdiffusion_cast_weights"):
-                module_mem = smartdiffusion.model_management.module_size(m)
+                module_mem = model_management.module_size(m)
                 if mem_counter + module_mem >= lowvram_model_memory:
                     lowvram_weight = True
+                    lowvram_counter += 1
+                    if m.smartdiffusion_cast_weights:
+                        continue
 
             weight_key = "{}.weight".format(n)
             bias_key = "{}.bias".format(n)
@@ -347,16 +389,37 @@ class ModelPatcher:
                 m.prev_smartdiffusion_cast_weights = m.smartdiffusion_cast_weights
                 m.smartdiffusion_cast_weights = True
             else:
+                if hasattr(m, "smartdiffusion_cast_weights"):
+                    if m.smartdiffusion_cast_weights:
+                        wipe_lowvram_weight(m)
+
                 if hasattr(m, "weight"):
-                    self.patch_weight_to_device(weight_key) #TODO: speed this up without causing OOM
+                    mem_counter += model_management.module_size(m)
+                    param = list(m.parameters())
+                    if len(param) > 0:
+                        weight = param[0]
+                        if weight.device == device_to:
+                            continue
+
+                    self.patch_weight_to_device(weight_key) #TODO: speed this up without OOM
                     self.patch_weight_to_device(bias_key)
                     m.to(device_to)
-                    mem_counter += smartdiffusion.model_management.module_size(m)
                     logging.debug("lowvram: loaded module regularly {} {}".format(n, m))
 
-        self.model_lowvram = True
-        self.lowvram_patch_counter = patch_counter
+        if lowvram_counter > 0:
+            logging.info("loaded in lowvram mode {}".format(lowvram_model_memory / (1024 * 1024)))
+            self.model.model_lowvram = True
+        else:
+            logging.info("loaded completely {} {}".format(lowvram_model_memory / (1024 * 1024), mem_counter / (1024 * 1024)))
+            self.model.model_lowvram = False
+        self.model.lowvram_patch_counter += patch_counter
         self.model.device = device_to
+        self.model.model_loaded_weight_memory = mem_counter
+
+
+    def patch_model_lowvram(self, device_to=None, lowvram_model_memory=0, force_patch_weights=False):
+        self.patch_model(device_to, patch_weights=False)
+        self.lowvram_load(device_to, lowvram_model_memory=lowvram_model_memory, force_patch_weights=force_patch_weights)
         return self.model
 
     def calculate_weight(self, patches, weight, key):
@@ -392,10 +455,10 @@ class ModelPatcher:
                     if w1.shape != weight.shape:
                         logging.warning("WARNING SHAPE MISMATCH {} WEIGHT NOT MERGED {} != {}".format(key, w1.shape, weight.shape))
                     else:
-                        weight += function(strength * smartdiffusion.model_management.cast_to_device(w1, weight.device, weight.dtype))
+                        weight += function(strength * model_management.cast_to_device(w1, weight.device, weight.dtype))
             elif patch_type == "lora": #lora/locon
-                mat1 = smartdiffusion.model_management.cast_to_device(v[0], weight.device, torch.float32)
-                mat2 = smartdiffusion.model_management.cast_to_device(v[1], weight.device, torch.float32)
+                mat1 = model_management.cast_to_device(v[0], weight.device, torch.float32)
+                mat2 = model_management.cast_to_device(v[1], weight.device, torch.float32)
                 dora_scale = v[4]
                 if v[2] is not None:
                     alpha = v[2] / mat2.shape[0]
@@ -404,7 +467,7 @@ class ModelPatcher:
 
                 if v[3] is not None:
                     #locon mid weights, hopefully the math is fine because I didn't properly test it
-                    mat3 = smartdiffusion.model_management.cast_to_device(v[3], weight.device, torch.float32)
+                    mat3 = model_management.cast_to_device(v[3], weight.device, torch.float32)
                     final_shape = [mat2.shape[1], mat2.shape[0], mat3.shape[2], mat3.shape[3]]
                     mat2 = torch.mm(mat2.transpose(0, 1).flatten(start_dim=1), mat3.transpose(0, 1).flatten(start_dim=1)).reshape(final_shape).transpose(0, 1)
                 try:
@@ -428,23 +491,23 @@ class ModelPatcher:
 
                 if w1 is None:
                     dim = w1_b.shape[0]
-                    w1 = torch.mm(smartdiffusion.model_management.cast_to_device(w1_a, weight.device, torch.float32),
-                                  smartdiffusion.model_management.cast_to_device(w1_b, weight.device, torch.float32))
+                    w1 = torch.mm(model_management.cast_to_device(w1_a, weight.device, torch.float32),
+                                  model_management.cast_to_device(w1_b, weight.device, torch.float32))
                 else:
-                    w1 = smartdiffusion.model_management.cast_to_device(w1, weight.device, torch.float32)
+                    w1 = model_management.cast_to_device(w1, weight.device, torch.float32)
 
                 if w2 is None:
                     dim = w2_b.shape[0]
                     if t2 is None:
-                        w2 = torch.mm(smartdiffusion.model_management.cast_to_device(w2_a, weight.device, torch.float32),
-                                      smartdiffusion.model_management.cast_to_device(w2_b, weight.device, torch.float32))
+                        w2 = torch.mm(model_management.cast_to_device(w2_a, weight.device, torch.float32),
+                                      model_management.cast_to_device(w2_b, weight.device, torch.float32))
                     else:
                         w2 = torch.einsum('i j k l, j r, i p -> p r k l',
-                                          smartdiffusion.model_management.cast_to_device(t2, weight.device, torch.float32),
-                                          smartdiffusion.model_management.cast_to_device(w2_b, weight.device, torch.float32),
-                                          smartdiffusion.model_management.cast_to_device(w2_a, weight.device, torch.float32))
+                                          model_management.cast_to_device(t2, weight.device, torch.float32),
+                                          model_management.cast_to_device(w2_b, weight.device, torch.float32),
+                                          model_management.cast_to_device(w2_a, weight.device, torch.float32))
                 else:
-                    w2 = smartdiffusion.model_management.cast_to_device(w2, weight.device, torch.float32)
+                    w2 = model_management.cast_to_device(w2, weight.device, torch.float32)
 
                 if len(w2.shape) == 4:
                     w1 = w1.unsqueeze(2).unsqueeze(2)
@@ -476,19 +539,19 @@ class ModelPatcher:
                     t1 = v[5]
                     t2 = v[6]
                     m1 = torch.einsum('i j k l, j r, i p -> p r k l',
-                                      smartdiffusion.model_management.cast_to_device(t1, weight.device, torch.float32),
-                                      smartdiffusion.model_management.cast_to_device(w1b, weight.device, torch.float32),
-                                      smartdiffusion.model_management.cast_to_device(w1a, weight.device, torch.float32))
+                                      model_management.cast_to_device(t1, weight.device, torch.float32),
+                                      model_management.cast_to_device(w1b, weight.device, torch.float32),
+                                      model_management.cast_to_device(w1a, weight.device, torch.float32))
 
                     m2 = torch.einsum('i j k l, j r, i p -> p r k l',
-                                      smartdiffusion.model_management.cast_to_device(t2, weight.device, torch.float32),
-                                      smartdiffusion.model_management.cast_to_device(w2b, weight.device, torch.float32),
-                                      smartdiffusion.model_management.cast_to_device(w2a, weight.device, torch.float32))
+                                      model_management.cast_to_device(t2, weight.device, torch.float32),
+                                      model_management.cast_to_device(w2b, weight.device, torch.float32),
+                                      model_management.cast_to_device(w2a, weight.device, torch.float32))
                 else:
-                    m1 = torch.mm(smartdiffusion.model_management.cast_to_device(w1a, weight.device, torch.float32),
-                                  smartdiffusion.model_management.cast_to_device(w1b, weight.device, torch.float32))
-                    m2 = torch.mm(smartdiffusion.model_management.cast_to_device(w2a, weight.device, torch.float32),
-                                  smartdiffusion.model_management.cast_to_device(w2b, weight.device, torch.float32))
+                    m1 = torch.mm(model_management.cast_to_device(w1a, weight.device, torch.float32),
+                                  model_management.cast_to_device(w1b, weight.device, torch.float32))
+                    m2 = torch.mm(model_management.cast_to_device(w2a, weight.device, torch.float32),
+                                  model_management.cast_to_device(w2b, weight.device, torch.float32))
 
                 try:
                     lora_diff = (m1 * m2).reshape(weight.shape)
@@ -506,10 +569,10 @@ class ModelPatcher:
 
                 dora_scale = v[5]
 
-                a1 = smartdiffusion.model_management.cast_to_device(v[0].flatten(start_dim=1), weight.device, torch.float32)
-                a2 = smartdiffusion.model_management.cast_to_device(v[1].flatten(start_dim=1), weight.device, torch.float32)
-                b1 = smartdiffusion.model_management.cast_to_device(v[2].flatten(start_dim=1), weight.device, torch.float32)
-                b2 = smartdiffusion.model_management.cast_to_device(v[3].flatten(start_dim=1), weight.device, torch.float32)
+                a1 = model_management.cast_to_device(v[0].flatten(start_dim=1), weight.device, torch.float32)
+                a2 = model_management.cast_to_device(v[1].flatten(start_dim=1), weight.device, torch.float32)
+                b1 = model_management.cast_to_device(v[2].flatten(start_dim=1), weight.device, torch.float32)
+                b2 = model_management.cast_to_device(v[3].flatten(start_dim=1), weight.device, torch.float32)
 
                 try:
                     lora_diff = (torch.mm(b2, b1) + torch.mm(torch.mm(weight.flatten(start_dim=1), a2), a1)).reshape(weight.shape)
@@ -529,37 +592,86 @@ class ModelPatcher:
 
     def unpatch_model(self, device_to=None, unpatch_weights=True):
         if unpatch_weights:
-            if self.model_lowvram:
+            if self.model.model_lowvram:
                 for m in self.model.modules():
-                    if hasattr(m, "prev_smartdiffusion_cast_weights"):
-                        m.smartdiffusion_cast_weights = m.prev_smartdiffusion_cast_weights
-                        del m.prev_smartdiffusion_cast_weights
-                    m.weight_function = None
-                    m.bias_function = None
+                    wipe_lowvram_weight(m)
 
-                self.model_lowvram = False
-                self.lowvram_patch_counter = 0
+                self.model.model_lowvram = False
+                self.model.lowvram_patch_counter = 0
 
             keys = list(self.backup.keys())
 
-            if self.weight_inplace_update:
-                for k in keys:
-                    smartdiffusion.utils.copy_to_param(self.model, k, self.backup[k])
-            else:
-                for k in keys:
-                    smartdiffusion.utils.set_attr_param(self.model, k, self.backup[k])
+            for k in keys:
+                bk = self.backup[k]
+                if bk.inplace_update:
+                    utils.copy_to_param(self.model, k, bk.weight)
+                else:
+                    utils.set_attr_param(self.model, k, bk.weight)
 
             self.backup.clear()
 
             if device_to is not None:
                 self.model.to(device_to)
                 self.model.device = device_to
+            self.model.model_loaded_weight_memory = 0
 
         keys = list(self.object_patches_backup.keys())
         for k in keys:
-            smartdiffusion.utils.set_attr(self.model, k, self.object_patches_backup[k])
+            utils.set_attr(self.model, k, self.object_patches_backup[k])
 
         self.object_patches_backup.clear()
+
+    def partially_unload(self, device_to, memory_to_free=0):
+        memory_freed = 0
+        patch_counter = 0
+
+        for n, m in list(self.model.named_modules())[::-1]:
+            if memory_to_free < memory_freed:
+                break
+
+            shift_lowvram = False
+            if hasattr(m, "smartdiffusion_cast_weights"):
+                module_mem = model_management.module_size(m)
+                weight_key = "{}.weight".format(n)
+                bias_key = "{}.bias".format(n)
+
+
+                if m.weight is not None and m.weight.device != device_to:
+                    for key in [weight_key, bias_key]:
+                        bk = self.backup.get(key, None)
+                        if bk is not None:
+                            if bk.inplace_update:
+                                utils.copy_to_param(self.model, key, bk.weight)
+                            else:
+                                utils.set_attr_param(self.model, key, bk.weight)
+                            self.backup.pop(key)
+
+                    m.to(device_to)
+                    if weight_key in self.patches:
+                        m.weight_function = LowVramPatch(weight_key, self)
+                        patch_counter += 1
+                    if bias_key in self.patches:
+                        m.bias_function = LowVramPatch(bias_key, self)
+                        patch_counter += 1
+
+                    m.prev_smartdiffusion_cast_weights = m.smartdiffusion_cast_weights
+                    m.smartdiffusion_cast_weights = True
+                    memory_freed += module_mem
+                    logging.debug("freed {}".format(n))
+
+        self.model.model_lowvram = True
+        self.model.lowvram_patch_counter += patch_counter
+        self.model.model_loaded_weight_memory -= memory_freed
+        return memory_freed
+
+    def partially_load(self, device_to, extra_memory=0):
+        if self.model.model_lowvram == False:
+            return 0
+        if self.model.model_loaded_weight_memory + extra_memory > self.model_size():
+            pass #TODO: Full load
+        current_used = self.model.model_loaded_weight_memory
+        self.lowvram_load(device_to, lowvram_model_memory=current_used + extra_memory)
+        return self.model.model_loaded_weight_memory - current_used
 
     def current_loaded_device(self):
         return self.model.device

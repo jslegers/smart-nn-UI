@@ -316,7 +316,7 @@ class VAE:
             for x in range(0, samples_in.shape[0], batch_number):
                 samples = samples_in[x:x+batch_number].to(self.vae_dtype).to(self.device)
                 pixel_samples[x:x+batch_number] = self.process_output(self.first_stage_model.decode(samples).to(self.output_device).float())
-        except model_management.OOM_EXCEPTION as e:
+        except model_management.OutOfMemoryError as e:
             logging.warning("Warning: Ran out of memory when regular VAE decoding, retrying with tiled VAE decoding.")
             if len(samples_in.shape) == 3:
                 pixel_samples = self.decode_tiled_1d(samples_in)
@@ -345,7 +345,7 @@ class VAE:
                 pixels_in = self.process_input(pixel_samples[x:x+batch_number]).to(self.vae_dtype).to(self.device)
                 samples[x:x+batch_number] = self.first_stage_model.encode(pixels_in).to(self.output_device).float()
 
-        except model_management.OOM_EXCEPTION as e:
+        except model_management.OutOfMemoryError as e:
             logging.warning("Warning: Ran out of memory when regular VAE encoding, retrying with tiled VAE encoding.")
             if len(pixel_samples.shape) == 3:
                 samples = self.encode_tiled_1d(pixel_samples)

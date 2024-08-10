@@ -1,24 +1,18 @@
 #taken from: https://github.com/lllyasviel/ControlNet
 #and modified
 
-import torch
-import torch as th
-import torch.nn as nn
-
-from smartdiffusion.ldm.modules.diffusionmodules.util import (
-    zero_module,
-    timestep_embedding,
-)
-
-from smartdiffusion.ldm.modules.attention import SpatialTransformer
-from smartdiffusion.ldm.modules.diffusionmodules.openaimodel import UNetModel, TimestepEmbedSequential, ResBlock, Downsample
+from torch import Tensor, sigmoid, float32, empty, zeros, mean, cat
+from torch.nn import Module, Sequential, SiLU, Embedding, Linear, Parameter
+from torch.nn.functional import silu
 from smartdiffusion.ldm.util import exists
+from smartdiffusion.ldm.modules.attention import SpatialTransformer, optimized_attention
+from smartdiffusion.ldm.modules.diffusionmodules.util import zero_module, timestep_embedding
+from smartdiffusion.ldm.modules.diffusionmodules.openaimodel import UNetModel, TimestepEmbedSequential, ResBlock, Downsample
 from smartdiffusion.cldm.control_types import UNION_CONTROLNET_TYPES
 from collections import OrderedDict
 from smartdiffusion import ops
-from smartdiffusion.ldm.modules.attention import optimized_attention
 
-class OptimizedAttention(nn.Module):
+class OptimizedAttention(Module):
     def __init__(self, c, nhead, dropout=0.0, dtype=None, device=None, operations=None):
         super().__init__()
         self.heads = nhead
@@ -33,24 +27,24 @@ class OptimizedAttention(nn.Module):
         out = optimized_attention(q, k, v, self.heads)
         return self.out_proj(out)
 
-class QuickGELU(nn.Module):
-    def forward(self, x: torch.Tensor):
-        return x * torch.sigmoid(1.702 * x)
+class QuickGELU(Module):
+    def forward(self, x: Tensor):
+        return x * sigmoid(1.702 * x)
 
-class ResBlockUnionControlnet(nn.Module):
+class ResBlockUnionControlnet(Module):
     def __init__(self, dim, nhead, dtype=None, device=None, operations=None):
         super().__init__()
         self.attn = OptimizedAttention(dim, nhead, dtype=dtype, device=device, operations=operations)
         self.ln_1 = operations.LayerNorm(dim, dtype=dtype, device=device)
-        self.mlp = nn.Sequential(
+        self.mlp = Sequential(
             OrderedDict([("c_fc", operations.Linear(dim, dim * 4, dtype=dtype, device=device)), ("gelu", QuickGELU()),
                          ("c_proj", operations.Linear(dim * 4, dim, dtype=dtype, device=device))]))
         self.ln_2 = operations.LayerNorm(dim, dtype=dtype, device=device)
 
-    def attention(self, x: torch.Tensor):
+    def attention(self, x: Tensor):
         return self.attn(x)
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, x: Tensor):
         x = x + self.attention(self.ln_1(x))
         x = x + self.mlp(self.ln_2(x))
         return x
@@ -59,7 +53,7 @@ class ControlledUnetModel(UNetModel):
     #implemented in the ldm unet
     pass
 
-class ControlNet(nn.Module):
+class ControlNet(Module):
     def __init__(
         self,
         image_size,
@@ -73,7 +67,7 @@ class ControlNet(nn.Module):
         dims=2,
         num_classes=None,
         use_checkpoint=False,
-        dtype=torch.float32,
+        dtype=float32,
         num_heads=-1,
         num_head_channels=-1,
         num_heads_upsample=-1,
@@ -152,54 +146,54 @@ class ControlNet(nn.Module):
         self.predict_codebook_ids = n_embed is not None
 
         time_embed_dim = model_channels * 4
-        self.time_embed = nn.Sequential(
+        self.time_embed = Sequential(
             operations.Linear(model_channels, time_embed_dim, dtype=self.dtype, device=device),
-            nn.SiLU(),
+            SiLU(),
             operations.Linear(time_embed_dim, time_embed_dim, dtype=self.dtype, device=device),
         )
 
         if self.num_classes is not None:
             if isinstance(self.num_classes, int):
-                self.label_emb = nn.Embedding(num_classes, time_embed_dim)
+                self.label_emb = Embedding(num_classes, time_embed_dim)
             elif self.num_classes == "continuous":
                 print("setting up linear c_adm embedding layer")
-                self.label_emb = nn.Linear(1, time_embed_dim)
+                self.label_emb = Linear(1, time_embed_dim)
             elif self.num_classes == "sequential":
                 assert adm_in_channels is not None
-                self.label_emb = nn.Sequential(
-                    nn.Sequential(
+                self.label_emb = Sequential(
+                    Sequential(
                         operations.Linear(adm_in_channels, time_embed_dim, dtype=self.dtype, device=device),
-                        nn.SiLU(),
+                        SiLU(),
                         operations.Linear(time_embed_dim, time_embed_dim, dtype=self.dtype, device=device),
                     )
                 )
             else:
                 raise ValueError()
 
-        self.input_blocks = nn.ModuleList(
+        self.input_blocks = ModuleList(
             [
                 TimestepEmbedSequential(
                     operations.conv_nd(dims, in_channels, model_channels, 3, padding=1, dtype=self.dtype, device=device)
                 )
             ]
         )
-        self.zero_convs = nn.ModuleList([self.make_zero_conv(model_channels, operations=operations, dtype=self.dtype, device=device)])
+        self.zero_convs = ModuleList([self.make_zero_conv(model_channels, operations=operations, dtype=self.dtype, device=device)])
 
         self.input_hint_block = TimestepEmbedSequential(
                     operations.conv_nd(dims, hint_channels, 16, 3, padding=1, dtype=self.dtype, device=device),
-                    nn.SiLU(),
+                    SiLU(),
                     operations.conv_nd(dims, 16, 16, 3, padding=1, dtype=self.dtype, device=device),
-                    nn.SiLU(),
+                    SiLU(),
                     operations.conv_nd(dims, 16, 32, 3, padding=1, stride=2, dtype=self.dtype, device=device),
-                    nn.SiLU(),
+                    SiLU(),
                     operations.conv_nd(dims, 32, 32, 3, padding=1, dtype=self.dtype, device=device),
-                    nn.SiLU(),
+                    SiLU(),
                     operations.conv_nd(dims, 32, 96, 3, padding=1, stride=2, dtype=self.dtype, device=device),
-                    nn.SiLU(),
+                    SiLU(),
                     operations.conv_nd(dims, 96, 96, 3, padding=1, dtype=self.dtype, device=device),
-                    nn.SiLU(),
+                    SiLU(),
                     operations.conv_nd(dims, 96, 256, 3, padding=1, stride=2, dtype=self.dtype, device=device),
-                    nn.SiLU(),
+                    SiLU(),
                     operations.conv_nd(dims, 256, model_channels, 3, padding=1, dtype=self.dtype, device=device)
         )
 
@@ -328,14 +322,14 @@ class ControlNet(nn.Module):
             num_trans_layer = 1
             num_proj_channel = 320
             # task_scale_factor = num_trans_channel ** 0.5
-            self.task_embedding = nn.Parameter(torch.empty(self.num_control_type, num_trans_channel, dtype=self.dtype, device=device))
+            self.task_embedding = Parameter(empty(self.num_control_type, num_trans_channel, dtype=self.dtype, device=device))
 
-            self.transformer_layes = nn.Sequential(*[ResBlockUnionControlnet(num_trans_channel, num_trans_head, dtype=self.dtype, device=device, operations=operations) for _ in range(num_trans_layer)])
+            self.transformer_layes = Sequential(*[ResBlockUnionControlnet(num_trans_channel, num_trans_head, dtype=self.dtype, device=device, operations=operations) for _ in range(num_trans_layer)])
             self.spatial_ch_projs = operations.Linear(num_trans_channel, num_proj_channel, dtype=self.dtype, device=device)
             #-----------------------------------------------------------------------------------------------------
 
             control_add_embed_dim = 256
-            class ControlAddEmbedding(nn.Module):
+            class ControlAddEmbedding(Module):
                 def __init__(self, in_dim, out_dim, num_control_type, dtype=None, device=None, operations=None):
                     super().__init__()
                     self.num_control_type = num_control_type
@@ -343,10 +337,10 @@ class ControlNet(nn.Module):
                     self.linear_1 = operations.Linear(in_dim * num_control_type, out_dim, dtype=dtype, device=device)
                     self.linear_2 = operations.Linear(out_dim, out_dim, dtype=dtype, device=device)
                 def forward(self, control_type, dtype, device):
-                    c_type = torch.zeros((self.num_control_type,), device=device)
+                    c_type = zeros((self.num_control_type,), device=device)
                     c_type[control_type] = 1.0
                     c_type = timestep_embedding(c_type.flatten(), self.in_dim, repeat_only=False).to(dtype).reshape((-1, self.num_control_type * self.in_dim))
-                    return self.linear_2(torch.nn.functional.silu(self.linear_1(c_type)))
+                    return self.linear_2(silu(self.linear_1(c_type)))
 
             self.control_add_embedding = ControlAddEmbedding(control_add_embed_dim, time_embed_dim, self.num_control_type, dtype=self.dtype, device=device, operations=operations)
         else:
@@ -360,14 +354,14 @@ class ControlNet(nn.Module):
 
         for idx in range(min(1, len(control_type))):
             controlnet_cond = self.input_hint_block(hint[idx], emb, context)
-            feat_seq = torch.mean(controlnet_cond, dim=(2, 3))
+            feat_seq = mean(controlnet_cond, dim=(2, 3))
             if idx < len(control_type):
                 feat_seq += self.task_embedding[control_type[idx]].to(dtype=feat_seq.dtype, device=feat_seq.device)
 
             inputs.append(feat_seq.unsqueeze(1))
             condition_list.append(controlnet_cond)
 
-        x = torch.cat(inputs, dim=1)
+        x = cat(inputs, dim=1)
         x = self.transformer_layes(x)
         controlnet_cond_fuser = None
         for idx in range(len(control_type)):

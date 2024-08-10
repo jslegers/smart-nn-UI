@@ -1,24 +1,21 @@
 from abc import abstractmethod
-
-import torch as th
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import chunk, Tensor, float32, cat
+from torch.nn import Module
+from torch.nn.functional import interpolate
 from einops import rearrange
 import logging
-
-from .util import (
+from smartdiffusion.ops import disable_weight_init
+from smartdiffusion.ldm.util import exists
+from smartdiffusion.ldm.modules.attention import SpatialTransformer, SpatialVideoTransformer, default
+from smartdiffusion.util import (
     checkpoint,
     avg_pool_nd,
     zero_module,
     timestep_embedding,
     AlphaBlender,
 )
-from ..attention import SpatialTransformer, SpatialVideoTransformer, default
-from smartdiffusion.ldm.util import exists
-import smartdiffusion.ops
-ops = smartdiffusion.ops.disable_weight_init
 
-class TimestepBlock(nn.Module):
+class TimestepBlock(Module):
     """
     Any module where forward() takes timestep embeddings as a second argument.
     """
@@ -59,7 +56,7 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
     def forward(self, *args, **kwargs):
         return forward_timestep_embed(self, *args, **kwargs)
 
-class Upsample(nn.Module):
+class Upsample(Module):
     """
     An upsampling layer with an optional convolution.
     :param channels: channels in the inputs and outputs.
@@ -68,7 +65,7 @@ class Upsample(nn.Module):
                  upsampling occurs in the inner-two dimensions.
     """
 
-    def __init__(self, channels, use_conv, dims=2, out_channels=None, padding=1, dtype=None, device=None, operations=ops):
+    def __init__(self, channels, use_conv, dims=2, out_channels=None, padding=1, dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
@@ -90,12 +87,12 @@ class Upsample(nn.Module):
                 shape[0] = output_shape[2]
                 shape[1] = output_shape[3]
 
-        x = F.interpolate(x, size=shape, mode="nearest")
+        x = interpolate(x, size=shape, mode="nearest")
         if self.use_conv:
             x = self.conv(x)
         return x
 
-class Downsample(nn.Module):
+class Downsample(Module):
     """
     A downsampling layer with an optional convolution.
     :param channels: channels in the inputs and outputs.
@@ -104,7 +101,7 @@ class Downsample(nn.Module):
                  downsampling occurs in the inner-two dimensions.
     """
 
-    def __init__(self, channels, use_conv, dims=2, out_channels=None, padding=1, dtype=None, device=None, operations=ops):
+    def __init__(self, channels, use_conv, dims=2, out_channels=None, padding=1, dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
@@ -157,7 +154,7 @@ class ResBlock(TimestepBlock):
         skip_t_emb=False,
         dtype=None,
         device=None,
-        operations=ops
+        operations=disable_weight_init
     ):
         super().__init__()
         self.channels = channels
@@ -251,7 +248,7 @@ class ResBlock(TimestepBlock):
             out_norm, out_rest = self.out_layers[0], self.out_layers[1:]
             h = out_norm(h)
             if emb_out is not None:
-                scale, shift = th.chunk(emb_out, 2, dim=1)
+                scale, shift = chunk(emb_out, 2, dim=1)
                 h *= (1 + scale)
                 h += shift
             h = out_rest(h)
@@ -282,7 +279,7 @@ class VideoResBlock(ResBlock):
         down: bool = False,
         dtype=None,
         device=None,
-        operations=ops
+        operations=disable_weight_init
     ):
         super().__init__(
             channels,
@@ -325,11 +322,11 @@ class VideoResBlock(ResBlock):
 
     def forward(
         self,
-        x: th.Tensor,
-        emb: th.Tensor,
+        x: Tensor,
+        emb: Tensor,
         num_video_frames: int,
         image_only_indicator = None,
-    ) -> th.Tensor:
+    ) -> Tensor:
         x = super().forward(x, emb)
 
         x_mix = rearrange(x, "(b t) c h w -> b c t h w", t=num_video_frames)
@@ -345,7 +342,7 @@ class VideoResBlock(ResBlock):
         return x
 
 
-class Timestep(nn.Module):
+class Timestep(Module):
     def __init__(self, dim):
         super().__init__()
         self.dim = dim
@@ -363,7 +360,7 @@ def apply_control(h, control, name):
                 logging.warning("warning control could not be applied {} {}".format(h.shape, ctrl.shape))
     return h
 
-class UNetModel(nn.Module):
+class UNetModel(Module):
     """
     The full UNet model with attention and timestep embedding.
     :param in_channels: channels in the input Tensor.
@@ -402,7 +399,7 @@ class UNetModel(nn.Module):
         dims=2,
         num_classes=None,
         use_checkpoint=False,
-        dtype=th.float32,
+        dtype=float32,
         num_heads=-1,
         num_head_channels=-1,
         num_heads_upsample=-1,
@@ -433,7 +430,7 @@ class UNetModel(nn.Module):
         max_ddpm_temb_period=10000,
         attn_precision=None,
         device=None,
-        operations=ops,
+        operations=disable_weight_init,
     ):
         super().__init__()
 
@@ -512,7 +509,7 @@ class UNetModel(nn.Module):
             else:
                 raise ValueError()
 
-        self.input_blocks = nn.ModuleList(
+        self.input_blocks = ModuleList(
             [
                 TimestepEmbedSequential(
                     operations.conv_nd(dims, in_channels, model_channels, 3, padding=1, dtype=self.dtype, device=device)
@@ -576,7 +573,7 @@ class UNetModel(nn.Module):
             up=False,
             dtype=None,
             device=None,
-            operations=ops
+            operations=disable_weight_init
         ):
             if self.use_temporal_resblocks:
                 return VideoResBlock(
@@ -736,7 +733,7 @@ class UNetModel(nn.Module):
             self.middle_block = TimestepEmbedSequential(*mid_block)
         self._feature_size += ch
 
-        self.output_blocks = nn.ModuleList([])
+        self.output_blocks = ModuleList([])
         for level, mult in list(enumerate(channel_mult))[::-1]:
             for i in range(self.num_res_blocks[level] + 1):
                 ich = input_block_chans.pop()
@@ -878,7 +875,7 @@ class UNetModel(nn.Module):
                 for p in patch:
                     h, hsp = p(h, hsp, transformer_options)
 
-            h = th.cat([h, hsp], dim=1)
+            h = cat([h, hsp], dim=1)
             del hsp
             if len(hs) > 0:
                 output_shape = hs[-1].shape

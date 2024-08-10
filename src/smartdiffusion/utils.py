@@ -1,27 +1,42 @@
-import torch
-import math
-import struct
-import smartdiffusion.checkpoint_pickle
+from torch import (
+    float32,
+    int64,
+    stack,
+    from_numpy,
+    arange,
+    acos,
+    sin,
+    load,
+    cat,
+    empty,
+    norm,
+    device as t_device
+)
+from torch.nn import Parameter
+from torch.nn.functional import interpolate
+from math import floor, ceil
+from struct import unpack
+from smartdiffusion import checkpoint_pickle
 from safetensors.torch import load_file, save_file
-import numpy as np
+from numpy import clip, uint8, float32, array
 from PIL import Image
 import logging
 import itertools
 
 def load_torch_file(ckpt, safe_load=False, device=None):
     if device is None:
-        device = torch.device("cpu")
+        device = t_device("cpu")
     if ckpt.lower().endswith(".safetensors") or ckpt.lower().endswith(".sft"):
         tf = load_file(ckpt, device=device.type)
     else:
         if safe_load:
-            if not 'weights_only' in torch.load.__code__.co_varnames:
-                logging.warning("Warning torch.load doesn't support weights_only on this pytorch version, loading unsafely.")
+            if not 'weights_only' in load.__code__.co_varnames:
+                logging.warning("Warning load doesn't support weights_only on this pytorch version, loading unsafely.")
                 safe_load = False
         if safe_load:
-            pl_sd = torch.load(ckpt, map_location=device, weights_only=True)
+            pl_sd = load(ckpt, map_location=device, weights_only=True)
         else:
-            pl_sd = torch.load(ckpt, map_location=device, pickle_module=smartdiffusion.checkpoint_pickle)
+            pl_sd = load(ckpt, map_location=device, pickle_module=checkpoint_pickle)
         if "global_step" in pl_sd:
             logging.debug(f"Global Step: {pl_sd['global_step']}")
         if "state_dict" in pl_sd:
@@ -265,7 +280,7 @@ def unet_to_diffusers(unet_config):
 
 def swap_scale_shift(weight):
     shift, scale = weight.chunk(2, dim=0)
-    new_weight = torch.cat([scale, shift], dim=0)
+    new_weight = cat([scale, shift], dim=0)
     return new_weight
 
 MMDIT_MAP_BASIC = {
@@ -472,7 +487,7 @@ def repeat_to_batch_size(tensor, batch_size, dim=0):
     if tensor.shape[dim] > batch_size:
         return tensor.narrow(dim, 0, batch_size)
     elif tensor.shape[dim] < batch_size:
-        return tensor.repeat(dim * [1] + [math.ceil(batch_size / tensor.shape[dim])] + [1] * (len(tensor.shape) - 1 - dim)).narrow(dim, 0, batch_size)
+        return tensor.repeat(dim * [1] + [ceil(batch_size / tensor.shape[dim])] + [1] * (len(tensor.shape) - 1 - dim)).narrow(dim, 0, batch_size)
     return tensor
 
 def resize_to_batch_size(tensor, batch_size):
@@ -483,7 +498,7 @@ def resize_to_batch_size(tensor, batch_size):
     if batch_size <= 1:
         return tensor[:batch_size]
 
-    output = torch.empty([batch_size] + list(tensor.shape)[1:], dtype=tensor.dtype, device=tensor.device)
+    output = empty([batch_size] + list(tensor.shape)[1:], dtype=tensor.dtype, device=tensor.device)
     if batch_size < in_batch_size:
         scale = (in_batch_size - 1) / (batch_size - 1)
         for i in range(batch_size):
@@ -491,7 +506,7 @@ def resize_to_batch_size(tensor, batch_size):
     else:
         scale = in_batch_size / batch_size
         for i in range(batch_size):
-            output[i] = tensor[min(math.floor((i + 0.5) * scale), in_batch_size - 1)]
+            output[i] = tensor[min(floor((i + 0.5) * scale), in_batch_size - 1)]
 
     return output
 
@@ -504,7 +519,7 @@ def convert_sd_to(state_dict, dtype):
 def safetensors_header(safetensors_path, max_size=100*1024*1024):
     with open(safetensors_path, "rb") as f:
         header = f.read(8)
-        length_of_header = struct.unpack('<Q', header)[0]
+        length_of_header = unpack('<Q', header)[0]
         if length_of_header > max_size:
             return None
         return f.read(length_of_header)
@@ -518,7 +533,7 @@ def set_attr(obj, attr, value):
     return prev
 
 def set_attr_param(obj, attr, value):
-    return set_attr(obj, attr, torch.nn.Parameter(value, requires_grad=False))
+    return set_attr(obj, attr, Parameter(value, requires_grad=False))
 
 def copy_to_param(obj, attr, value):
     # inplace update tensor instead of replacing it
@@ -541,8 +556,8 @@ def bislerp(samples, width, height):
         c = b1.shape[-1]
 
         #norms
-        b1_norms = torch.norm(b1, dim=-1, keepdim=True)
-        b2_norms = torch.norm(b2, dim=-1, keepdim=True)
+        b1_norms = norm(b1, dim=-1, keepdim=True)
+        b2_norms = norm(b2, dim=-1, keepdim=True)
 
         #normalize
         b1_normalized = b1 / b1_norms
@@ -554,11 +569,11 @@ def bislerp(samples, width, height):
 
         #slerp
         dot = (b1_normalized*b2_normalized).sum(1)
-        omega = torch.acos(dot)
-        so = torch.sin(omega)
+        omega = acos(dot)
+        so = sin(omega)
 
         #technically not mathematically correct, but more pleasing?
-        res = (torch.sin((1.0-r.squeeze(1))*omega)/so).unsqueeze(1)*b1_normalized + (torch.sin(r.squeeze(1)*omega)/so).unsqueeze(1) * b2_normalized
+        res = (sin((1.0-r.squeeze(1))*omega)/so).unsqueeze(1)*b1_normalized + (sin(r.squeeze(1)*omega)/so).unsqueeze(1) * b2_normalized
         res *= (b1_norms * (1.0-r) + b2_norms * r).expand(-1,c)
 
         #edge cases for same or polar opposites
@@ -567,15 +582,15 @@ def bislerp(samples, width, height):
         return res
 
     def generate_bilinear_data(length_old, length_new, device):
-        coords_1 = torch.arange(length_old, dtype=torch.float32, device=device).reshape((1,1,1,-1))
-        coords_1 = torch.nn.functional.interpolate(coords_1, size=(1, length_new), mode="bilinear")
+        coords_1 = arange(length_old, dtype=float32, device=device).reshape((1,1,1,-1))
+        coords_1 = interpolate(coords_1, size=(1, length_new), mode="bilinear")
         ratios = coords_1 - coords_1.floor()
-        coords_1 = coords_1.to(torch.int64)
+        coords_1 = coords_1.to(int64)
 
-        coords_2 = torch.arange(length_old, dtype=torch.float32, device=device).reshape((1,1,1,-1)) + 1
+        coords_2 = arange(length_old, dtype=float32, device=device).reshape((1,1,1,-1)) + 1
         coords_2[:,:,:,-1] -= 1
-        coords_2 = torch.nn.functional.interpolate(coords_2, size=(1, length_new), mode="bilinear")
-        coords_2 = coords_2.to(torch.int64)
+        coords_2 = interpolate(coords_2, size=(1, length_new), mode="bilinear")
+        coords_2 = coords_2.to(int64)
         return ratios, coords_1, coords_2
 
     orig_dtype = samples.dtype
@@ -611,10 +626,10 @@ def bislerp(samples, width, height):
     return result.to(orig_dtype)
 
 def lanczos(samples, width, height):
-    images = [Image.fromarray(np.clip(255. * image.movedim(0, -1).cpu().numpy(), 0, 255).astype(np.uint8)) for image in samples]
+    images = [Image.fromarray(clip(255. * image.movedim(0, -1).cpu().numpy(), 0, 255).astype(uint8)) for image in samples]
     images = [image.resize((width, height), resample=Image.Resampling.LANCZOS) for image in images]
-    images = [torch.from_numpy(np.array(image).astype(np.float32) / 255.0).movedim(-1, 0) for image in images]
-    result = torch.stack(images)
+    images = [from_numpy(array(image).astype(float32) / 255.0).movedim(-1, 0) for image in images]
+    result = stack(images)
     return result.to(samples.device, samples.dtype)
 
 def common_upscale(samples, width, height, upscale_method, crop):
@@ -638,15 +653,15 @@ def common_upscale(samples, width, height, upscale_method, crop):
         elif upscale_method == "lanczos":
             return lanczos(s, width, height)
         else:
-            return torch.nn.functional.interpolate(s, size=(height, width), mode=upscale_method)
+            return interpolate(s, size=(height, width), mode=upscale_method)
 
 def get_tiled_scale_steps(width, height, tile_x, tile_y, overlap):
-    return math.ceil((height / (tile_y - overlap))) * math.ceil((width / (tile_x - overlap)))
+    return ceil((height / (tile_y - overlap))) * ceil((width / (tile_x - overlap)))
 
 @torch.inference_mode()
 def tiled_scale_multidim(samples, function, tile=(64, 64), overlap = 8, upscale_amount = 4, out_channels = 3, output_device="cpu", pbar = None):
     dims = len(tile)
-    output = torch.empty([samples.shape[0], out_channels] + list(map(lambda a: round(a * upscale_amount), samples.shape[2:])), device=output_device)
+    output = empty([samples.shape[0], out_channels] + list(map(lambda a: round(a * upscale_amount), samples.shape[2:])), device=output_device)
 
     for b in range(samples.shape[0]):
         s = samples[b:b+1]

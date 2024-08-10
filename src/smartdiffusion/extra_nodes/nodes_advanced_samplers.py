@@ -1,14 +1,11 @@
 from smartdiffusion import samplers
 from smartdiffusion import utils
-from smartdiffusion import model_patcher
-from smartdiffusion.k_diffusion.sampling import to_d
-import torch
-import numpy as np
 from tqdm.auto import trange, tqdm
-import math
+from numpy import linspace
+from torch import no_grad, randn_like
 
 
-@torch.no_grad()
+@no_grad()
 def sample_lcm_upscale(model, x, sigmas, extra_args=None, callback=None, disable=None, total_upscale=2.0, upscale_method="bislerp", upscale_steps=None):
     extra_args = {} if extra_args is None else extra_args
 
@@ -18,7 +15,7 @@ def sample_lcm_upscale(model, x, sigmas, extra_args=None, callback=None, disable
         upscale_steps += 1
         upscale_steps = min(upscale_steps, len(sigmas) + 1)
 
-    upscales = np.linspace(1.0, total_upscale, upscale_steps)[1:]
+    upscales = linspace(1.0, total_upscale, upscale_steps)[1:]
 
     orig_shape = x.size()
     s_in = x.new_ones([x.shape[0]])
@@ -32,7 +29,7 @@ def sample_lcm_upscale(model, x, sigmas, extra_args=None, callback=None, disable
             x = utils.common_upscale(x, round(orig_shape[-1] * upscales[i]), round(orig_shape[-2] * upscales[i]), upscale_method, "disabled")
 
         if sigmas[i + 1] > 0:
-            x += sigmas[i + 1] * torch.randn_like(x)
+            x += sigmas[i + 1] * randn_like(x)
     return x
 
 
@@ -58,8 +55,10 @@ class SamplerLCMUpscale:
         sampler = samplers.KSAMPLER(sample_lcm_upscale, extra_options={"total_upscale": scale_ratio, "upscale_steps": scale_steps, "upscale_method": upscale_method})
         return (sampler, )
 
+from smartdiffusion.k_diffusion.sampling import to_d
+import smartdiffusion.model_patcher
 
-@torch.no_grad()
+@no_grad()
 def sample_euler_pp(model, x, sigmas, extra_args=None, callback=None, disable=None):
     extra_args = {} if extra_args is None else extra_args
 
@@ -69,7 +68,7 @@ def sample_euler_pp(model, x, sigmas, extra_args=None, callback=None, disable=No
         return args["denoised"]
 
     model_options = extra_args.get("model_options", {}).copy()
-    extra_args["model_options"] = model_patcher.set_model_options_post_cfg_function(model_options, post_cfg_function, disable_cfg1_optimization=True)
+    extra_args["model_options"] = smartdiffusion.model_patcher.set_model_options_post_cfg_function(model_options, post_cfg_function, disable_cfg1_optimization=True)
 
     s_in = x.new_ones([x.shape[0]])
     for i in trange(len(sigmas) - 1, disable=disable):
