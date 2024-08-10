@@ -13,9 +13,9 @@ from smartdiffusion.ldm.modules.diffusionmodules.util import (
 from smartdiffusion.ldm.modules.attention import SpatialTransformer
 from smartdiffusion.ldm.modules.diffusionmodules.openaimodel import UNetModel, TimestepEmbedSequential, ResBlock, Downsample
 from smartdiffusion.ldm.util import exists
-from .control_types import UNION_CONTROLNET_TYPES
+from smartdiffusion.cldm.control_types import UNION_CONTROLNET_TYPES
 from collections import OrderedDict
-import smartdiffusion.ops
+from smartdiffusion import ops
 from smartdiffusion.ldm.modules.attention import optimized_attention
 
 class OptimizedAttention(nn.Module):
@@ -95,7 +95,7 @@ class ControlNet(nn.Module):
         attn_precision=None,
         union_controlnet_num_control_type=None,
         device=None,
-        operations=smartdiffusion.ops.disable_weight_init,
+        operations=ops.disable_weight_init,
         **kwargs,
     ):
         super().__init__()
