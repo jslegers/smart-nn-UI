@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 import folder_paths
-import smartdiffusion.clip_model
-import smartdiffusion.clip_vision
-import smartdiffusion.ops
+from smartdiffusion import clip_model
+from smartdiffusion import clip_vision
+from smartdiffusion import ops
 
 # code for model from: https://github.com/TencentARC/PhotoMaker/blob/main/photomaker/model.py under Apache License Version 2.0
 VISION_CONFIG_DICT = {
@@ -19,7 +19,7 @@ VISION_CONFIG_DICT = {
 }
 
 class MLP(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden_dim, use_residual=True, operations=smartdiffusion.ops):
+    def __init__(self, in_dim, out_dim, hidden_dim, use_residual=True, operations=ops):
         super().__init__()
         if use_residual:
             assert in_dim == out_dim
@@ -88,15 +88,15 @@ class FuseModule(nn.Module):
         updated_prompt_embeds = prompt_embeds.view(batch_size, seq_length, -1)
         return updated_prompt_embeds
 
-class PhotoMakerIDEncoder(smartdiffusion.clip_model.CLIPVisionModelProjection):
+class PhotoMakerIDEncoder(clip_model.CLIPVisionModelProjection):
     def __init__(self):
         self.load_device = smartdiffusion.model_management.text_encoder_device()
         offload_device = smartdiffusion.model_management.text_encoder_offload_device()
         dtype = smartdiffusion.model_management.text_encoder_dtype(self.load_device)
 
-        super().__init__(VISION_CONFIG_DICT, dtype, offload_device, smartdiffusion.ops.manual_cast)
-        self.visual_projection_2 = smartdiffusion.ops.manual_cast.Linear(1024, 1280, bias=False)
-        self.fuse_module = FuseModule(2048, smartdiffusion.ops.manual_cast)
+        super().__init__(VISION_CONFIG_DICT, dtype, offload_device, ops.manual_cast)
+        self.visual_projection_2 = ops.manual_cast.Linear(1024, 1280, bias=False)
+        self.fuse_module = FuseModule(2048, ops.manual_cast)
 
     def forward(self, id_pixel_values, prompt_embeds, class_tokens_mask):
         b, num_inputs, c, h, w = id_pixel_values.shape
@@ -151,7 +151,7 @@ class PhotoMakerEncode:
 
     def apply_photomaker(self, photomaker, image, clip, text):
         special_token = "photomaker"
-        pixel_values = smartdiffusion.clip_vision.clip_preprocess(image.to(photomaker.load_device)).float()
+        pixel_values = clip_vision.clip_preprocess(image.to(photomaker.load_device)).float()
         try:
             index = text.split(" ").index(special_token) + 1
         except ValueError:
@@ -184,4 +184,3 @@ NODE_CLASS_MAPPINGS = {
     "PhotoMakerLoader": PhotoMakerLoader,
     "PhotoMakerEncode": PhotoMakerEncode,
 }
-

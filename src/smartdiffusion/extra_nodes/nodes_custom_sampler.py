@@ -2,9 +2,9 @@ from smartdiffusion import samplers
 from smartdiffusion import sample
 from smartdiffusion import latent_preview
 from smartdiffusion import utils
+from smartdiffusion import node_helpers
 from smartdiffusion.k_diffusion import sampling as k_diffusion_sampling
 import torch
-import node_helpers
 
 
 class BasicScheduler:

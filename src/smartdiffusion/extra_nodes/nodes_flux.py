@@ -1,4 +1,4 @@
-import node_helpers
+from smartdiffusion import node_helpers
 
 class CLIPTextEncodeFlux:
     @classmethod
