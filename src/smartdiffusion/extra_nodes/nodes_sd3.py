@@ -1,7 +1,7 @@
 import folder_paths
-import smartdiffusion.sd
-import smartdiffusion.model_management
-import nodes
+from smartdiffusion import sd
+from smartdiffusion import model_management
+from smartdiffusion import config
 import torch
 
 class TripleCLIPLoader:
@@ -18,17 +18,17 @@ class TripleCLIPLoader:
         clip_path1 = folder_paths.get_full_path("clip", clip_name1)
         clip_path2 = folder_paths.get_full_path("clip", clip_name2)
         clip_path3 = folder_paths.get_full_path("clip", clip_name3)
-        clip = smartdiffusion.sd.load_clip(ckpt_paths=[clip_path1, clip_path2, clip_path3], embedding_directory=folder_paths.get_folder_paths("embeddings"))
+        clip = sd.load_clip(ckpt_paths=[clip_path1, clip_path2, clip_path3], embedding_directory=folder_paths.get_folder_paths("embeddings"))
         return (clip,)
 
 class EmptySD3LatentImage:
     def __init__(self):
-        self.device = smartdiffusion.model_management.intermediate_device()
+        self.device = model_management.intermediate_device()
 
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "width": ("INT", {"default": 1024, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 16}),
-                              "height": ("INT", {"default": 1024, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 16}),
+        return {"required": { "width": ("INT", {"default": 1024, "min": 16, "max": config.MAX_RESOLUTION, "step": 16}),
+                              "height": ("INT", {"default": 1024, "min": 16, "max": config.MAX_RESOLUTION, "step": 16}),
                               "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096})}}
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "generate"
@@ -80,7 +80,7 @@ class CLIPTextEncodeSD3:
         return ([[cond, {"pooled_output": pooled}]], )
 
 
-class ControlNetApplySD3(nodes.ControlNetApplyAdvanced):
+class ControlNetApplySD3(config.ControlNetApplyAdvanced):
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {"positive": ("CONDITIONING", ),

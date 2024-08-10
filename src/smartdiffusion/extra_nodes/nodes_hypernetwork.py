@@ -1,10 +1,10 @@
-import smartdiffusion.utils
-import folder_paths
+from smartdiffusion import utils
+from smartdiffusion import folder_paths
 import torch
 import logging
 
 def load_hypernetwork_patch(path, strength):
-    sd = smartdiffusion.utils.load_torch_file(path, safe_load=True)
+    sd = utils.load_torch_file(path, safe_load=True)
     activation_func = sd.get('activation_func', 'linear')
     is_layer_norm = sd.get('is_layer_norm', False)
     use_dropout = sd.get('use_dropout', False)

@@ -1,9 +1,8 @@
 import torch
-import smartdiffusion.model_management
-import smartdiffusion.sampler_helpers
-import smartdiffusion.samplers
-import smartdiffusion.utils
-import node_helpers
+from smartdiffusion import node_helpers
+from smartdiffusion import sampler_helpers
+from smartdiffusion import samplers
+from smartdiffusion import utils
 
 def perp_neg(x, noise_pred_pos, noise_pred_neg, noise_pred_nocond, neg_scale, cond_scale):
     pos = noise_pred_pos - noise_pred_nocond
@@ -29,7 +28,7 @@ class PerpNeg:
 
     def patch(self, model, empty_conditioning, neg_scale):
         m = model.clone()
-        nocond = smartdiffusion.sampler_helpers.convert_cond(empty_conditioning)
+        nocond = sampler_helpers.convert_cond(empty_conditioning)
 
         def cfg_function(args):
             model = args["model"]
@@ -39,9 +38,9 @@ class PerpNeg:
             x = args["input"]
             sigma = args["sigma"]
             model_options = args["model_options"]
-            nocond_processed = smartdiffusion.samplers.encode_model_conds(model.extra_conds, nocond, x, x.device, "negative")
+            nocond_processed = samplers.encode_model_conds(model.extra_conds, nocond, x, x.device, "negative")
 
-            (noise_pred_nocond,) = smartdiffusion.samplers.calc_cond_batch(model, [nocond_processed], x, sigma, model_options)
+            (noise_pred_nocond,) = samplers.calc_cond_batch(model, [nocond_processed], x, sigma, model_options)
 
             cfg_result = x - perp_neg(x, noise_pred_pos, noise_pred_neg, noise_pred_nocond, neg_scale, cond_scale)
             return cfg_result
@@ -51,7 +50,7 @@ class PerpNeg:
         return (m, )
 
 
-class Guider_PerpNeg(smartdiffusion.samplers.CFGGuider):
+class Guider_PerpNeg(samplers.CFGGuider):
     def set_conds(self, positive, negative, empty_negative_prompt):
         empty_negative_prompt = node_helpers.conditioning_set_values(empty_negative_prompt, {"prompt_type": "negative"})
         self.inner_set_conds({"positive": positive, "empty_negative_prompt": empty_negative_prompt, "negative": negative})
@@ -63,16 +62,16 @@ class Guider_PerpNeg(smartdiffusion.samplers.CFGGuider):
     def predict_noise(self, x, timestep, model_options={}, seed=None):
         # in CFGGuider.predict_noise, we call sampling_function(), which uses cfg_function() to compute pos & neg
         # but we'd rather do a single batch of sampling pos, neg, and empty, so we call calc_cond_batch([pos,neg,empty]) directly
-        
+
         positive_cond = self.conds.get("positive", None)
         negative_cond = self.conds.get("negative", None)
         empty_cond = self.conds.get("empty_negative_prompt", None)
 
         (noise_pred_pos, noise_pred_neg, noise_pred_empty) = \
-            smartdiffusion.samplers.calc_cond_batch(self.inner_model, [positive_cond, negative_cond, empty_cond], x, timestep, model_options)
+            samplers.calc_cond_batch(self.inner_model, [positive_cond, negative_cond, empty_cond], x, timestep, model_options)
         cfg_result = perp_neg(x, noise_pred_pos, noise_pred_neg, noise_pred_empty, self.neg_scale, self.cfg)
 
-        # normally this would be done in cfg_function, but we skipped 
+        # normally this would be done in cfg_function, but we skipped
         # that for efficiency: we can compute the noise predictions in
         # a single call to calc_cond_batch() (rather than two)
         # so we replicate the hook here

@@ -1,6 +1,5 @@
 import torchaudio
 import torch
-import smartdiffusion.model_management
 import folder_paths
 import os
 import io
@@ -8,6 +7,7 @@ import json
 import struct
 import random
 import hashlib
+from smartdiffusion import model_management
 from smartdiffusion.cli_args import args
 
 class EmptyLatentAudio:

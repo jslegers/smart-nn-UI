@@ -360,8 +360,8 @@ def load_embed(embedding_name, embedding_directory, embedding_size, embed_key=No
 
     try:
         if embed_path.lower().endswith(".safetensors"):
-            import safetensors.torch
-            embed = safetensors.torch.load_file(embed_path, device="cpu")
+            from safetensors.torch import load_file
+            embed = load_file(embed_path, device="cpu")
         else:
             if 'weights_only' in torch.load.__code__.co_varnames:
                 try:
