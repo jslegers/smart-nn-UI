@@ -3,7 +3,7 @@ from smartdiffusion import utils
 from smartdiffusion import sd
 from smartdiffusion import folder_paths
 from smartdiffusion import config
-from smartdiffusion.class.extra_nodes import config_model_merging
+from smartdiffusion.extra_nodes import config_model_merging
 
 
 class ImageOnlyCheckpointLoader:
