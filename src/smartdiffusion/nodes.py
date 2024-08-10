@@ -67,15 +67,15 @@ NODE_CLASS_MAPPINGS = {
     "GLIGENTextBoxApply": module("GLIGENTextBoxApply"),
     "InpaintModelConditioning": module("InpaintModelConditioning"),
 
-    "CheckpointLoader": CheckpointLoader,
-    "DiffusersLoader": DiffusersLoader,
+    "CheckpointLoader": module("CheckpointLoader"),
+    "DiffusersLoader": module("DiffusersLoader"),
 
-    "LoadLatent": LoadLatent,
-    "SaveLatent": SaveLatent,
+    "LoadLatent": module("LoadLatent"),
+    "SaveLatent": module("SaveLatent"),
 
-    "ConditioningZeroOut": ConditioningZeroOut,
-    "ConditioningSetTimestepRange": ConditioningSetTimestepRange,
-    "LoraLoaderModelOnly": LoraLoaderModelOnly,
+    "ConditioningZeroOut": module("ConditioningZeroOut"),
+    "ConditioningSetTimestepRange": module("ConditioningSetTimestepRange"),
+    "LoraLoaderModelOnly": module("LoraLoaderModelOnly"),
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
