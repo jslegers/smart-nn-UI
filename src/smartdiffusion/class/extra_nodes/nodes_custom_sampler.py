@@ -3,6 +3,7 @@ from smartdiffusion import sample
 from smartdiffusion import latent_preview
 from smartdiffusion import utils
 from smartdiffusion import node_helpers
+from smartdiffusion import model_management
 from smartdiffusion.k_diffusion import sampling as k_diffusion_sampling
 import torch
 
@@ -610,7 +611,7 @@ class SamplerCustomAdvanced:
 
         disable_pbar = not utils.PROGRESS_BAR_ENABLED
         samples = guider.sample(noise.generate_noise(latent), latent_image, sampler, sigmas, denoise_mask=noise_mask, callback=callback, disable_pbar=disable_pbar, seed=noise.seed)
-        samples = samples.to(smartdiffusion.model_management.intermediate_device())
+        samples = samples.to(model_management.intermediate_device())
 
         out = latent.copy()
         out["samples"] = samples

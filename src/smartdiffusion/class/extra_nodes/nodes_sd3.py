@@ -1,6 +1,6 @@
 import folder_paths
-import smartdiffusion.sd
-import smartdiffusion.model_management
+from smartdiffusion import sd
+from smartdiffusion import model_management
 import nodes
 import torch
 
@@ -18,12 +18,12 @@ class TripleCLIPLoader:
         clip_path1 = folder_paths.get_full_path("clip", clip_name1)
         clip_path2 = folder_paths.get_full_path("clip", clip_name2)
         clip_path3 = folder_paths.get_full_path("clip", clip_name3)
-        clip = smartdiffusion.sd.load_clip(ckpt_paths=[clip_path1, clip_path2, clip_path3], embedding_directory=folder_paths.get_folder_paths("embeddings"))
+        clip = sd.load_clip(ckpt_paths=[clip_path1, clip_path2, clip_path3], embedding_directory=folder_paths.get_folder_paths("embeddings"))
         return (clip,)
 
 class EmptySD3LatentImage:
     def __init__(self):
-        self.device = smartdiffusion.model_management.intermediate_device()
+        self.device = model_management.intermediate_device()
 
     @classmethod
     def INPUT_TYPES(s):

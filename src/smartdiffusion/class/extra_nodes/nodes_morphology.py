@@ -1,5 +1,5 @@
 import torch
-import smartdiffusion.model_management
+from smartdiffusion import model_management
 
 from kornia.morphology import dilation, erosion, opening, closing, gradient, top_hat, bottom_hat
 
@@ -18,7 +18,7 @@ class Morphology:
     CATEGORY = "image/postprocessing"
 
     def process(self, image, operation, kernel_size):
-        device = smartdiffusion.model_management.get_torch_device()
+        device = model_management.get_torch_device()
         kernel = torch.ones(kernel_size, kernel_size, device=device)
         image_k = image.to(device).movedim(-1, 1)
         if operation == "erode":
@@ -37,7 +37,7 @@ class Morphology:
             output = bottom_hat(image_k, kernel)
         else:
             raise ValueError(f"Invalid operation {operation} for morphology. Must be one of 'erode', 'dilate', 'open', 'close', 'gradient', 'tophat', 'bottomhat'")
-        img_out = output.to(smartdiffusion.model_management.intermediate_device()).movedim(1, -1)
+        img_out = output.to(model_management.intermediate_device()).movedim(1, -1)
         return (img_out,)
 
 NODE_CLASS_MAPPINGS = {
