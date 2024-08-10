@@ -283,7 +283,7 @@ def init_builtin_extra_nodes():
     Returns:
         None
     """
-    extras_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), , "class", "extra_nodes")
+    extras_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "class", "extra_nodes")
     extras_files = os.listdir()
     import_failed = []
     for node_file in extras_files:
