@@ -296,6 +296,18 @@ def autoload(**kwargs):
     return module
 
 
+
+
+def get_mod(fullname, attrs = None):
+  if not attrs :
+    code = f"from {fullname} import *"
+    return get_module_from_code(code)
+  if isinstance(attrs, str) :
+    code = f"from {fullname} import {attrs}"
+    return get_module_from_code(code)
+  code = f"from {fullname} import {', '.join(attrs)}"
+  return get_module_from_code(code)
+
 def module(module, attrs=None):
     class Module_Attr:
         __slots__ = ['name']
