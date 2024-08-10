@@ -1,5 +1,5 @@
-from .k_diffusion import sampling as k_diffusion_sampling
-from .extra_samplers import uni_pc
+from smartdiffusion.k_diffusion import sampling as k_diffusion_sampling
+from smartdiffusion.extra_samplers import uni_pc
 import torch
 import collections
 from smartdiffusion import model_management

@@ -1,7 +1,7 @@
 import torch
-from . import model_base
-from . import utils
-from . import latent_formats
+from smartdiffusion import model_base
+from smartdiffusion import utils
+from smartdiffusion import latent_formats
 
 class ClipTarget:
     def __init__(self, tokenizer, clip):

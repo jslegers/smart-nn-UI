@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from .ldm.modules.attention import CrossAttention
+from smartdiffusion.ldm.modules.attention import CrossAttention
 from inspect import isfunction
 import smartdiffusion.ops
 ops = smartdiffusion.ops.manual_cast

@@ -16,7 +16,7 @@ import smartdiffusion.model_management
 import smartdiffusion.conds
 import smartdiffusion.ops
 from enum import Enum
-from . import utils
+import smartdiffusion.utils
 import smartdiffusion.latent_formats
 import math
 

@@ -11,13 +11,13 @@ import yaml
 
 import smartdiffusion.utils
 
-from . import clip_vision
-from . import gligen
-from . import diffusers_convert
-from . import model_detection
+from smartdiffusion import clip_vision
+from smartdiffusion import gligen
+from smartdiffusion import diffusers_convert
+from smartdiffusion import model_detection
 
-from . import sd1_clip
-from . import sdxl_clip
+from smartdiffusion import sd1_clip
+from smartdiffusion import sdxl_clip
 import smartdiffusion.text_encoders.sd2_clip
 import smartdiffusion.text_encoders.sd3_clip
 import smartdiffusion.text_encoders.sa_t5

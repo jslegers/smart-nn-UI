@@ -18,29 +18,29 @@ import safetensors.torch
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "smartdiffusion"))
 
-import smartdiffusion.diffusers_load
-import smartdiffusion.samplers
-import smartdiffusion.sample
-import smartdiffusion.sd
-import smartdiffusion.utils
-import smartdiffusion.controlnet
+from smartdiffusion import diffusers_load
+from smartdiffusion import samplers
+from smartdiffusion import sample
+from smartdiffusion import sd
+from smartdiffusion import utils
+from smartdiffusion import controlnet
 
-import smartdiffusion.clip_vision
+from smartdiffusion import clip_vision
 
-import smartdiffusion.model_management
+from smartdiffusion import model_management
 from smartdiffusion.cli_args import args
 
 import importlib
 
-import folder_paths
-import latent_preview
-import node_helpers
+from smartdiffusion import folder_paths
+from smartdiffusion import latent_preview
+from smartdiffusion import node_helpers
 
 def before_node_execution():
-    smartdiffusion.model_management.throw_exception_if_processing_interrupted()
+    model_management.throw_exception_if_processing_interrupted()
 
 def interrupt_processing(value=True):
-    smartdiffusion.model_management.interrupt_current_processing(value)
+    model_management.interrupt_current_processing(value)
 
 MAX_RESOLUTION=16384
 
@@ -448,7 +448,7 @@ class SaveLatent:
         output["latent_tensor"] = samples["samples"]
         output["latent_format_version_0"] = torch.tensor([])
 
-        smartdiffusion.utils.save_torch_file(output, file, metadata=metadata)
+        utils.save_torch_file(output, file, metadata=metadata)
         return { "ui": { "latents": results } }
 
 
@@ -501,7 +501,7 @@ class CheckpointLoader:
     def load_checkpoint(self, config_name, ckpt_name):
         config_path = folder_paths.get_full_path("configs", config_name)
         ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
-        return smartdiffusion.sd.load_checkpoint(config_path, ckpt_path, output_vae=True, output_clip=True, embedding_directory=folder_paths.get_folder_paths("embeddings"))
+        return sd.load_checkpoint(config_path, ckpt_path, output_vae=True, output_clip=True, embedding_directory=folder_paths.get_folder_paths("embeddings"))
 
 class CheckpointLoaderSimple:
     @classmethod
@@ -515,7 +515,7 @@ class CheckpointLoaderSimple:
 
     def load_checkpoint(self, ckpt_name):
         ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
-        out = smartdiffusion.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, embedding_directory=folder_paths.get_folder_paths("embeddings"))
+        out = sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, embedding_directory=folder_paths.get_folder_paths("embeddings"))
         return out[:3]
 
 class DiffusersLoader:
@@ -542,7 +542,7 @@ class DiffusersLoader:
                     model_path = path
                     break
 
-        return smartdiffusion.diffusers_load.load_diffusers(model_path, output_vae=output_vae, output_clip=output_clip, embedding_directory=folder_paths.get_folder_paths("embeddings"))
+        return diffusers_load.load_diffusers(model_path, output_vae=output_vae, output_clip=output_clip, embedding_directory=folder_paths.get_folder_paths("embeddings"))
 
 
 class unCLIPCheckpointLoader:
@@ -557,7 +557,7 @@ class unCLIPCheckpointLoader:
 
     def load_checkpoint(self, ckpt_name, output_vae=True, output_clip=True):
         ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
-        out = smartdiffusion.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, output_clipvision=True, embedding_directory=folder_paths.get_folder_paths("embeddings"))
+        out = sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, output_clipvision=True, embedding_directory=folder_paths.get_folder_paths("embeddings"))
         return out
 
 class CLIPSetLastLayer:
@@ -608,10 +608,10 @@ class LoraLoader:
                 del temp
 
         if lora is None:
-            lora = smartdiffusion.utils.load_torch_file(lora_path, safe_load=True)
+            lora = utils.load_torch_file(lora_path, safe_load=True)
             self.loaded_lora = (lora_path, lora)
 
-        model_lora, clip_lora = smartdiffusion.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
+        model_lora, clip_lora = sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
         return (model_lora, clip_lora)
 
 class LoraLoaderModelOnly(LoraLoader):
@@ -662,30 +662,30 @@ class VAELoader:
 
     @staticmethod
     def load_taesd(name):
-        sd = {}
+        taesd = {}
         approx_vaes = folder_paths.get_filename_list("vae_approx")
 
         encoder = next(filter(lambda a: a.startswith("{}_encoder.".format(name)), approx_vaes))
         decoder = next(filter(lambda a: a.startswith("{}_decoder.".format(name)), approx_vaes))
 
-        enc = smartdiffusion.utils.load_torch_file(folder_paths.get_full_path("vae_approx", encoder))
+        enc = utils.load_torch_file(folder_paths.get_full_path("vae_approx", encoder))
         for k in enc:
-            sd["taesd_encoder.{}".format(k)] = enc[k]
+            taesd["taesd_encoder.{}".format(k)] = enc[k]
 
-        dec = smartdiffusion.utils.load_torch_file(folder_paths.get_full_path("vae_approx", decoder))
+        dec = utils.load_torch_file(folder_paths.get_full_path("vae_approx", decoder))
         for k in dec:
-            sd["taesd_decoder.{}".format(k)] = dec[k]
+            taesd["taesd_decoder.{}".format(k)] = dec[k]
 
         if name == "taesd":
-            sd["vae_scale"] = torch.tensor(0.18215)
-            sd["vae_shift"] = torch.tensor(0.0)
+            taesd["vae_scale"] = torch.tensor(0.18215)
+            taesd["vae_shift"] = torch.tensor(0.0)
         elif name == "taesdxl":
-            sd["vae_scale"] = torch.tensor(0.13025)
-            sd["vae_shift"] = torch.tensor(0.0)
+            taesd["vae_scale"] = torch.tensor(0.13025)
+            taesd["vae_shift"] = torch.tensor(0.0)
         elif name == "taesd3":
-            sd["vae_scale"] = torch.tensor(1.5305)
-            sd["vae_shift"] = torch.tensor(0.0609)
-        return sd
+            taesd["vae_scale"] = torch.tensor(1.5305)
+            taesd["vae_shift"] = torch.tensor(0.0609)
+        return taesd
 
     @classmethod
     def INPUT_TYPES(s):
@@ -698,11 +698,11 @@ class VAELoader:
     #TODO: scale factor?
     def load_vae(self, vae_name):
         if vae_name in ["taesd", "taesdxl", "taesd3"]:
-            sd = self.load_taesd(vae_name)
+            vae = self.load_taesd(vae_name)
         else:
             vae_path = folder_paths.get_full_path("vae", vae_name)
-            sd = smartdiffusion.utils.load_torch_file(vae_path)
-        vae = smartdiffusion.sd.VAE(sd=sd)
+            vae = utils.load_torch_file(vae_path)
+        vae = sd.VAE(sd=vae)
         return (vae,)
 
 class ControlNetLoader:
@@ -717,7 +717,7 @@ class ControlNetLoader:
 
     def load_controlnet(self, control_net_name):
         controlnet_path = folder_paths.get_full_path("controlnet", control_net_name)
-        controlnet = smartdiffusion.controlnet.load_controlnet(controlnet_path)
+        controlnet = controlnet.load_controlnet(controlnet_path)
         return (controlnet,)
 
 class DiffControlNetLoader:
@@ -733,7 +733,7 @@ class DiffControlNetLoader:
 
     def load_controlnet(self, model, control_net_name):
         controlnet_path = folder_paths.get_full_path("controlnet", control_net_name)
-        controlnet = smartdiffusion.controlnet.load_controlnet(controlnet_path, model)
+        controlnet = controlnet.load_controlnet(controlnet_path, model)
         return (controlnet,)
 
 
@@ -825,15 +825,15 @@ class UNETLoader:
 
     CATEGORY = "advanced/loaders"
 
-    def load_unet(self, unet_name, weight_dtype):
+    def load_unet(self, unet_name, weight_dtype, path = "unet"):
         dtype = None
         if weight_dtype == "fp8_e4m3fn":
             dtype = torch.float8_e4m3fn
         elif weight_dtype == "fp8_e5m2":
             dtype = torch.float8_e5m2
 
-        unet_path = folder_paths.get_full_path("unet", unet_name)
-        model = smartdiffusion.sd.load_unet(unet_path, dtype=dtype)
+        unet_path = folder_paths.get_full_path(path, unet_name)
+        model = sd.load_unet(unet_path, dtype=dtype)
         return (model,)
 
 class CLIPLoader:
@@ -849,16 +849,16 @@ class CLIPLoader:
 
     def load_clip(self, clip_name, type="stable_diffusion"):
         if type == "stable_cascade":
-            clip_type = smartdiffusion.sd.CLIPType.STABLE_CASCADE
+            clip_type = sd.CLIPType.STABLE_CASCADE
         elif type == "sd3":
-            clip_type = smartdiffusion.sd.CLIPType.SD3
+            clip_type = sd.CLIPType.SD3
         elif type == "stable_audio":
-            clip_type = smartdiffusion.sd.CLIPType.STABLE_AUDIO
+            clip_type = sd.CLIPType.STABLE_AUDIO
         else:
-            clip_type = smartdiffusion.sd.CLIPType.STABLE_DIFFUSION
+            clip_type = sd.CLIPType.STABLE_DIFFUSION
 
         clip_path = folder_paths.get_full_path("clip", clip_name)
-        clip = smartdiffusion.sd.load_clip(ckpt_paths=[clip_path], embedding_directory=folder_paths.get_folder_paths("embeddings"), clip_type=clip_type)
+        clip = sd.load_clip(ckpt_paths=[clip_path], embedding_directory=folder_paths.get_folder_paths("embeddings"), clip_type=clip_type)
         return (clip,)
 
 class DualCLIPLoader:
@@ -876,16 +876,16 @@ class DualCLIPLoader:
     def load_clip(self, clip_name1, clip_name2, type):
         clip_path1 = folder_paths.get_full_path("clip", clip_name1)
         if type == "sdxl":
-            clip_type = smartdiffusion.sd.CLIPType.STABLE_DIFFUSION
+            clip_type = sd.CLIPType.STABLE_DIFFUSION
             clip_path2 = folder_paths.get_full_path("clip", clip_name2)
         elif type == "sd3":
-            clip_type = smartdiffusion.sd.CLIPType.SD3
+            clip_type = sd.CLIPType.SD3
             clip_path2 = folder_paths.get_full_path("t5", clip_name2)
         elif type == "flux":
-            clip_type = smartdiffusion.sd.CLIPType.FLUX
+            clip_type = sd.CLIPType.FLUX
             clip_path2 = folder_paths.get_full_path("t5", clip_name2)
 
-        clip = smartdiffusion.sd.load_clip(ckpt_paths=[clip_path1, clip_path2], embedding_directory=folder_paths.get_folder_paths("embeddings"), clip_type=clip_type)
+        clip = sd.load_clip(ckpt_paths=[clip_path1, clip_path2], embedding_directory=folder_paths.get_folder_paths("embeddings"), clip_type=clip_type)
         return (clip,)
 
 class CLIPVisionLoader:
@@ -900,7 +900,7 @@ class CLIPVisionLoader:
 
     def load_clip(self, clip_name):
         clip_path = folder_paths.get_full_path("clip_vision", clip_name)
-        clip_vision = smartdiffusion.clip_vision.load(clip_path)
+        clip_vision = clip_vision.load(clip_path)
         return (clip_vision,)
 
 class CLIPVisionEncode:
@@ -930,7 +930,7 @@ class StyleModelLoader:
 
     def load_style_model(self, style_model_name):
         style_model_path = folder_paths.get_full_path("style_models", style_model_name)
-        style_model = smartdiffusion.sd.load_style_model(style_model_path)
+        style_model = sd.load_style_model(style_model_path)
         return (style_model,)
 
 
@@ -995,7 +995,7 @@ class GLIGENLoader:
 
     def load_gligen(self, gligen_name):
         gligen_path = folder_paths.get_full_path("gligen", gligen_name)
-        gligen = smartdiffusion.sd.load_gligen(gligen_path)
+        gligen = sd.load_gligen(gligen_path)
         return (gligen,)
 
 class GLIGENTextBoxApply:
@@ -1031,7 +1031,7 @@ class GLIGENTextBoxApply:
 
 class EmptyLatentImage:
     def __init__(self):
-        self.device = smartdiffusion.model_management.intermediate_device()
+        self.device = model_management.intermediate_device()
 
     @classmethod
     def INPUT_TYPES(s):
@@ -1137,7 +1137,7 @@ class LatentUpscale:
                 width = max(64, width)
                 height = max(64, height)
 
-            s["samples"] = smartdiffusion.utils.common_upscale(samples["samples"], width // 8, height // 8, upscale_method, crop)
+            s["samples"] = utils.common_upscale(samples["samples"], width // 8, height // 8, upscale_method, crop)
         return (s,)
 
 class LatentUpscaleBy:
@@ -1156,7 +1156,7 @@ class LatentUpscaleBy:
         s = samples.copy()
         width = round(samples["samples"].shape[3] * scale_by)
         height = round(samples["samples"].shape[2] * scale_by)
-        s["samples"] = smartdiffusion.utils.common_upscale(samples["samples"], width, height, upscale_method, "disabled")
+        s["samples"] = utils.common_upscale(samples["samples"], width, height, upscale_method, "disabled")
         return (s,)
 
 class LatentRotate:
@@ -1272,7 +1272,7 @@ class LatentBlend:
 
         if samples1.shape != samples2.shape:
             samples2.permute(0, 3, 1, 2)
-            samples2 = smartdiffusion.utils.common_upscale(samples2, samples1.shape[3], samples1.shape[2], 'bicubic', crop='center')
+            samples2 = utils.common_upscale(samples2, samples1.shape[3], samples1.shape[2], 'bicubic', crop='center')
             samples2.permute(0, 2, 3, 1)
 
         samples_blended = self.blend_mode(samples1, samples2, blend_mode)
@@ -1337,21 +1337,21 @@ class SetLatentNoiseMask:
 
 def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0, disable_noise=False, start_step=None, last_step=None, force_full_denoise=False):
     latent_image = latent["samples"]
-    latent_image = smartdiffusion.sample.fix_empty_latent_channels(model, latent_image)
+    latent_image = sample.fix_empty_latent_channels(model, latent_image)
 
     if disable_noise:
         noise = torch.zeros(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout, device="cpu")
     else:
         batch_inds = latent["batch_index"] if "batch_index" in latent else None
-        noise = smartdiffusion.sample.prepare_noise(latent_image, seed, batch_inds)
+        noise = sample.prepare_noise(latent_image, seed, batch_inds)
 
     noise_mask = None
     if "noise_mask" in latent:
         noise_mask = latent["noise_mask"]
 
     callback = latent_preview.prepare_callback(model, steps)
-    disable_pbar = not smartdiffusion.utils.PROGRESS_BAR_ENABLED
-    samples = smartdiffusion.sample.sample(model, noise, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,
+    disable_pbar = not utils.PROGRESS_BAR_ENABLED
+    samples = sample.sample(model, noise, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,
                                   denoise=denoise, disable_noise=disable_noise, start_step=start_step, last_step=last_step,
                                   force_full_denoise=force_full_denoise, noise_mask=noise_mask, callback=callback, disable_pbar=disable_pbar, seed=seed)
     out = latent.copy()
@@ -1366,8 +1366,8 @@ class KSampler:
                     "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                     "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                     "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step":0.1, "round": 0.01}),
-                    "sampler_name": (smartdiffusion.samplers.KSampler.SAMPLERS, ),
-                    "scheduler": (smartdiffusion.samplers.KSampler.SCHEDULERS, ),
+                    "sampler_name": (samplers.KSampler.SAMPLERS, ),
+                    "scheduler": (samplers.KSampler.SCHEDULERS, ),
                     "positive": ("CONDITIONING", ),
                     "negative": ("CONDITIONING", ),
                     "latent_image": ("LATENT", ),
@@ -1392,8 +1392,8 @@ class KSamplerAdvanced:
                     "noise_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                     "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                     "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step":0.1, "round": 0.01}),
-                    "sampler_name": (smartdiffusion.samplers.KSampler.SAMPLERS, ),
-                    "scheduler": (smartdiffusion.samplers.KSampler.SCHEDULERS, ),
+                    "sampler_name": (samplers.KSampler.SAMPLERS, ),
+                    "scheduler": (samplers.KSampler.SCHEDULERS, ),
                     "positive": ("CONDITIONING", ),
                     "negative": ("CONDITIONING", ),
                     "latent_image": ("LATENT", ),
@@ -1628,7 +1628,7 @@ class ImageScale:
             elif height == 0:
                 height = max(1, round(samples.shape[2] * width / samples.shape[3]))
 
-            s = smartdiffusion.utils.common_upscale(samples, width, height, upscale_method, crop)
+            s = utils.common_upscale(samples, width, height, upscale_method, crop)
             s = s.movedim(1,-1)
         return (s,)
 
@@ -1648,7 +1648,7 @@ class ImageScaleBy:
         samples = image.movedim(-1,1)
         width = round(samples.shape[3] * scale_by)
         height = round(samples.shape[2] * scale_by)
-        s = smartdiffusion.utils.common_upscale(samples, width, height, upscale_method, "disabled")
+        s = utils.common_upscale(samples, width, height, upscale_method, "disabled")
         s = s.movedim(1,-1)
         return (s,)
 
@@ -1680,7 +1680,7 @@ class ImageBatch:
 
     def batch(self, image1, image2):
         if image1.shape[1:] != image2.shape[1:]:
-            image2 = smartdiffusion.utils.common_upscale(image2.movedim(-1,1), image1.shape[2], image1.shape[1], "bilinear", "center").movedim(1,-1)
+            image2 = utils.common_upscale(image2.movedim(-1,1), image1.shape[2], image1.shape[1], "bilinear", "center").movedim(1,-1)
         s = torch.cat((image1, image2), dim=0)
         return (s,)
 
