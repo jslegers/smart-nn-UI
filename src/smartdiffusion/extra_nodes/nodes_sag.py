@@ -1,6 +1,6 @@
 import torch
 from torch import einsum
-import torch.nn.functional as F
+from torch.nn.functional import interpolate, pad, conv2d
 import math
 
 from einops import rearrange, repeat
@@ -67,7 +67,7 @@ def create_blur_map(x0, attn, sigma=3.0, threshold=1.0):
         .type(attn.dtype)
     )
     # Upsample
-    mask = F.interpolate(mask, (lh, lw))
+    mask = interpolate(mask, (lh, lw))
 
     blurred = gaussian_blur_2d(x0, kernel_size=9, sigma=sigma)
     blurred = blurred * mask + x0 * (1 - mask)
@@ -88,8 +88,8 @@ def gaussian_blur_2d(img, kernel_size, sigma):
 
     padding = [kernel_size // 2, kernel_size // 2, kernel_size // 2, kernel_size // 2]
 
-    img = F.pad(img, padding, mode="reflect")
-    img = F.conv2d(img, kernel2d, groups=img.shape[-3])
+    img = pad(img, padding, mode="reflect")
+    img = conv2d(img, kernel2d, groups=img.shape[-3])
     return img
 
 class SelfAttentionGuidance:
