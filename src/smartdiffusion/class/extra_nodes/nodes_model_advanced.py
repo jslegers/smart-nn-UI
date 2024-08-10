@@ -175,8 +175,8 @@ class ModelSamplingFlux:
         return {"required": { "model": ("MODEL",),
                               "max_shift": ("FLOAT", {"default": 1.15, "min": 0.0, "max": 100.0, "step":0.01}),
                               "base_shift": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 100.0, "step":0.01}),
-                              "width": ("INT", {"default": 1024, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 8}),
-                              "height": ("INT", {"default": 1024, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 8}),
+                              "width": ("INT", {"default": 1024, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
+                              "height": ("INT", {"default": 1024, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
                               }}
 
     RETURN_TYPES = ("MODEL",)

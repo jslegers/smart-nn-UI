@@ -1,10 +1,10 @@
-import nodes
+from smartdiffusion import config
 import folder_paths
 
-MAX_RESOLUTION = nodes.MAX_RESOLUTION
+MAX_RESOLUTION = config.MAX_RESOLUTION
 
 
-class WebcamCapture(nodes.LoadImage):
+class WebcamCapture(config.LoadImage):
     @classmethod
     def INPUT_TYPES(s):
         return {

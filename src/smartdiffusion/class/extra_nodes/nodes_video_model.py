@@ -1,9 +1,9 @@
-import nodes
 import torch
 from smartdiffusion import utils
 from smartdiffusion import sd
-import folder_paths
-import extra_nodes.nodes_model_merging
+from smartdiffusion import folder_paths
+from smartdiffusion import config
+from smartdiffusion.class.extra_nodes import config_model_merging
 
 
 class ImageOnlyCheckpointLoader:
@@ -28,8 +28,8 @@ class SVD_img2vid_Conditioning:
         return {"required": { "clip_vision": ("CLIP_VISION",),
                               "init_image": ("IMAGE",),
                               "vae": ("VAE",),
-                              "width": ("INT", {"default": 1024, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 8}),
-                              "height": ("INT", {"default": 576, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 8}),
+                              "width": ("INT", {"default": 1024, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
+                              "height": ("INT", {"default": 576, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
                               "video_frames": ("INT", {"default": 14, "min": 1, "max": 4096}),
                               "motion_bucket_id": ("INT", {"default": 127, "min": 1, "max": 1023}),
                               "fps": ("INT", {"default": 6, "min": 1, "max": 1024}),
@@ -106,7 +106,7 @@ class VideoTriangleCFGGuidance:
         m.set_model_sampler_cfg_function(linear_cfg)
         return (m, )
 
-class ImageOnlyCheckpointSave(extra_nodes.nodes_model_merging.CheckpointSave):
+class ImageOnlyCheckpointSave(config_model_merging.CheckpointSave):
     CATEGORY = "_for_testing"
 
     @classmethod
@@ -118,7 +118,7 @@ class ImageOnlyCheckpointSave(extra_nodes.nodes_model_merging.CheckpointSave):
                 "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},}
 
     def save(self, model, clip_vision, vae, filename_prefix, prompt=None, extra_pnginfo=None):
-        extra_nodes.nodes_model_merging.save_checkpoint(model, clip_vision=clip_vision, vae=vae, filename_prefix=filename_prefix, output_dir=self.output_dir, prompt=prompt, extra_pnginfo=extra_pnginfo)
+        config_model_merging.save_checkpoint(model, clip_vision=clip_vision, vae=vae, filename_prefix=filename_prefix, output_dir=self.output_dir, prompt=prompt, extra_pnginfo=extra_pnginfo)
         return {}
 
 NODE_CLASS_MAPPINGS = {

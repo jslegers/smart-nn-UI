@@ -1,7 +1,7 @@
 import folder_paths
 from smartdiffusion import sd
 from smartdiffusion import model_management
-import nodes
+from smartdiffusion import config
 import torch
 
 class TripleCLIPLoader:
@@ -27,8 +27,8 @@ class EmptySD3LatentImage:
 
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "width": ("INT", {"default": 1024, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 16}),
-                              "height": ("INT", {"default": 1024, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 16}),
+        return {"required": { "width": ("INT", {"default": 1024, "min": 16, "max": config.MAX_RESOLUTION, "step": 16}),
+                              "height": ("INT", {"default": 1024, "min": 16, "max": config.MAX_RESOLUTION, "step": 16}),
                               "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096})}}
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "generate"
@@ -80,7 +80,7 @@ class CLIPTextEncodeSD3:
         return ([[cond, {"pooled_output": pooled}]], )
 
 
-class ControlNetApplySD3(nodes.ControlNetApplyAdvanced):
+class ControlNetApplySD3(config.ControlNetApplyAdvanced):
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {"positive": ("CONDITIONING", ),
