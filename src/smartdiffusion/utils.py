@@ -2,7 +2,7 @@ import torch
 import math
 import struct
 import smartdiffusion.checkpoint_pickle
-import safetensors.torch
+from safetensors.torch import load_file, save_file
 import numpy as np
 from PIL import Image
 import logging
@@ -12,7 +12,7 @@ def load_torch_file(ckpt, safe_load=False, device=None):
     if device is None:
         device = torch.device("cpu")
     if ckpt.lower().endswith(".safetensors") or ckpt.lower().endswith(".sft"):
-        sd = safetensors.torch.load_file(ckpt, device=device.type)
+        sd = load_file(ckpt, device=device.type)
     else:
         if safe_load:
             if not 'weights_only' in torch.load.__code__.co_varnames:
@@ -32,9 +32,9 @@ def load_torch_file(ckpt, safe_load=False, device=None):
 
 def save_torch_file(sd, ckpt, metadata=None):
     if metadata is not None:
-        safetensors.torch.save_file(sd, ckpt, metadata=metadata)
+        save_file(sd, ckpt, metadata=metadata)
     else:
-        safetensors.torch.save_file(sd, ckpt)
+        save_file(sd, ckpt)
 
 def calculate_parameters(sd, prefix=""):
     params = 0
@@ -537,7 +537,7 @@ def get_attr(obj, attr):
 def bislerp(samples, width, height):
     def slerp(b1, b2, r):
         '''slerps batches b1, b2 according to ratio r, batches should be flat e.g. NxC'''
-        
+
         c = b1.shape[-1]
 
         #norms
@@ -562,16 +562,16 @@ def bislerp(samples, width, height):
         res *= (b1_norms * (1.0-r) + b2_norms * r).expand(-1,c)
 
         #edge cases for same or polar opposites
-        res[dot > 1 - 1e-5] = b1[dot > 1 - 1e-5] 
+        res[dot > 1 - 1e-5] = b1[dot > 1 - 1e-5]
         res[dot < 1e-5 - 1] = (b1 * (1.0-r) + b2 * r)[dot < 1e-5 - 1]
         return res
-    
+
     def generate_bilinear_data(length_old, length_new, device):
         coords_1 = torch.arange(length_old, dtype=torch.float32, device=device).reshape((1,1,1,-1))
         coords_1 = torch.nn.functional.interpolate(coords_1, size=(1, length_new), mode="bilinear")
         ratios = coords_1 - coords_1.floor()
         coords_1 = coords_1.to(torch.int64)
-        
+
         coords_2 = torch.arange(length_old, dtype=torch.float32, device=device).reshape((1,1,1,-1)) + 1
         coords_2[:,:,:,-1] -= 1
         coords_2 = torch.nn.functional.interpolate(coords_2, size=(1, length_new), mode="bilinear")
@@ -582,7 +582,7 @@ def bislerp(samples, width, height):
     samples = samples.float()
     n,c,h,w = samples.shape
     h_new, w_new = (height, width)
-    
+
     #linear w
     ratios, coords_1, coords_2 = generate_bilinear_data(w, w_new, samples.device)
     coords_1 = coords_1.expand((n, c, h, -1))
