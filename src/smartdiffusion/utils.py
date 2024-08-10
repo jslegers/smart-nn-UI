@@ -12,7 +12,7 @@ def load_torch_file(ckpt, safe_load=False, device=None):
     if device is None:
         device = torch.device("cpu")
     if ckpt.lower().endswith(".safetensors") or ckpt.lower().endswith(".sft"):
-        sd = load_file(ckpt, device=device.type)
+        tf = load_file(ckpt, device=device.type)
     else:
         if safe_load:
             if not 'weights_only' in torch.load.__code__.co_varnames:
@@ -25,30 +25,30 @@ def load_torch_file(ckpt, safe_load=False, device=None):
         if "global_step" in pl_sd:
             logging.debug(f"Global Step: {pl_sd['global_step']}")
         if "state_dict" in pl_sd:
-            sd = pl_sd["state_dict"]
+            tf = pl_sd["state_dict"]
         else:
-            sd = pl_sd
-    return sd
+            tf = pl_sd
+    return tf
 
-def save_torch_file(sd, ckpt, metadata=None):
+def save_torch_file(tf, ckpt, metadata=None):
     if metadata is not None:
-        save_file(sd, ckpt, metadata=metadata)
+        save_file(tf, ckpt, metadata=metadata)
     else:
-        save_file(sd, ckpt)
+        save_file(tf, ckpt)
 
-def calculate_parameters(sd, prefix=""):
+def calculate_parameters(tf, prefix=""):
     params = 0
-    for k in sd.keys():
+    for k in tf.keys():
         if k.startswith(prefix):
-            w = sd[k]
+            w = tf[k]
             params += w.nelement()
     return params
 
-def weight_dtype(sd, prefix=""):
+def weight_dtype(tf, prefix=""):
     dtypes = {}
-    for k in sd.keys():
+    for k in tf.keys():
         if k.startswith(prefix):
-            w = sd[k]
+            w = tf[k]
             dtypes[w.dtype] = dtypes.get(w.dtype, 0) + 1
 
     if len(dtypes) == 0:
@@ -75,7 +75,7 @@ def state_dict_prefix_replace(state_dict, replace_prefix, filter_keys=False):
     return out
 
 
-def transformers_convert(sd, prefix_from, prefix_to, number):
+def transformers_convert(tf, prefix_from, prefix_to, number):
     keys_to_replace = {
         "{}positional_embedding": "{}embeddings.position_embedding.weight",
         "{}token_embedding.weight": "{}embeddings.token_embedding.weight",
@@ -85,8 +85,8 @@ def transformers_convert(sd, prefix_from, prefix_to, number):
 
     for k in keys_to_replace:
         x = k.format(prefix_from)
-        if x in sd:
-            sd[keys_to_replace[k].format(prefix_to)] = sd.pop(x)
+        if x in tf:
+            tf[keys_to_replace[k].format(prefix_to)] = tf.pop(x)
 
     resblock_to_replace = {
         "ln_1": "layer_norm1",
@@ -101,32 +101,32 @@ def transformers_convert(sd, prefix_from, prefix_to, number):
             for y in ["weight", "bias"]:
                 k = "{}transformer.resblocks.{}.{}.{}".format(prefix_from, resblock, x, y)
                 k_to = "{}encoder.layers.{}.{}.{}".format(prefix_to, resblock, resblock_to_replace[x], y)
-                if k in sd:
-                    sd[k_to] = sd.pop(k)
+                if k in tf:
+                    tf[k_to] = tf.pop(k)
 
         for y in ["weight", "bias"]:
             k_from = "{}transformer.resblocks.{}.attn.in_proj_{}".format(prefix_from, resblock, y)
-            if k_from in sd:
-                weights = sd.pop(k_from)
+            if k_from in tf:
+                weights = tf.pop(k_from)
                 shape_from = weights.shape[0] // 3
                 for x in range(3):
                     p = ["self_attn.q_proj", "self_attn.k_proj", "self_attn.v_proj"]
                     k_to = "{}encoder.layers.{}.{}.{}".format(prefix_to, resblock, p[x], y)
-                    sd[k_to] = weights[shape_from*x:shape_from*(x + 1)]
+                    tf[k_to] = weights[shape_from*x:shape_from*(x + 1)]
 
-    return sd
+    return tf
 
-def clip_text_transformers_convert(sd, prefix_from, prefix_to):
-    sd = transformers_convert(sd, prefix_from, "{}text_model.".format(prefix_to), 32)
+def clip_text_transformers_convert(tf, prefix_from, prefix_to):
+    tf = transformers_convert(tf, prefix_from, "{}text_model.".format(prefix_to), 32)
 
     tp = "{}text_projection.weight".format(prefix_from)
-    if tp in sd:
-        sd["{}text_projection.weight".format(prefix_to)] = sd.pop(tp)
+    if tp in tf:
+        tf["{}text_projection.weight".format(prefix_to)] = tf.pop(tp)
 
     tp = "{}text_projection".format(prefix_from)
-    if tp in sd:
-        sd["{}text_projection.weight".format(prefix_to)] = sd.pop(tp).transpose(0, 1).contiguous()
-    return sd
+    if tp in tf:
+        tf["{}text_projection.weight".format(prefix_to)] = tf.pop(tp).transpose(0, 1).contiguous()
+    return tf
 
 
 UNET_MAP_ATTENTIONS = {
