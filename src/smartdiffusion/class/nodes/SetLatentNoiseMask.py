@@ -1,11 +1,16 @@
 import torch
 
+
 class SetLatentNoiseMask:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "samples": ("LATENT",),
-                              "mask": ("MASK",),
-                              }}
+        return {
+            "required": {
+                "samples": ("LATENT",),
+                "mask": ("MASK",),
+            }
+        }
+
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "set_mask"
 

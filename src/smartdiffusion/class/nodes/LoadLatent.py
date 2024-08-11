@@ -3,16 +3,27 @@ import hashlib
 from safetensors.torch import load_file
 from smartdiffusion import folder_paths
 
+
 class LoadLatent:
     @classmethod
     def INPUT_TYPES(s):
         input_dir = folder_paths.get_input_directory()
-        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f)) and f.endswith(".latent")]
-        return {"required": {"latent": [sorted(files), ]}, }
+        files = [
+            f
+            for f in os.listdir(input_dir)
+            if os.path.isfile(os.path.join(input_dir, f)) and f.endswith(".latent")
+        ]
+        return {
+            "required": {
+                "latent": [
+                    sorted(files),
+                ]
+            },
+        }
 
     CATEGORY = "_for_testing"
 
-    RETURN_TYPES = ("LATENT", )
+    RETURN_TYPES = ("LATENT",)
     FUNCTION = "load"
 
     def load(self, latent):
@@ -22,13 +33,13 @@ class LoadLatent:
         if "latent_format_version_0" not in latent:
             multiplier = 1.0 / 0.18215
         samples = {"samples": latent["latent_tensor"].float() * multiplier}
-        return (samples, )
+        return (samples,)
 
     @classmethod
     def IS_CHANGED(s, latent):
         image_path = folder_paths.get_annotated_filepath(latent)
         m = hashlib.sha256()
-        with open(image_path, 'rb') as f:
+        with open(image_path, "rb") as f:
             m.update(f.read())
         return m.digest().hex()
 

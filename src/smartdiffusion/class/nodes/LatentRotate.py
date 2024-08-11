@@ -1,11 +1,16 @@
 import torch
 
+
 class LatentRotate:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "samples": ("LATENT",),
-                              "rotation": (["none", "90 degrees", "180 degrees", "270 degrees"],),
-                              }}
+        return {
+            "required": {
+                "samples": ("LATENT",),
+                "rotation": (["none", "90 degrees", "180 degrees", "270 degrees"],),
+            }
+        }
+
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "rotate"
 
@@ -20,6 +25,5 @@ class LatentRotate:
             rotate_by = 2
         elif rotation.startswith("270"):
             rotate_by = 3
-
         s["samples"] = torch.rot90(samples["samples"], k=rotate_by, dims=[3, 2])
         return (s,)

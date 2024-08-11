@@ -2,7 +2,7 @@ class ImageInvert:
 
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "image": ("IMAGE",)}}
+        return {"required": {"image": ("IMAGE",)}}
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "invert"

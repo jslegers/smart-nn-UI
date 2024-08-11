@@ -1,10 +1,13 @@
 from smartdiffusion import sd
 from smartdiffusion import folder_paths
 
+
 class GLIGENLoader:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "gligen_name": (folder_paths.get_filename_list("gligen"), )}}
+        return {
+            "required": {"gligen_name": (folder_paths.get_filename_list("gligen"),)}
+        }
 
     RETURN_TYPES = ("GLIGEN",)
     FUNCTION = "load_gligen"

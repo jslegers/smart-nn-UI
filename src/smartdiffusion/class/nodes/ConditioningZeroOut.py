@@ -1,9 +1,11 @@
 import torch
 
+
 class ConditioningZeroOut:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {"conditioning": ("CONDITIONING", )}}
+        return {"required": {"conditioning": ("CONDITIONING",)}}
+
     RETURN_TYPES = ("CONDITIONING",)
     FUNCTION = "zero_out"
 
@@ -18,4 +20,4 @@ class ConditioningZeroOut:
                 d["pooled_output"] = torch.zeros_like(pooled_output)
             n = [torch.zeros_like(t[0]), d]
             c.append(n)
-        return (c, )
+        return (c,)
