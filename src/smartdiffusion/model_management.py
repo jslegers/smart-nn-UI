@@ -117,10 +117,11 @@ def get_torch_device():
 
 def get_total_memory(dev=None, torch_total_too=False):
     global directml_enabled
+    global total_ram
     if dev is None:
         dev = get_torch_device()
     if hasattr(dev, "type") and (dev.type == "cpu" or dev.type == "mps"):
-        mem_total = psutil.virtual_memory().total
+        mem_total = total_ram
         mem_total_torch = mem_total
     else:
         if directml_enabled:
@@ -142,12 +143,20 @@ def get_total_memory(dev=None, torch_total_too=False):
     else:
         return mem_total
 
-
-total_vram = get_total_memory(get_torch_device()) / (1024 * 1024)
-total_ram = psutil.virtual_memory().total / (1024 * 1024)
+total_vram = get_total_memory(get_torch_device())
+total_ram = psutil.virtual_memory().total
 logging.info(
-    "Total VRAM {:0.0f} MB, total RAM {:0.0f} MB".format(total_vram, total_ram)
+    "Total VRAM {:0.0f} MB, total RAM {:0.0f} MB".format(
+        total_vram / (1024 * 1024),
+        total_ram / (1024 * 1024)
+    )
 )
+
+if total_ram < 5 * (1024 * 1024) :
+    set_vram_to = VRAMState.LOW_VRAM
+    lowvram_available = True
+if total_ram > 15 * (1024 * 1024) :
+    vram_state = VRAMState.HIGH_VRAM
 
 try:
     logging.info("pytorch version: {}".format(torch.version.__version__))
@@ -241,7 +250,7 @@ if args.lowvram:
     lowvram_available = True
 elif args.novram:
     set_vram_to = VRAMState.NO_VRAM
-elif args.highvram or args.gpu_only or total_vram >= 16000:
+elif args.highvram or args.gpu_only:
     vram_state = VRAMState.HIGH_VRAM
 FORCE_FP32 = False
 FORCE_FP16 = False
@@ -671,7 +680,8 @@ def unet_inital_load_device(parameters, dtype):
 
 
 def maximum_vram_for_weights(device=None):
-    return get_total_memory(device) * 0.88 - minimum_inference_memory()
+    global total_vram
+    return total_vram * 0.88 - minimum_inference_memory()
 
 
 def unet_dtype(
