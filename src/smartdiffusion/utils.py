@@ -10,7 +10,10 @@ from torch import (
     cat,
     empty,
     norm,
-    device as t_device
+    zeros,
+    device as t_device,
+    inference_mode,
+    ones_like
 )
 from torch.nn import Parameter
 from torch.nn.functional import interpolate
@@ -658,15 +661,15 @@ def common_upscale(samples, width, height, upscale_method, crop):
 def get_tiled_scale_steps(width, height, tile_x, tile_y, overlap):
     return ceil((height / (tile_y - overlap))) * ceil((width / (tile_x - overlap)))
 
-@torch.inference_mode()
+@inference_mode()
 def tiled_scale_multidim(samples, function, tile=(64, 64), overlap = 8, upscale_amount = 4, out_channels = 3, output_device="cpu", pbar = None):
     dims = len(tile)
     output = empty([samples.shape[0], out_channels] + list(map(lambda a: round(a * upscale_amount), samples.shape[2:])), device=output_device)
 
     for b in range(samples.shape[0]):
         s = samples[b:b+1]
-        out = torch.zeros([s.shape[0], out_channels] + list(map(lambda a: round(a * upscale_amount), s.shape[2:])), device=output_device)
-        out_div = torch.zeros([s.shape[0], out_channels] + list(map(lambda a: round(a * upscale_amount), s.shape[2:])), device=output_device)
+        out = zeros([s.shape[0], out_channels] + list(map(lambda a: round(a * upscale_amount), s.shape[2:])), device=output_device)
+        out_div = zeros([s.shape[0], out_channels] + list(map(lambda a: round(a * upscale_amount), s.shape[2:])), device=output_device)
 
         for it in itertools.product(*map(lambda a: range(0, a[0], a[1] - overlap), zip(s.shape[2:], tile))):
             s_in = s
@@ -678,7 +681,7 @@ def tiled_scale_multidim(samples, function, tile=(64, 64), overlap = 8, upscale_
                 s_in = s_in.narrow(d + 2, pos, l)
                 upscaled.append(round(pos * upscale_amount))
             ps = function(s_in).to(output_device)
-            mask = torch.ones_like(ps)
+            mask = ones_like(ps)
             feather = round(overlap * upscale_amount)
             for t in range(feather):
                 for d in range(2, dims + 2):
