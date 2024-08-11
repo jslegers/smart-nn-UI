@@ -1,18 +1,17 @@
 # code adapted from: https://github.com/Stability-AI/stable-audio-tools
 
 
-import torch
-from torch import nn
+from torch import nn, log, randn_like, sin, zeros, ones, exp
 from typing import Literal, Dict, Any
-import math
+from math import ceil
 from smartdiffusion.ops import disable_weight_init
 
 
 def vae_sample(mean, scale):
     stdev = nn.functional.softplus(scale) + 1e-4
     var = stdev * stdev
-    logvar = torch.log(var)
-    latents = torch.randn_like(mean) * stdev + mean
+    logvar = log(var)
+    latents = randn_like(mean) * stdev + mean
 
     kl = (mean * mean + var - logvar - 1).sum(1).mean()
 
@@ -43,7 +42,7 @@ class VAEBottleneck(nn.Module):
 
 
 def snake_beta(x, alpha, beta):
-    return x + (1.0 / (beta + 0.000000001)) * pow(torch.sin(x * alpha), 2)
+    return x + (1.0 / (beta + 0.000000001)) * pow(sin(x * alpha), 2)
 
 
 # Adapted from https://github.com/NVIDIA/BigVGAN/blob/main/activations.py under MIT license
@@ -61,11 +60,11 @@ class SnakeBeta(nn.Module):
 
         self.alpha_logscale = alpha_logscale
         if self.alpha_logscale:  # log scale alphas initialized to zeros
-            self.alpha = nn.Parameter(torch.zeros(in_features) * alpha)
-            self.beta = nn.Parameter(torch.zeros(in_features) * alpha)
+            self.alpha = nn.Parameter(zeros(in_features) * alpha)
+            self.beta = nn.Parameter(zeros(in_features) * alpha)
         else:  # linear scale alphas initialized to ones
-            self.alpha = nn.Parameter(torch.ones(in_features) * alpha)
-            self.beta = nn.Parameter(torch.ones(in_features) * alpha)
+            self.alpha = nn.Parameter(ones(in_features) * alpha)
+            self.beta = nn.Parameter(ones(in_features) * alpha)
         # self.alpha.requires_grad = alpha_trainable
         # self.beta.requires_grad = alpha_trainable
 
@@ -77,29 +76,31 @@ class SnakeBeta(nn.Module):
         )  # line up with x to [B, C, T]
         beta = self.beta.unsqueeze(0).unsqueeze(-1).to(x.device)
         if self.alpha_logscale:
-            alpha = torch.exp(alpha)
-            beta = torch.exp(beta)
+            alpha = exp(alpha)
+            beta = exp(beta)
         x = snake_beta(x, alpha, beta)
 
         return x
 
 
-def WNdisable_weight_init.Conv1d(*args, **kwargs):
+def WNConv1d(*args, **kwargs):
     try:
-        return torch.nn.utils.parametrizations.weight_norm(disable_weight_init.Conv1d(*args, **kwargs))
+        return nn.utils.parametrizations.weight_norm(
+            disable_weight_init.Conv1d(*args, **kwargs)
+        )
     except:
-        return torch.nn.utils.weight_norm(
+        return nn.utils.weight_norm(
             disable_weight_init.Conv1d(*args, **kwargs)
         )  # support pytorch 2.1 and older
 
 
-def WNdisable_weight_init.ConvTranspose1d(*args, **kwargs):
+def WNConvTranspose1d(*args, **kwargs):
     try:
-        return torch.nn.utils.parametrizations.weight_norm(
+        return nn.utils.parametrizations.weight_norm(
             disable_weight_init.ConvTranspose1d(*args, **kwargs)
         )
     except:
-        return torch.nn.utils.weight_norm(
+        return nn.utils.weight_norm(
             disable_weight_init.ConvTranspose1d(*args, **kwargs)
         )  # support pytorch 2.1 and older
 
@@ -108,11 +109,11 @@ def get_activation(
     activation: Literal["elu", "snake", "none"], antialias=False, channels=None
 ) -> nn.Module:
     if activation == "elu":
-        act = torch.nn.ELU()
+        act = nn.ELU()
     elif activation == "snake":
         act = SnakeBeta(channels)
     elif activation == "none":
-        act = torch.nn.Identity()
+        act = nn.Identity()
     else:
         raise ValueError(f"Unknown activation {activation}")
     if antialias:
@@ -141,7 +142,7 @@ class ResidualUnit(nn.Module):
                 antialias=antialias_activation,
                 channels=out_channels,
             ),
-            WNdisable_weight_init.Conv1d(
+            WNConv1d(
                 in_channels=in_channels,
                 out_channels=out_channels,
                 kernel_size=7,
@@ -153,7 +154,7 @@ class ResidualUnit(nn.Module):
                 antialias=antialias_activation,
                 channels=out_channels,
             ),
-            WNdisable_weight_init.Conv1d(
+            WNConv1d(
                 in_channels=out_channels, out_channels=out_channels, kernel_size=1
             ),
         )
@@ -203,12 +204,12 @@ class EncoderBlock(nn.Module):
                 antialias=antialias_activation,
                 channels=in_channels,
             ),
-            WNdisable_weight_init.Conv1d(
+            WNConv1d(
                 in_channels=in_channels,
                 out_channels=out_channels,
                 kernel_size=2 * stride,
                 stride=stride,
-                padding=math.ceil(stride / 2),
+                padding=ceil(stride / 2),
             ),
         )
 
@@ -231,7 +232,7 @@ class DecoderBlock(nn.Module):
         if use_nearest_upsample:
             upsample_layer = nn.Sequential(
                 nn.Upsample(scale_factor=stride, mode="nearest"),
-                WNdisable_weight_init.Conv1d(
+                WNConv1d(
                     in_channels=in_channels,
                     out_channels=out_channels,
                     kernel_size=2 * stride,
@@ -241,12 +242,12 @@ class DecoderBlock(nn.Module):
                 ),
             )
         else:
-            upsample_layer = WNdisable_weight_init.ConvTranspose1d(
+            upsample_layer = WNConvTranspose1d(
                 in_channels=in_channels,
                 out_channels=out_channels,
                 kernel_size=2 * stride,
                 stride=stride,
-                padding=math.ceil(stride / 2),
+                padding=ceil(stride / 2),
             )
         self.layers = nn.Sequential(
             get_activation(
@@ -297,7 +298,7 @@ class OobleckEncoder(nn.Module):
         self.depth = len(c_mults)
 
         layers = [
-            WNdisable_weight_init.Conv1d(
+            WNConv1d(
                 in_channels=in_channels,
                 out_channels=c_mults[0] * channels,
                 kernel_size=7,
@@ -320,7 +321,7 @@ class OobleckEncoder(nn.Module):
                 antialias=antialias_activation,
                 channels=c_mults[-1] * channels,
             ),
-            WNdisable_weight_init.Conv1d(
+            WNConv1d(
                 in_channels=c_mults[-1] * channels,
                 out_channels=latent_dim,
                 kernel_size=3,
@@ -354,7 +355,7 @@ class OobleckDecoder(nn.Module):
         self.depth = len(c_mults)
 
         layers = [
-            WNdisable_weight_init.Conv1d(
+            WNConv1d(
                 in_channels=latent_dim,
                 out_channels=c_mults[-1] * channels,
                 kernel_size=7,
@@ -379,7 +380,7 @@ class OobleckDecoder(nn.Module):
                 antialias=antialias_activation,
                 channels=c_mults[0] * channels,
             ),
-            WNdisable_weight_init.Conv1d(
+            WNConv1d(
                 in_channels=c_mults[0] * channels,
                 out_channels=out_channels,
                 kernel_size=7,
