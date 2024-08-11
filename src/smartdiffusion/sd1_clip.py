@@ -1,7 +1,7 @@
 import os
 
 from transformers import CLIPTokenizer
-import smartdiffusion.ops
+from smartdiffusion.ops import manual_cast
 import torch
 import traceback
 import zipfile
@@ -94,7 +94,7 @@ class SDClipModel(torch.nn.Module, ClipTokenWeightEncoder):
         with open(textmodel_json_config) as f:
             config = json.load(f)
 
-        self.operations = smartdiffusion.ops.manual_cast
+        self.operations = manual_cast
         self.transformer = model_class(config, dtype, device, self.operations)
         self.num_layers = self.transformer.num_layers
 

@@ -13,11 +13,10 @@ from smartdiffusion import model_management
 
 if model_management.xformers_enabled():
     import xformers
-    import xformers.ops
+    from xformers.ops import memory_efficient_attention
 
 from smartdiffusion.cli_args import args
-import smartdiffusion.ops
-ops = smartdiffusion.ops.disable_weight_init
+from smartdiffusion.ops import disable_weight_init
 
 FORCE_UPCAST_ATTENTION_DTYPE = model_management.force_upcast_attention_dtype()
 
@@ -55,7 +54,7 @@ def init_(tensor):
 
 # feedforward
 class GEGLU(nn.Module):
-    def __init__(self, dim_in, dim_out, dtype=None, device=None, operations=ops):
+    def __init__(self, dim_in, dim_out, dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
         self.proj = operations.Linear(dim_in, dim_out * 2, dtype=dtype, device=device)
 
@@ -65,7 +64,7 @@ class GEGLU(nn.Module):
 
 
 class FeedForward(nn.Module):
-    def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0., dtype=None, device=None, operations=ops):
+    def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0., dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
         inner_dim = int(dim * mult)
         dim_out = default(dim_out, dim)
@@ -377,7 +376,7 @@ def attention_xformers(q, k, v, heads, mask=None, attn_precision=None, skip_resh
         mask_out[:, :, :mask.shape[-1]] = mask
         mask = mask_out[:, :, :mask.shape[-1]]
 
-    out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=mask)
+    out = memory_efficient_attention(q, k, v, attn_bias=mask)
 
     if skip_reshape:
         out = (
@@ -446,7 +445,7 @@ def optimized_attention_for_device(device, mask=False, small_input=False):
 
 
 class CrossAttention(nn.Module):
-    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0., attn_precision=None, dtype=None, device=None, operations=ops):
+    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0., attn_precision=None, dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
         inner_dim = dim_head * heads
         context_dim = default(context_dim, query_dim)
@@ -480,7 +479,7 @@ class CrossAttention(nn.Module):
 
 class BasicTransformerBlock(nn.Module):
     def __init__(self, dim, n_heads, d_head, dropout=0., context_dim=None, gated_ff=True, checkpoint=True, ff_in=False, inner_dim=None,
-                 disable_self_attn=False, disable_temporal_crossattention=False, switch_temporal_ca_to_sa=False, attn_precision=None, dtype=None, device=None, operations=ops):
+                 disable_self_attn=False, disable_temporal_crossattention=False, switch_temporal_ca_to_sa=False, attn_precision=None, dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
 
         self.ff_in = ff_in or inner_dim is not None
@@ -647,7 +646,7 @@ class SpatialTransformer(nn.Module):
     def __init__(self, in_channels, n_heads, d_head,
                  depth=1, dropout=0., context_dim=None,
                  disable_self_attn=False, use_linear=False,
-                 use_checkpoint=True, attn_precision=None, dtype=None, device=None, operations=ops):
+                 use_checkpoint=True, attn_precision=None, dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
         if exists(context_dim) and not isinstance(context_dim, list):
             context_dim = [context_dim] * depth
@@ -722,7 +721,7 @@ class SpatialVideoTransformer(SpatialTransformer):
         disable_temporal_crossattention=False,
         max_time_embed_period: int = 10000,
         attn_precision=None,
-        dtype=None, device=None, operations=ops
+        dtype=None, device=None, operations=disable_weight_init
     ):
         super().__init__(
             in_channels,

@@ -1,15 +1,14 @@
 import logging
-import math
 from typing import Dict, Optional
 
 import numpy as np
 import torch
 import torch.nn as nn
-from .. import attention
+from smartdiffusion.ldm.modules import attention
 from einops import rearrange, repeat
-from .util import timestep_embedding
-import smartdiffusion.ops
-import smartdiffusion.ldm.common_dit
+from smartdiffusion.ldm.modules.diffusion.modules.util import timestep_embedding
+from smartdiffusion.ops import cast_to_input
+from smartdiffusion.ldm.common_dit import pad_to_patch_size
 
 def default(x, y):
     if x is not None:
@@ -112,7 +111,7 @@ class PatchEmbed(nn.Module):
         #             f"Input width ({W}) should be divisible by patch size ({self.patch_size[1]})."
         #         )
         if self.dynamic_img_pad:
-            x = smartdiffusion.ldm.common_dit.pad_to_patch_size(x, self.patch_size, padding_mode=self.padding_mode)
+            x = pad_to_patch_size(x, self.patch_size, padding_mode=self.padding_mode)
         x = self.proj(x)
         if self.flatten:
             x = x.flatten(2).transpose(1, 2)  # NCHW -> NLC
@@ -926,7 +925,7 @@ class MMDiT(nn.Module):
             context = self.context_processor(context)
 
         hw = x.shape[-2:]
-        x = self.x_embedder(x) + smartdiffusion.ops.cast_to_input(self.cropped_pos_embed(hw, device=x.device), x)
+        x = self.x_embedder(x) + cast_to_input(self.cropped_pos_embed(hw, device=x.device), x)
         c = self.t_embedder(t, dtype=x.dtype)  # (N, D)
         if y is not None and self.y_embedder is not None:
             y = self.y_embedder(y)  # (N, D)
@@ -952,4 +951,3 @@ class OpenAISignatureMMDITWrapper(MMDiT):
         **kwargs,
     ) -> torch.Tensor:
         return super().forward(x, timesteps, context=context, y=y, control=control)
-

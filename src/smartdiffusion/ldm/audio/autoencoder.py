@@ -5,7 +5,7 @@ import torch
 from torch import nn
 from typing import Literal, Dict, Any
 import math
-from smartdiffusion.ops.disable_weight_init import Conv1d, ConvTranspose1d
+from smartdiffusion.ops import disable_weight_init
 
 
 def vae_sample(mean, scale):
@@ -84,23 +84,23 @@ class SnakeBeta(nn.Module):
         return x
 
 
-def WNConv1d(*args, **kwargs):
+def WNdisable_weight_init.Conv1d(*args, **kwargs):
     try:
-        return torch.nn.utils.parametrizations.weight_norm(Conv1d(*args, **kwargs))
+        return torch.nn.utils.parametrizations.weight_norm(disable_weight_init.Conv1d(*args, **kwargs))
     except:
         return torch.nn.utils.weight_norm(
-            Conv1d(*args, **kwargs)
+            disable_weight_init.Conv1d(*args, **kwargs)
         )  # support pytorch 2.1 and older
 
 
-def WNConvTranspose1d(*args, **kwargs):
+def WNdisable_weight_init.ConvTranspose1d(*args, **kwargs):
     try:
         return torch.nn.utils.parametrizations.weight_norm(
-            ConvTranspose1d(*args, **kwargs)
+            disable_weight_init.ConvTranspose1d(*args, **kwargs)
         )
     except:
         return torch.nn.utils.weight_norm(
-            ConvTranspose1d(*args, **kwargs)
+            disable_weight_init.ConvTranspose1d(*args, **kwargs)
         )  # support pytorch 2.1 and older
 
 
@@ -141,7 +141,7 @@ class ResidualUnit(nn.Module):
                 antialias=antialias_activation,
                 channels=out_channels,
             ),
-            WNConv1d(
+            WNdisable_weight_init.Conv1d(
                 in_channels=in_channels,
                 out_channels=out_channels,
                 kernel_size=7,
@@ -153,7 +153,7 @@ class ResidualUnit(nn.Module):
                 antialias=antialias_activation,
                 channels=out_channels,
             ),
-            WNConv1d(
+            WNdisable_weight_init.Conv1d(
                 in_channels=out_channels, out_channels=out_channels, kernel_size=1
             ),
         )
@@ -203,7 +203,7 @@ class EncoderBlock(nn.Module):
                 antialias=antialias_activation,
                 channels=in_channels,
             ),
-            WNConv1d(
+            WNdisable_weight_init.Conv1d(
                 in_channels=in_channels,
                 out_channels=out_channels,
                 kernel_size=2 * stride,
@@ -231,7 +231,7 @@ class DecoderBlock(nn.Module):
         if use_nearest_upsample:
             upsample_layer = nn.Sequential(
                 nn.Upsample(scale_factor=stride, mode="nearest"),
-                WNConv1d(
+                WNdisable_weight_init.Conv1d(
                     in_channels=in_channels,
                     out_channels=out_channels,
                     kernel_size=2 * stride,
@@ -241,7 +241,7 @@ class DecoderBlock(nn.Module):
                 ),
             )
         else:
-            upsample_layer = WNConvTranspose1d(
+            upsample_layer = WNdisable_weight_init.ConvTranspose1d(
                 in_channels=in_channels,
                 out_channels=out_channels,
                 kernel_size=2 * stride,
@@ -297,7 +297,7 @@ class OobleckEncoder(nn.Module):
         self.depth = len(c_mults)
 
         layers = [
-            WNConv1d(
+            WNdisable_weight_init.Conv1d(
                 in_channels=in_channels,
                 out_channels=c_mults[0] * channels,
                 kernel_size=7,
@@ -320,7 +320,7 @@ class OobleckEncoder(nn.Module):
                 antialias=antialias_activation,
                 channels=c_mults[-1] * channels,
             ),
-            WNConv1d(
+            WNdisable_weight_init.Conv1d(
                 in_channels=c_mults[-1] * channels,
                 out_channels=latent_dim,
                 kernel_size=3,
@@ -354,7 +354,7 @@ class OobleckDecoder(nn.Module):
         self.depth = len(c_mults)
 
         layers = [
-            WNConv1d(
+            WNdisable_weight_init.Conv1d(
                 in_channels=latent_dim,
                 out_channels=c_mults[-1] * channels,
                 kernel_size=7,
@@ -379,7 +379,7 @@ class OobleckDecoder(nn.Module):
                 antialias=antialias_activation,
                 channels=c_mults[0] * channels,
             ),
-            WNConv1d(
+            WNdisable_weight_init.Conv1d(
                 in_channels=c_mults[0] * channels,
                 out_channels=out_channels,
                 kernel_size=7,

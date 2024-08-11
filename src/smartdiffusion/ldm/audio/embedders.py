@@ -6,8 +6,8 @@ import torch.nn as nn
 from torch import Tensor, einsum
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
 from einops import rearrange
-import math
-from smartdiffusion.ops.manual_cast import Linear
+from math import pi
+from smartdiffusion.ops import manual_cast
 
 
 class LearnedPositionalEmbedding(nn.Module):
@@ -30,7 +30,7 @@ class LearnedPositionalEmbedding(nn.Module):
 def TimePositionalEmbedding(dim: int, out_features: int) -> nn.Module:
     return nn.Sequential(
         LearnedPositionalEmbedding(dim),
-        Linear(
+        manual_cast.Linear(
             in_features=dim + 1, out_features=out_features
         ),
     )
@@ -66,7 +66,7 @@ class Conditioner(nn.Module):
         self.dim = dim
         self.output_dim = output_dim
         self.proj_out = (
-            nn.Linear(dim, output_dim)
+            nn.manual_cast.Linear(dim, output_dim)
             if (dim != output_dim or project_out)
             else nn.Identity()
         )

@@ -3,7 +3,7 @@ from torch import nn
 from smartdiffusion.ldm.modules.attention import CrossAttention
 from inspect import isfunction
 from smartdiffusion import ops
-from smartdiffusion.ops.manual_cast import Linear, LayerNorm
+from smartdiffusion.ops import manual_cast
 
 
 def exists(val):
@@ -26,7 +26,7 @@ def default(val, d):
 class GEGLU(nn.Module):
     def __init__(self, dim_in, dim_out):
         super().__init__()
-        self.proj = Linear(dim_in, dim_out * 2)
+        self.proj = manual_cast.Linear(dim_in, dim_out * 2)
 
     def forward(self, x):
         x, gate = self.proj(x).chunk(2, dim=-1)
@@ -39,13 +39,13 @@ class FeedForward(nn.Module):
         inner_dim = int(dim * mult)
         dim_out = default(dim_out, dim)
         project_in = (
-            nn.Sequential(Linear(dim, inner_dim), nn.GELU())
+            nn.Sequential(manual_cast.Linear(dim, inner_dim), nn.GELU())
             if not glu
             else GEGLU(dim, inner_dim)
         )
 
         self.net = nn.Sequential(
-            project_in, nn.Dropout(dropout), Linear(inner_dim, dim_out)
+            project_in, nn.Dropout(dropout), manual_cast.Linear(inner_dim, dim_out)
         )
 
     def forward(self, x):
@@ -65,8 +65,8 @@ class GatedCrossAttentionDense(nn.Module):
         )
         self.ff = FeedForward(query_dim, glu=True)
 
-        self.norm1 = LayerNorm(query_dim)
-        self.norm2 = LayerNorm(query_dim)
+        self.norm1 = manual_cast.LayerNorm(query_dim)
+        self.norm2 = manual_cast.LayerNorm(query_dim)
 
         self.register_parameter("alpha_attn", nn.Parameter(torch.tensor(0.0)))
         self.register_parameter("alpha_dense", nn.Parameter(torch.tensor(0.0)))
@@ -94,7 +94,7 @@ class GatedSelfAttentionDense(nn.Module):
         # we need a linear projection since we need cat visual feature and obj
         # feature
 
-        self.linear = Linear(context_dim, query_dim)
+        self.linear = manual_cast.Linear(context_dim, query_dim)
 
         self.attn = CrossAttention(
             query_dim=query_dim,
@@ -105,8 +105,8 @@ class GatedSelfAttentionDense(nn.Module):
         )
         self.ff = FeedForward(query_dim, glu=True)
 
-        self.norm1 = LayerNorm(query_dim)
-        self.norm2 = LayerNorm(query_dim)
+        self.norm1 = manual_cast.LayerNorm(query_dim)
+        self.norm2 = manual_cast.LayerNorm(query_dim)
 
         self.register_parameter("alpha_attn", nn.Parameter(torch.tensor(0.0)))
         self.register_parameter("alpha_dense", nn.Parameter(torch.tensor(0.0)))
@@ -140,15 +140,15 @@ class GatedSelfAttentionDense2(nn.Module):
         # we need a linear projection since we need cat visual feature and obj
         # feature
 
-        self.linear = Linear(context_dim, query_dim)
+        self.linear = manual_cast.Linear(context_dim, query_dim)
 
         self.attn = CrossAttention(
             query_dim=query_dim, context_dim=query_dim, dim_head=d_head, operations=ops
         )
         self.ff = FeedForward(query_dim, glu=True)
 
-        self.norm1 = LayerNorm(query_dim)
-        self.norm2 = LayerNorm(query_dim)
+        self.norm1 = manual_cast.LayerNorm(query_dim)
+        self.norm2 = manual_cast.LayerNorm(query_dim)
 
         self.register_parameter("alpha_attn", nn.Parameter(torch.tensor(0.0)))
         self.register_parameter("alpha_dense", nn.Parameter(torch.tensor(0.0)))
@@ -217,11 +217,11 @@ class PositionNet(nn.Module):
         self.position_dim = fourier_freqs * 2 * 4  # 2 is sin&cos, 4 is xyxy
 
         self.linears = nn.Sequential(
-            Linear(self.in_dim + self.position_dim, 512),
+            manual_cast.Linear(self.in_dim + self.position_dim, 512),
             nn.SiLU(),
-            Linear(512, 512),
+            manual_cast.Linear(512, 512),
             nn.SiLU(),
-            Linear(512, out_dim),
+            manual_cast.Linear(512, out_dim),
         )
 
         self.null_positive_feature = torch.nn.Parameter(torch.zeros([self.in_dim]))

@@ -7,12 +7,11 @@ from typing import Optional, Any
 import logging
 
 from smartdiffusion import model_management
-import smartdiffusion.ops
-ops = smartdiffusion.ops.disable_weight_init
+from smartdiffusion.ops import disable_weight_init
 
 if model_management.xformers_enabled_vae():
     import xformers
-    import xformers.ops
+    from xformers.ops import memory_efficient_attention
 
 def get_timestep_embedding(timesteps, embedding_dim):
     """
@@ -41,7 +40,7 @@ def nonlinearity(x):
 
 
 def Normalize(in_channels, num_groups=32):
-    return ops.GroupNorm(num_groups=num_groups, num_channels=in_channels, eps=1e-6, affine=True)
+    return disable_weight_init.GroupNorm(num_groups=num_groups, num_channels=in_channels, eps=1e-6, affine=True)
 
 
 class Upsample(nn.Module):
@@ -49,7 +48,7 @@ class Upsample(nn.Module):
         super().__init__()
         self.with_conv = with_conv
         if self.with_conv:
-            self.conv = ops.Conv2d(in_channels,
+            self.conv = disable_weight_init.Conv2d(in_channels,
                                         in_channels,
                                         kernel_size=3,
                                         stride=1,
@@ -79,7 +78,7 @@ class Downsample(nn.Module):
         self.with_conv = with_conv
         if self.with_conv:
             # no asymmetric padding in torch conv, must do it ourselves
-            self.conv = ops.Conv2d(in_channels,
+            self.conv = disable_weight_init.Conv2d(in_channels,
                                         in_channels,
                                         kernel_size=3,
                                         stride=2,
@@ -106,30 +105,30 @@ class ResnetBlock(nn.Module):
 
         self.swish = torch.nn.SiLU(inplace=True)
         self.norm1 = Normalize(in_channels)
-        self.conv1 = ops.Conv2d(in_channels,
+        self.conv1 = disable_weight_init.Conv2d(in_channels,
                                      out_channels,
                                      kernel_size=3,
                                      stride=1,
                                      padding=1)
         if temb_channels > 0:
-            self.temb_proj = ops.Linear(temb_channels,
+            self.temb_proj = disable_weight_init.Linear(temb_channels,
                                              out_channels)
         self.norm2 = Normalize(out_channels)
         self.dropout = torch.nn.Dropout(dropout, inplace=True)
-        self.conv2 = ops.Conv2d(out_channels,
+        self.conv2 = disable_weight_init.Conv2d(out_channels,
                                      out_channels,
                                      kernel_size=3,
                                      stride=1,
                                      padding=1)
         if self.in_channels != self.out_channels:
             if self.use_conv_shortcut:
-                self.conv_shortcut = ops.Conv2d(in_channels,
+                self.conv_shortcut = disable_weight_init.Conv2d(in_channels,
                                                      out_channels,
                                                      kernel_size=3,
                                                      stride=1,
                                                      padding=1)
             else:
-                self.nin_shortcut = ops.Conv2d(in_channels,
+                self.nin_shortcut = disable_weight_init.Conv2d(in_channels,
                                                     out_channels,
                                                     kernel_size=1,
                                                     stride=1,
@@ -217,7 +216,7 @@ def xformers_attention(q, k, v):
     )
 
     try:
-        out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=None)
+        out = memory_efficient_attention(q, k, v, attn_bias=None)
         out = out.transpose(1, 2).reshape(B, C, H, W)
     except NotImplementedError as e:
         out = slice_attention(q.view(B, -1, C), k.view(B, -1, C).transpose(1, 2), v.view(B, -1, C).transpose(1, 2)).reshape(B, C, H, W)
@@ -246,22 +245,22 @@ class AttnBlock(nn.Module):
         self.in_channels = in_channels
 
         self.norm = Normalize(in_channels)
-        self.q = ops.Conv2d(in_channels,
+        self.q = disable_weight_init.Conv2d(in_channels,
                                  in_channels,
                                  kernel_size=1,
                                  stride=1,
                                  padding=0)
-        self.k = ops.Conv2d(in_channels,
+        self.k = disable_weight_init.Conv2d(in_channels,
                                  in_channels,
                                  kernel_size=1,
                                  stride=1,
                                  padding=0)
-        self.v = ops.Conv2d(in_channels,
+        self.v = disable_weight_init.Conv2d(in_channels,
                                  in_channels,
                                  kernel_size=1,
                                  stride=1,
                                  padding=0)
-        self.proj_out = ops.Conv2d(in_channels,
+        self.proj_out = disable_weight_init.Conv2d(in_channels,
                                         in_channels,
                                         kernel_size=1,
                                         stride=1,
@@ -313,14 +312,14 @@ class Model(nn.Module):
             # timestep embedding
             self.temb = nn.Module()
             self.temb.dense = nn.ModuleList([
-                ops.Linear(self.ch,
+                disable_weight_init.Linear(self.ch,
                                 self.temb_ch),
-                ops.Linear(self.temb_ch,
+                disable_weight_init.Linear(self.temb_ch,
                                 self.temb_ch),
             ])
 
         # downsampling
-        self.conv_in = ops.Conv2d(in_channels,
+        self.conv_in = disable_weight_init.Conv2d(in_channels,
                                        self.ch,
                                        kernel_size=3,
                                        stride=1,
@@ -389,7 +388,7 @@ class Model(nn.Module):
 
         # end
         self.norm_out = Normalize(block_in)
-        self.conv_out = ops.Conv2d(block_in,
+        self.conv_out = disable_weight_init.Conv2d(block_in,
                                         out_ch,
                                         kernel_size=3,
                                         stride=1,
@@ -462,7 +461,7 @@ class Encoder(nn.Module):
         self.in_channels = in_channels
 
         # downsampling
-        self.conv_in = ops.Conv2d(in_channels,
+        self.conv_in = disable_weight_init.Conv2d(in_channels,
                                        self.ch,
                                        kernel_size=3,
                                        stride=1,
@@ -507,7 +506,7 @@ class Encoder(nn.Module):
 
         # end
         self.norm_out = Normalize(block_in)
-        self.conv_out = ops.Conv2d(block_in,
+        self.conv_out = disable_weight_init.Conv2d(block_in,
                                         2*z_channels if double_z else z_channels,
                                         kernel_size=3,
                                         stride=1,
@@ -542,7 +541,7 @@ class Decoder(nn.Module):
     def __init__(self, *, ch, out_ch, ch_mult=(1,2,4,8), num_res_blocks,
                  attn_resolutions, dropout=0.0, resamp_with_conv=True, in_channels,
                  resolution, z_channels, give_pre_end=False, tanh_out=False, use_linear_attn=False,
-                 conv_out_op=ops.Conv2d,
+                 conv_out_op=disable_weight_init.Conv2d,
                  resnet_op=ResnetBlock,
                  attn_op=AttnBlock,
                 **ignorekwargs):
@@ -566,7 +565,7 @@ class Decoder(nn.Module):
             self.z_shape, np.prod(self.z_shape)))
 
         # z to block_in
-        self.conv_in = ops.Conv2d(z_channels,
+        self.conv_in = disable_weight_init.Conv2d(z_channels,
                                        block_in,
                                        kernel_size=3,
                                        stride=1,

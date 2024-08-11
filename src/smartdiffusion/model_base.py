@@ -14,7 +14,7 @@ import smartdiffusion.ldm.flux.model
 
 import smartdiffusion.model_management
 import smartdiffusion.conds
-import smartdiffusion.ops
+from smartdiffusion.ops import manual_cast, disable_weight_init
 from enum import Enum
 import smartdiffusion.utils
 import smartdiffusion.latent_formats
@@ -78,9 +78,9 @@ class BaseModel(torch.nn.Module):
 
         if not unet_config.get("disable_unet_model_creation", False):
             if self.manual_cast_dtype is not None:
-                operations = smartdiffusion.ops.manual_cast
+                operations = manual_cast
             else:
-                operations = smartdiffusion.ops.disable_weight_init
+                operations = disable_weight_init
             self.diffusion_model = unet_model(**unet_config, device=device, operations=operations)
             if smartdiffusion.model_management.force_channels_last():
                 self.diffusion_model.to(memory_format=torch.channels_last)
@@ -439,7 +439,7 @@ class SV3D_p(SVD_img2vid):
 class Stable_Zero123(BaseModel):
     def __init__(self, model_config, model_type=ModelType.EPS, device=None, cc_projection_weight=None, cc_projection_bias=None):
         super().__init__(model_config, model_type, device=device)
-        self.cc_projection = smartdiffusion.ops.manual_cast.Linear(cc_projection_weight.shape[1], cc_projection_weight.shape[0], dtype=self.get_dtype(), device=device)
+        self.cc_projection = manual_cast.Linear(cc_projection_weight.shape[1], cc_projection_weight.shape[0], dtype=self.get_dtype(), device=device)
         self.cc_projection.weight.copy_(cc_projection_weight)
         self.cc_projection.bias.copy_(cc_projection_bias)
 
