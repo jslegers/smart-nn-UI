@@ -114,7 +114,7 @@ class StableCascade_StageB_Conditioning:
         c = []
         for t in conditioning:
             d = t[1].copy()
-            d['stable_cascade_prior'] = stage_c['samples']
+            d["stable_cascade_prior"] = stage_c["samples"]
             n = [t[0], d]
             c.append(n)
         return (c,)
