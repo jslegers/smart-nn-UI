@@ -6,8 +6,8 @@ Tiny AutoEncoder for Stable Diffusion
 import torch
 import torch.nn as nn
 
-import smartdiffusion.utils import load_torch_file
-import smartdiffusion.ops import disable_weight_init
+from smartdiffusion.utils import load_torch_file
+from smartdiffusion.ops import disable_weight_init
 
 def conv(n_in, n_out, **kwargs):
     return disable_weight_init.Conv2d(n_in, n_out, 3, padding=1, **kwargs)
