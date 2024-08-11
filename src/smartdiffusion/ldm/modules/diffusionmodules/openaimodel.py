@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from torch import chunk, Tensor, float32, cat
-from torch.nn import Module
+from torch.nn import Module, Sequential, SiLU, Identity
 from torch.nn.functional import interpolate
 from einops import rearrange
 import logging
@@ -47,7 +47,7 @@ def forward_timestep_embed(ts, x, emb, context=None, transformer_options={}, out
             x = layer(x)
     return x
 
-class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
+class TimestepEmbedSequential(Sequential, TimestepBlock):
     """
     A sequential module that passes timestep embeddings to the children that
     support it as an extra input.
@@ -171,9 +171,9 @@ class ResBlock(TimestepBlock):
         else:
             padding = kernel_size // 2
 
-        self.in_layers = nn.Sequential(
+        self.in_layers = Sequential(
             operations.GroupNorm(32, channels, dtype=dtype, device=device),
-            nn.SiLU(),
+            SiLU(),
             operations.conv_nd(dims, channels, self.out_channels, kernel_size, padding=padding, dtype=dtype, device=device),
         )
 
@@ -186,30 +186,30 @@ class ResBlock(TimestepBlock):
             self.h_upd = Downsample(channels, False, dims, dtype=dtype, device=device)
             self.x_upd = Downsample(channels, False, dims, dtype=dtype, device=device)
         else:
-            self.h_upd = self.x_upd = nn.Identity()
+            self.h_upd = self.x_upd = Identity()
 
         self.skip_t_emb = skip_t_emb
         if self.skip_t_emb:
             self.emb_layers = None
             self.exchange_temb_dims = False
         else:
-            self.emb_layers = nn.Sequential(
-                nn.SiLU(),
+            self.emb_layers = Sequential(
+                SiLU(),
                 operations.Linear(
                     emb_channels,
                     2 * self.out_channels if use_scale_shift_norm else self.out_channels, dtype=dtype, device=device
                 ),
             )
-        self.out_layers = nn.Sequential(
+        self.out_layers = Sequential(
             operations.GroupNorm(32, self.out_channels, dtype=dtype, device=device),
-            nn.SiLU(),
-            nn.Dropout(p=dropout),
+            SiLU(),
+            Dropout(p=dropout),
             operations.conv_nd(dims, self.out_channels, self.out_channels, kernel_size, padding=padding, dtype=dtype, device=device)
             ,
         )
 
         if self.out_channels == channels:
-            self.skip_connection = nn.Identity()
+            self.skip_connection = Identity()
         elif use_conv:
             self.skip_connection = operations.conv_nd(
                 dims, channels, self.out_channels, kernel_size, padding=padding, dtype=dtype, device=device
@@ -485,24 +485,24 @@ class UNetModel(Module):
         self.default_num_video_frames = None
 
         time_embed_dim = model_channels * 4
-        self.time_embed = nn.Sequential(
+        self.time_embed = Sequential(
             operations.Linear(model_channels, time_embed_dim, dtype=self.dtype, device=device),
-            nn.SiLU(),
+            SiLU(),
             operations.Linear(time_embed_dim, time_embed_dim, dtype=self.dtype, device=device),
         )
 
         if self.num_classes is not None:
             if isinstance(self.num_classes, int):
-                self.label_emb = nn.Embedding(num_classes, time_embed_dim, dtype=self.dtype, device=device)
+                self.label_emb = Embedding(num_classes, time_embed_dim, dtype=self.dtype, device=device)
             elif self.num_classes == "continuous":
                 logging.debug("setting up linear c_adm embedding layer")
-                self.label_emb = nn.Linear(1, time_embed_dim)
+                self.label_emb = Linear(1, time_embed_dim)
             elif self.num_classes == "sequential":
                 assert adm_in_channels is not None
-                self.label_emb = nn.Sequential(
-                    nn.Sequential(
+                self.label_emb = Sequential(
+                    Sequential(
                         operations.Linear(adm_in_channels, time_embed_dim, dtype=self.dtype, device=device),
-                        nn.SiLU(),
+                        SiLU(),
                         operations.Linear(time_embed_dim, time_embed_dim, dtype=self.dtype, device=device),
                     )
                 )
@@ -803,13 +803,13 @@ class UNetModel(Module):
                 self.output_blocks.append(TimestepEmbedSequential(*layers))
                 self._feature_size += ch
 
-        self.out = nn.Sequential(
+        self.out = Sequential(
             operations.GroupNorm(32, ch, dtype=self.dtype, device=device),
-            nn.SiLU(),
+            SiLU(),
             operations.conv_nd(dims, model_channels, out_channels, 3, padding=1, dtype=self.dtype, device=device),
         )
         if self.predict_codebook_ids:
-            self.id_predictor = nn.Sequential(
+            self.id_predictor = Sequential(
             operations.GroupNorm(32, ch, dtype=self.dtype, device=device),
             operations.conv_nd(dims, model_channels, n_embed, 1, dtype=self.dtype, device=device),
             #nn.LogSoftmax(dim=1)  # change to cross_entropy and produce non-normalized logits
