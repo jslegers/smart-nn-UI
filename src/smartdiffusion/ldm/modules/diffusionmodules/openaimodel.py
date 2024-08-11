@@ -7,7 +7,7 @@ import logging
 from smartdiffusion.ops import disable_weight_init
 from smartdiffusion.ldm.util import exists
 from smartdiffusion.ldm.modules.attention import SpatialTransformer, SpatialVideoTransformer, default
-from smartdiffusion.util import (
+from smartdiffusion.ldm.modules.diffusionmodules.util import (
     checkpoint,
     avg_pool_nd,
     zero_module,
