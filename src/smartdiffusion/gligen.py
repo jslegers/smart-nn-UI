@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from smartdiffusion.ldm.modules.attention import CrossAttention
 from inspect import isfunction
+from smartdiffusion import ops
 from smartdiffusion.ops.manual_cast import Linear, LayerNorm
 
 

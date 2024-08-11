@@ -6,8 +6,8 @@ from einops import rearrange, repeat
 from typing import Optional
 import logging
 
-from .diffusionmodules.util import AlphaBlender, timestep_embedding
-from .sub_quadratic_attention import efficient_dot_product_attention
+from smartdiffusion.ldm.modules.diffusionmodules.util import AlphaBlender, timestep_embedding
+from smartdiffusion.ldm.modules.sub_quadratic_attention import efficient_dot_product_attention
 
 from smartdiffusion import model_management
 
