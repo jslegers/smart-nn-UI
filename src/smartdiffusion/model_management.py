@@ -1,6 +1,6 @@
 """
-    This file is part of ComfyUI.
-    Copyright (C) 2024 Comfy
+    This file is part of smartdiffusion and derived from ComfyUI.
+    Copyright (C) 2024 Comfy & John Slegers
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -241,7 +241,7 @@ if args.lowvram:
     lowvram_available = True
 elif args.novram:
     set_vram_to = VRAMState.NO_VRAM
-elif args.highvram or args.gpu_only:
+elif args.highvram or args.gpu_only or total_vram >= 16000:
     vram_state = VRAMState.HIGH_VRAM
 FORCE_FP32 = False
 FORCE_FP16 = False
@@ -1162,7 +1162,7 @@ def unload_all_models():
 
 def resolve_lowvram_weight(weight, model, key):  # TODO: remove
     print(
-        "WARNING: The comfy.model_management.resolve_lowvram_weight function will be removed soon, please stop using it."
+        "WARNING: The smartdiffusion.model_management.resolve_lowvram_weight function will be removed soon, please stop using it."
     )
     return weight
 
