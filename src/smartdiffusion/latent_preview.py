@@ -7,9 +7,8 @@ from smartdiffusion.taesd.taesd import TAESD
 from smartdiffusion import model_management
 from smartdiffusion import folder_paths
 from smartdiffusion import utils
+from smartdiffusion.config import MAX_PREVIEW_RESOLUTION
 import logging
-
-MAX_PREVIEW_RESOLUTION = 512
 
 def preview_to_image(latent_image):
         latents_ubyte = (((latent_image + 1.0) / 2.0).clamp(0, 1)  # change scale from -1..1 to 0..1
