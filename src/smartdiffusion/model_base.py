@@ -41,7 +41,7 @@ from smartdiffusion.ops import manual_cast, disable_weight_init
 from enum import Enum
 from smartdiffusion import utils
 from smartdiffusion.latent_formats import SDXL
-import math
+from math import prod
 
 
 class ModelType(Enum):
@@ -324,7 +324,7 @@ class BaseModel(torch.nn.Module):
                 dtype = self.manual_cast_dtype
             # TODO: this needs to be tweaked
 
-            area = input_shape[0] * math.prod(input_shape[2:])
+            area = input_shape[0] * prod(input_shape[2:])
             return (
                 area
                 * model_management.dtype_size(dtype)
@@ -334,7 +334,7 @@ class BaseModel(torch.nn.Module):
         else:
             # TODO: this formula might be too aggressive since I tweaked the sub-quad and split algorithms to use less memory.
 
-            area = input_shape[0] * math.prod(input_shape[2:])
+            area = input_shape[0] * prod(input_shape[2:])
             return (area * 0.15 * self.memory_usage_factor) * (1024 * 1024)
 
 

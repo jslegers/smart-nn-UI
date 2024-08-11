@@ -5,8 +5,7 @@ from torch.nn.functional import interpolate
 from einops import rearrange
 import logging
 from smartdiffusion.ops import disable_weight_init
-from smartdiffusion.ldm.util import exists
-from smartdiffusion.ldm.modules.attention import SpatialTransformer, SpatialVideoTransformer, default
+from smartdiffusion.ldm.modules.attention import SpatialTransformer, SpatialVideoTransformer
 from smartdiffusion.ldm.modules.diffusionmodules.util import (
     checkpoint,
     avg_pool_nd,
@@ -298,11 +297,11 @@ class VideoResBlock(ResBlock):
         )
 
         self.time_stack = ResBlock(
-            default(out_channels, channels),
+            channels if out_channels is None else out_channels,
             emb_channels,
             dropout=dropout,
             dims=3,
-            out_channels=default(out_channels, channels),
+            out_channels=channels if out_channels is None else out_channels,
             use_scale_shift_norm=False,
             use_conv=False,
             up=False,
@@ -639,12 +638,12 @@ class UNetModel(Module):
                     if legacy:
                         #num_heads = 1
                         dim_head = ch // num_heads if use_spatial_transformer else num_head_channels
-                    if exists(disable_self_attentions):
+                    if disable_self_attentions is not None:
                         disabled_sa = disable_self_attentions[level]
                     else:
                         disabled_sa = False
 
-                    if not exists(num_attention_blocks) or nr < num_attention_blocks[level]:
+                    if num_attention_blocks is None or nr < num_attention_blocks[level]:
                         layers.append(get_attention_layer(
                                 ch, num_heads, dim_head, depth=num_transformers, context_dim=context_dim,
                                 disable_self_attn=disabled_sa, use_checkpoint=use_checkpoint)
@@ -765,12 +764,12 @@ class UNetModel(Module):
                     if legacy:
                         #num_heads = 1
                         dim_head = ch // num_heads if use_spatial_transformer else num_head_channels
-                    if exists(disable_self_attentions):
+                    if disable_self_attentions is not None:
                         disabled_sa = disable_self_attentions[level]
                     else:
                         disabled_sa = False
 
-                    if not exists(num_attention_blocks) or i < num_attention_blocks[level]:
+                    if num_attention_blocks is None or i < num_attention_blocks[level]:
                         layers.append(
                             get_attention_layer(
                                 ch, num_heads, dim_head, depth=num_transformers, context_dim=context_dim,

@@ -44,12 +44,8 @@ def isimage(x):
     return (len(x.shape) == 4) and (x.shape[1] == 3 or x.shape[1] == 1)
 
 
-def exists(x):
-    return x is not None
-
-
 def default(val, d):
-    if exists(val):
+    if val is not None:
         return val
     return d() if isfunction(d) else d
 

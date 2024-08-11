@@ -6,13 +6,13 @@ from einops import rearrange, repeat
 
 from smartdiffusion.disable_weight_init import disable_weight_init
 
-from .diffusionmodules.model import (
+from smartdiffusion.ldm.modules.diffusionmodules.model import (
     AttnBlock,
     Decoder,
     ResnetBlock,
 )
-from .diffusionmodules.openaimodel import ResBlock, timestep_embedding
-from .attention import BasicTransformerBlock
+from smartdiffusion.ldm.modules.diffusionmodules.openaimodel import ResBlock, timestep_embedding
+from smartdiffusion.ldm.modules.attention import BasicTransformerBlock
 
 def partialclass(cls, *args, **kwargs):
     class NewCls(cls):

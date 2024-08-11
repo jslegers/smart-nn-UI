@@ -3,19 +3,9 @@ from torch import nn
 from smartdiffusion.ldm.modules.attention import CrossAttention
 from inspect import isfunction
 from smartdiffusion import ops
-from smartdiffusion.ops import manual_cast
-
-
-def exists(val):
-    return val is not None
-
-
-def uniq(arr):
-    return {el: True for el in arr}.keys()
-
 
 def default(val, d):
-    if exists(val):
+    if val is not None:
         return val
     return d() if isfunction(d) else d
 
@@ -26,7 +16,7 @@ def default(val, d):
 class GEGLU(nn.Module):
     def __init__(self, dim_in, dim_out):
         super().__init__()
-        self.proj = manual_cast.Linear(dim_in, dim_out * 2)
+        self.proj = ops.manual_cast.Linear(dim_in, dim_out * 2)
 
     def forward(self, x):
         x, gate = self.proj(x).chunk(2, dim=-1)
@@ -37,15 +27,17 @@ class FeedForward(nn.Module):
     def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0.0):
         super().__init__()
         inner_dim = int(dim * mult)
-        dim_out = default(dim_out, dim)
+        if not dim_out:
+            dim_out = dim() if isfunction(dim) else dim
+
         project_in = (
-            nn.Sequential(manual_cast.Linear(dim, inner_dim), nn.GELU())
+            nn.Sequential(ops.manual_cast.Linear(dim, inner_dim), nn.GELU())
             if not glu
             else GEGLU(dim, inner_dim)
         )
 
         self.net = nn.Sequential(
-            project_in, nn.Dropout(dropout), manual_cast.Linear(inner_dim, dim_out)
+            project_in, nn.Dropout(dropout), ops.manual_cast.Linear(inner_dim, dim_out)
         )
 
     def forward(self, x):
@@ -65,8 +57,8 @@ class GatedCrossAttentionDense(nn.Module):
         )
         self.ff = FeedForward(query_dim, glu=True)
 
-        self.norm1 = manual_cast.LayerNorm(query_dim)
-        self.norm2 = manual_cast.LayerNorm(query_dim)
+        self.norm1 = ops.manual_cast.LayerNorm(query_dim)
+        self.norm2 = ops.manual_cast.LayerNorm(query_dim)
 
         self.register_parameter("alpha_attn", nn.Parameter(torch.tensor(0.0)))
         self.register_parameter("alpha_dense", nn.Parameter(torch.tensor(0.0)))
@@ -94,7 +86,7 @@ class GatedSelfAttentionDense(nn.Module):
         # we need a linear projection since we need cat visual feature and obj
         # feature
 
-        self.linear = manual_cast.Linear(context_dim, query_dim)
+        self.linear = ops.manual_cast.Linear(context_dim, query_dim)
 
         self.attn = CrossAttention(
             query_dim=query_dim,
@@ -105,8 +97,8 @@ class GatedSelfAttentionDense(nn.Module):
         )
         self.ff = FeedForward(query_dim, glu=True)
 
-        self.norm1 = manual_cast.LayerNorm(query_dim)
-        self.norm2 = manual_cast.LayerNorm(query_dim)
+        self.norm1 = ops.manual_cast.LayerNorm(query_dim)
+        self.norm2 = ops.manual_cast.LayerNorm(query_dim)
 
         self.register_parameter("alpha_attn", nn.Parameter(torch.tensor(0.0)))
         self.register_parameter("alpha_dense", nn.Parameter(torch.tensor(0.0)))
@@ -140,15 +132,15 @@ class GatedSelfAttentionDense2(nn.Module):
         # we need a linear projection since we need cat visual feature and obj
         # feature
 
-        self.linear = manual_cast.Linear(context_dim, query_dim)
+        self.linear = ops.manual_cast.Linear(context_dim, query_dim)
 
         self.attn = CrossAttention(
             query_dim=query_dim, context_dim=query_dim, dim_head=d_head, operations=ops
         )
         self.ff = FeedForward(query_dim, glu=True)
 
-        self.norm1 = manual_cast.LayerNorm(query_dim)
-        self.norm2 = manual_cast.LayerNorm(query_dim)
+        self.norm1 = ops.manual_cast.LayerNorm(query_dim)
+        self.norm2 = ops.manual_cast.LayerNorm(query_dim)
 
         self.register_parameter("alpha_attn", nn.Parameter(torch.tensor(0.0)))
         self.register_parameter("alpha_dense", nn.Parameter(torch.tensor(0.0)))
@@ -217,11 +209,11 @@ class PositionNet(nn.Module):
         self.position_dim = fourier_freqs * 2 * 4  # 2 is sin&cos, 4 is xyxy
 
         self.linears = nn.Sequential(
-            manual_cast.Linear(self.in_dim + self.position_dim, 512),
+            ops.manual_cast.Linear(self.in_dim + self.position_dim, 512),
             nn.SiLU(),
-            manual_cast.Linear(512, 512),
+            ops.manual_cast.Linear(512, 512),
             nn.SiLU(),
-            manual_cast.Linear(512, out_dim),
+            ops.manual_cast.Linear(512, out_dim),
         )
 
         self.null_positive_feature = torch.nn.Parameter(torch.zeros([self.in_dim]))
