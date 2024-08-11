@@ -1,9 +1,9 @@
 import torch
 from typing import Dict, Optional
-import smartdiffusion.ldm.modules.diffusionmodules.mmdit
+from smartdiffusion.ldm.modules.diffusionmodules.mmdit import MMDiT, PatchEmbed
 
 
-class ControlNet(smartdiffusion.ldm.modules.diffusionmodules.mmdit.MMDiT):
+class ControlNet(MMDiT):
     def __init__(
         self,
         num_blocks=None,
@@ -29,18 +29,16 @@ class ControlNet(smartdiffusion.ldm.modules.diffusionmodules.mmdit.MMDiT):
                     self.hidden_size, self.hidden_size, device=device, dtype=dtype
                 )
             )
-        self.pos_embed_input = (
-            smartdiffusion.ldm.modules.diffusionmodules.mmdit.PatchEmbed(
-                None,
-                self.patch_size,
-                self.in_channels,
-                self.hidden_size,
-                bias=True,
-                strict_img_size=False,
-                dtype=dtype,
-                device=device,
-                operations=operations,
-            )
+        self.pos_embed_input = PatchEmbed(
+            None,
+            self.patch_size,
+            self.in_channels,
+            self.hidden_size,
+            bias=True,
+            strict_img_size=False,
+            dtype=dtype,
+            device=device,
+            operations=operations,
         )
 
     def forward(

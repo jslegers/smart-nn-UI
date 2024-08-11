@@ -3,6 +3,8 @@ from smartdiffusion import utils
 from tqdm.auto import trange, tqdm
 from numpy import linspace
 from torch import no_grad, randn_like
+from smartdiffusion.k_diffusion.sampling import to_d
+from smartdiffusion.model_patcher import set_model_options_post_cfg_function
 
 
 @no_grad()
@@ -92,10 +94,6 @@ class SamplerLCMUpscale:
         return (sampler,)
 
 
-from smartdiffusion.k_diffusion.sampling import to_d
-import smartdiffusion.model_patcher
-
-
 @no_grad()
 def sample_euler_pp(model, x, sigmas, extra_args=None, callback=None, disable=None):
     extra_args = {} if extra_args is None else extra_args
@@ -107,10 +105,8 @@ def sample_euler_pp(model, x, sigmas, extra_args=None, callback=None, disable=No
         return args["denoised"]
 
     model_options = extra_args.get("model_options", {}).copy()
-    extra_args["model_options"] = (
-        smartdiffusion.model_patcher.set_model_options_post_cfg_function(
-            model_options, post_cfg_function, disable_cfg1_optimization=True
-        )
+    extra_args["model_options"] = set_model_options_post_cfg_function(
+        model_options, post_cfg_function, disable_cfg1_optimization=True
     )
 
     s_in = x.new_ones([x.shape[0]])
