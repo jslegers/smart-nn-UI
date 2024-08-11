@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from smartdiffusion.ldm.modules import attention
 from einops import rearrange, repeat
-from smartdiffusion.ldm.modules.diffusion.modules.util import timestep_embedding
+from smartdiffusion.ldm.modules.diffusionmodules.util import timestep_embedding
 from smartdiffusion.ops import cast_to_input
 from smartdiffusion.ldm.common_dit import pad_to_patch_size
 
