@@ -1,9 +1,16 @@
 class CLIPSetLastLayer:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "clip": ("CLIP", ),
-                              "stop_at_clip_layer": ("INT", {"default": -1, "min": -24, "max": -1, "step": 1}),
-                              }}
+        return {
+            "required": {
+                "clip": ("CLIP",),
+                "stop_at_clip_layer": (
+                    "INT",
+                    {"default": -1, "min": -24, "max": -1, "step": 1},
+                ),
+            }
+        }
+
     RETURN_TYPES = ("CLIP",)
     FUNCTION = "set_last_layer"
 

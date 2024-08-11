@@ -1,11 +1,11 @@
 from smartdiffusion import clip_vision
 
+
 class CLIPVisionEncode:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "clip_vision": ("CLIP_VISION",),
-                              "image": ("IMAGE",)
-                             }}
+        return {"required": {"clip_vision": ("CLIP_VISION",), "image": ("IMAGE",)}}
+
     RETURN_TYPES = ("CLIP_VISION_OUTPUT",)
     FUNCTION = "encode"
 
