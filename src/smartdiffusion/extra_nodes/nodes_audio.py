@@ -13,7 +13,7 @@ from smartdiffusion.cli_args import args
 
 class EmptyLatentAudio:
     def __init__(self):
-        self.device = smartdiffusion.model_management.intermediate_device()
+        self.device = model_management.intermediate_device()
 
     @classmethod
     def INPUT_TYPES(s):

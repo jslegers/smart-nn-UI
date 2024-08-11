@@ -1669,7 +1669,7 @@ def sample_euler_cfg_pp(model, x, sigmas, extra_args=None, callback=None, disabl
 
     model_options = extra_args.get("model_options", {}).copy()
     extra_args["model_options"] = (
-        smartdiffusion.model_patcher.set_model_options_post_cfg_function(
+        model_patcher.set_model_options_post_cfg_function(
             model_options, post_cfg_function, disable_cfg1_optimization=True
         )
     )
@@ -1720,7 +1720,7 @@ def sample_euler_ancestral_cfg_pp(
 
     model_options = extra_args.get("model_options", {}).copy()
     extra_args["model_options"] = (
-        smartdiffusion.model_patcher.set_model_options_post_cfg_function(
+        model_patcher.set_model_options_post_cfg_function(
             model_options, post_cfg_function, disable_cfg1_optimization=True
         )
     )

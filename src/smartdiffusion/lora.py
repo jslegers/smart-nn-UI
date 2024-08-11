@@ -1,4 +1,5 @@
-import smartdiffusion.utils
+from smartdiffusion.utils import unet_to_diffusers, mmdit_to_diffusers, auraflow_to_diffusers, flux_to_diffusers
+from smartdiffusion.model_base import SD3, AuraFlow, HunyuanDiT, Flux
 import logging
 
 LORA_CLIP_MAP = {
@@ -247,7 +248,7 @@ def model_lora_keys_unet(model, key_map={}):
             key_map["lora_prior_unet_{}".format(key_lora)] = k #cascade lora: TODO put lora key prefix in the model config
             key_map["{}".format(k[:-len(".weight")])] = k #generic lora format without any weird key names
 
-    diffusers_keys = smartdiffusion.utils.unet_to_diffusers(model.model_config.unet_config)
+    diffusers_keys = unet_to_diffusers(model.model_config.unet_config)
     for k in diffusers_keys:
         if k.endswith(".weight"):
             unet_key = "diffusion_model.{}".format(diffusers_keys[k])
@@ -261,8 +262,8 @@ def model_lora_keys_unet(model, key_map={}):
                     diffusers_lora_key = diffusers_lora_key[:-2]
                 key_map[diffusers_lora_key] = unet_key
 
-    if isinstance(model, smartdiffusion.model_base.SD3): #Diffusers lora SD3
-        diffusers_keys = smartdiffusion.utils.mmdit_to_diffusers(model.model_config.unet_config, output_prefix="diffusion_model.")
+    if isinstance(model, SD3): #Diffusers lora SD3
+        diffusers_keys = mmdit_to_diffusers(model.model_config.unet_config, output_prefix="diffusion_model.")
         for k in diffusers_keys:
             if k.endswith(".weight"):
                 to = diffusers_keys[k]
@@ -275,22 +276,22 @@ def model_lora_keys_unet(model, key_map={}):
                 key_lora = "lora_transformer_{}".format(k[:-len(".weight")].replace(".", "_")) #OneTrainer lora
                 key_map[key_lora] = to
 
-    if isinstance(model, smartdiffusion.model_base.AuraFlow): #Diffusers lora AuraFlow
-        diffusers_keys = smartdiffusion.utils.auraflow_to_diffusers(model.model_config.unet_config, output_prefix="diffusion_model.")
+    if isinstance(model, AuraFlow): #Diffusers lora AuraFlow
+        diffusers_keys = auraflow_to_diffusers(model.model_config.unet_config, output_prefix="diffusion_model.")
         for k in diffusers_keys:
             if k.endswith(".weight"):
                 to = diffusers_keys[k]
                 key_lora = "transformer.{}".format(k[:-len(".weight")]) #simpletrainer and probably regular diffusers lora format
                 key_map[key_lora] = to
 
-    if isinstance(model, smartdiffusion.model_base.HunyuanDiT):
+    if isinstance(model, HunyuanDiT):
         for k in sdk:
             if k.startswith("diffusion_model.") and k.endswith(".weight"):
                 key_lora = k[len("diffusion_model."):-len(".weight")]
                 key_map["base_model.model.{}".format(key_lora)] = k #official hunyuan lora format
 
-    if isinstance(model, smartdiffusion.model_base.Flux): #Diffusers lora Flux
-        diffusers_keys = smartdiffusion.utils.flux_to_diffusers(model.model_config.unet_config, output_prefix="diffusion_model.")
+    if isinstance(model, Flux): #Diffusers lora Flux
+        diffusers_keys = flux_to_diffusers(model.model_config.unet_config, output_prefix="diffusion_model.")
         for k in diffusers_keys:
             if k.endswith(".weight"):
                 to = diffusers_keys[k]

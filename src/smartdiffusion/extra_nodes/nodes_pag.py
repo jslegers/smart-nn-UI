@@ -4,8 +4,8 @@
 # My modified one here is more basic but has less chances of breaking with smartdiffusionui updates.
 
 
-from smartdiffusion import model_patcher
-from smartdiffusion import samplers
+from smartdiffusion.model_patcher import set_model_options_patch_replace
+from smartdiffusion.samplers import calc_cond_batch
 
 
 class PerturbedAttentionGuidance:
@@ -53,10 +53,10 @@ class PerturbedAttentionGuidance:
                 return cfg_result
             # Replace Self-attention with PAG
 
-            model_options = model_patcher.set_model_options_patch_replace(
+            model_options = set_model_options_patch_replace.set_model_options_patch_replace(
                 model_options, perturbed_attention, "attn1", unet_block, unet_block_id
             )
-            (pag,) = smartdiffusion.samplers.calc_cond_batch(
+            (pag,) = calc_cond_batch(
                 model, [cond], x, sigma, model_options
             )
 

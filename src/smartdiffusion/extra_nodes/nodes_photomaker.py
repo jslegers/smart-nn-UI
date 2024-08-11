@@ -4,6 +4,8 @@ from smartdiffusion import folder_paths
 from smartdiffusion import clip_model
 from smartdiffusion import clip_vision
 from smartdiffusion import ops
+from smartdiffusion import model_management
+from smartdiffusion.utils import load_torch_file
 
 # code for model from: https://github.com/TencentARC/PhotoMaker/blob/main/photomaker/model.py under Apache License Version 2.0
 
@@ -110,9 +112,9 @@ class FuseModule(nn.Module):
 
 class PhotoMakerIDEncoder(clip_model.CLIPVisionModelProjection):
     def __init__(self):
-        self.load_device = smartdiffusion.model_management.text_encoder_device()
-        offload_device = smartdiffusion.model_management.text_encoder_offload_device()
-        dtype = smartdiffusion.model_management.text_encoder_dtype(self.load_device)
+        self.load_device = model_management.text_encoder_device()
+        offload_device = model_management.text_encoder_offload_device()
+        dtype = model_management.text_encoder_dtype(self.load_device)
 
         super().__init__(VISION_CONFIG_DICT, dtype, offload_device, ops.manual_cast)
         self.visual_projection_2 = ops.manual_cast.Linear(1024, 1280, bias=False)
@@ -156,7 +158,7 @@ class PhotoMakerLoader:
             "photomaker", photomaker_model_name
         )
         photomaker_model = PhotoMakerIDEncoder()
-        data = smartdiffusion.utils.load_torch_file(
+        data = load_torch_file(
             photomaker_model_path, safe_load=True
         )
         if "id_encoder" in data:
