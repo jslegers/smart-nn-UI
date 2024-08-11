@@ -19,7 +19,7 @@
 import psutil
 import logging
 from enum import Enum
-from comfy.cli_args import args
+from smartdiffusion.cli_args import args
 import torch
 import sys
 import platform

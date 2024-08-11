@@ -17,7 +17,7 @@
 """
 
 import torch
-import smartdiffusion import config
+import smartdiffusion.config import MAX_RESOLUTION
 import smartdiffusion import utils
 
 
@@ -28,8 +28,8 @@ class StableCascade_EmptyLatentImage:
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
-            "width": ("INT", {"default": 1024, "min": 256, "max": config.MAX_RESOLUTION, "step": 8}),
-            "height": ("INT", {"default": 1024, "min": 256, "max": config.MAX_RESOLUTION, "step": 8}),
+            "width": ("INT", {"default": 1024, "min": 256, "max": MAX_RESOLUTION, "step": 8}),
+            "height": ("INT", {"default": 1024, "min": 256, "max": MAX_RESOLUTION, "step": 8}),
             "compression": ("INT", {"default": 42, "min": 4, "max": 128, "step": 1}),
             "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096})
         }}

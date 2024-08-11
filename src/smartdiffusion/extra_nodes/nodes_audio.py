@@ -1,12 +1,12 @@
 import torchaudio
 import torch
-import folder_paths
 import os
 import io
 import json
 import struct
 import random
 import hashlib
+from smartdiffusion import folder_paths
 from smartdiffusion import model_management
 from smartdiffusion.cli_args import args
 

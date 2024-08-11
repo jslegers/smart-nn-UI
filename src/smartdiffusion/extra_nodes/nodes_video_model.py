@@ -2,7 +2,7 @@ import torch
 from smartdiffusion import utils
 from smartdiffusion import sd
 from smartdiffusion import folder_paths
-from smartdiffusion import config
+from smartdiffusion.config import MAX_RESOLUTION
 from smartdiffusion.extra_nodes import config_model_merging
 
 
@@ -28,8 +28,8 @@ class SVD_img2vid_Conditioning:
         return {"required": { "clip_vision": ("CLIP_VISION",),
                               "init_image": ("IMAGE",),
                               "vae": ("VAE",),
-                              "width": ("INT", {"default": 1024, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
-                              "height": ("INT", {"default": 576, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
+                              "width": ("INT", {"default": 1024, "min": 16, "max": MAX_RESOLUTION, "step": 8}),
+                              "height": ("INT", {"default": 576, "min": 16, "max": MAX_RESOLUTION, "step": 8}),
                               "video_frames": ("INT", {"default": 14, "min": 1, "max": 4096}),
                               "motion_bucket_id": ("INT", {"default": 127, "min": 1, "max": 1023}),
                               "fps": ("INT", {"default": 6, "min": 1, "max": 1024}),

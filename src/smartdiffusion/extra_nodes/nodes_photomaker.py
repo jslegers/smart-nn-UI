@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import folder_paths
+from smartdiffusion import folder_paths
 from smartdiffusion import clip_model
 from smartdiffusion import clip_vision
 from smartdiffusion import ops

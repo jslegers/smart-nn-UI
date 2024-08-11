@@ -1,5 +1,5 @@
-from smartdiffusion import config
-import folder_paths
+from smartdiffusion.config import MAX_RESOLUTION
+from smartdiffusion import folder_paths
 from smartdiffusion.cli_args import args
 
 from PIL import Image
@@ -9,7 +9,7 @@ import numpy as np
 import json
 import os
 
-MAX_RESOLUTION = config.MAX_RESOLUTION
+MAX_RESOLUTION = MAX_RESOLUTION
 
 class ImageCrop:
     @classmethod

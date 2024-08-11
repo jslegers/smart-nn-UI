@@ -3,8 +3,8 @@ import logging
 from spandrel import ModelLoader, ImageModelDescriptor
 from smartdiffusion import model_management
 import torch
-import smartdiffusion.utils
-import folder_paths
+from smartdiffusion import utils
+from smartdiffusion import folder_paths
 
 try:
     from spandrel_extra_arches import EXTRA_REGISTRY
@@ -26,9 +26,9 @@ class UpscaleModelLoader:
 
     def load_model(self, model_name):
         model_path = folder_paths.get_full_path("upscale_models", model_name)
-        sd = smartdiffusion.utils.load_torch_file(model_path, safe_load=True)
+        sd = utils.load_torch_file(model_path, safe_load=True)
         if "module.layers.0.residual_group.blocks.0.norm1.weight" in sd:
-            sd = smartdiffusion.utils.state_dict_prefix_replace(sd, {"module.":""})
+            sd = utils.state_dict_prefix_replace(sd, {"module.":""})
         out = ModelLoader().load_from_state_dict(sd).eval()
 
         if not isinstance(out, ImageModelDescriptor):
@@ -65,9 +65,9 @@ class ImageUpscaleWithModel:
         oom = True
         while oom:
             try:
-                steps = in_img.shape[0] * smartdiffusion.utils.get_tiled_scale_steps(in_img.shape[3], in_img.shape[2], tile_x=tile, tile_y=tile, overlap=overlap)
-                pbar = smartdiffusion.utils.ProgressBar(steps)
-                s = smartdiffusion.utils.tiled_scale(in_img, lambda a: upscale_model(a), tile_x=tile, tile_y=tile, overlap=overlap, upscale_amount=upscale_model.scale, pbar=pbar)
+                steps = in_img.shape[0] * utils.get_tiled_scale_steps(in_img.shape[3], in_img.shape[2], tile_x=tile, tile_y=tile, overlap=overlap)
+                pbar = utils.ProgressBar(steps)
+                s = utils.tiled_scale(in_img, lambda a: upscale_model(a), tile_x=tile, tile_y=tile, overlap=overlap, upscale_amount=upscale_model.scale, pbar=pbar)
                 oom = False
             except model_management.OutOfMemoryError as e:
                 tile //= 2

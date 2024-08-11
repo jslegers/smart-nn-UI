@@ -1,7 +1,5 @@
-from smartdiffusion import config
-import folder_paths
-
-MAX_RESOLUTION = config.MAX_RESOLUTION
+from smartdiffusion.config import MAX_RESOLUTION
+from smartdiffusion import folder_paths
 
 
 class WebcamCapture(config.LoadImage):

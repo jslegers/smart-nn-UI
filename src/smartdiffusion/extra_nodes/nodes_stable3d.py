@@ -1,5 +1,5 @@
 import torch
-from smartdiffusion import config
+from smartdiffusion.config import MAX_RESOLUTION
 from smartdiffusion import utils
 
 def camera_embeddings(elevation, azimuth):
@@ -26,8 +26,8 @@ class StableZero123_Conditioning:
         return {"required": { "clip_vision": ("CLIP_VISION",),
                               "init_image": ("IMAGE",),
                               "vae": ("VAE",),
-                              "width": ("INT", {"default": 256, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
-                              "height": ("INT", {"default": 256, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
+                              "width": ("INT", {"default": 256, "min": 16, "max": MAX_RESOLUTION, "step": 8}),
+                              "height": ("INT", {"default": 256, "min": 16, "max": MAX_RESOLUTION, "step": 8}),
                               "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096}),
                               "elevation": ("FLOAT", {"default": 0.0, "min": -180.0, "max": 180.0, "step": 0.1, "round": False}),
                               "azimuth": ("FLOAT", {"default": 0.0, "min": -180.0, "max": 180.0, "step": 0.1, "round": False}),
@@ -59,8 +59,8 @@ class StableZero123_Conditioning_Batched:
         return {"required": { "clip_vision": ("CLIP_VISION",),
                               "init_image": ("IMAGE",),
                               "vae": ("VAE",),
-                              "width": ("INT", {"default": 256, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
-                              "height": ("INT", {"default": 256, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
+                              "width": ("INT", {"default": 256, "min": 16, "max": MAX_RESOLUTION, "step": 8}),
+                              "height": ("INT", {"default": 256, "min": 16, "max": MAX_RESOLUTION, "step": 8}),
                               "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096}),
                               "elevation": ("FLOAT", {"default": 0.0, "min": -180.0, "max": 180.0, "step": 0.1, "round": False}),
                               "azimuth": ("FLOAT", {"default": 0.0, "min": -180.0, "max": 180.0, "step": 0.1, "round": False}),
@@ -101,8 +101,8 @@ class SV3D_Conditioning:
         return {"required": { "clip_vision": ("CLIP_VISION",),
                               "init_image": ("IMAGE",),
                               "vae": ("VAE",),
-                              "width": ("INT", {"default": 576, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
-                              "height": ("INT", {"default": 576, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
+                              "width": ("INT", {"default": 576, "min": 16, "max": MAX_RESOLUTION, "step": 8}),
+                              "height": ("INT", {"default": 576, "min": 16, "max": MAX_RESOLUTION, "step": 8}),
                               "video_frames": ("INT", {"default": 21, "min": 1, "max": 4096}),
                               "elevation": ("FLOAT", {"default": 0.0, "min": -90.0, "max": 90.0, "step": 0.1, "round": False}),
                              }}

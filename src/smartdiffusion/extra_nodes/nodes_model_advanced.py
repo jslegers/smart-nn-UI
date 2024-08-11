@@ -1,6 +1,6 @@
 from smartdiffusion import model_sampling
 from smartdiffusion import latent_formats
-from smartdiffusion import config
+from smartdiffusion.config import MAX_RESOLUTION
 import torch
 
 class LCM(model_sampling.EPS):
@@ -175,8 +175,8 @@ class ModelSamplingFlux:
         return {"required": { "model": ("MODEL",),
                               "max_shift": ("FLOAT", {"default": 1.15, "min": 0.0, "max": 100.0, "step":0.01}),
                               "base_shift": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 100.0, "step":0.01}),
-                              "width": ("INT", {"default": 1024, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
-                              "height": ("INT", {"default": 1024, "min": 16, "max": config.MAX_RESOLUTION, "step": 8}),
+                              "width": ("INT", {"default": 1024, "min": 16, "max": MAX_RESOLUTION, "step": 8}),
+                              "height": ("INT", {"default": 1024, "min": 16, "max": MAX_RESOLUTION, "step": 8}),
                               }}
 
     RETURN_TYPES = ("MODEL",)
