@@ -1,6 +1,9 @@
 import torch
 import logging
-from smartdiffusion.ldm.modules.diffusionmodules.openaimodel import UNetModel, Timestep
+from smartdiffusion.ldm.modules.diffusionmodules.openaimodel import (
+    UNetModel as BaseModel_unet,
+    Timestep,
+)
 from smartdiffusion.ldm.cascade.stage_c import StageC
 from smartdiffusion.ldm.cascade.stage_b import StageB
 from smartdiffusion.ldm.modules.encoders.noise_aug_modules import (
@@ -10,13 +13,13 @@ from smartdiffusion.ldm.modules.diffusionmodules.upscaling import (
     ImageConcatWithNoiseAugmentation,
 )
 from smartdiffusion.ldm.modules.diffusionmodules.mmdit import (
-    OpenAISignatureMMDITWrapper,
+    OpenAISignatureMMDITWrapper as SD3_unet,
 )
-from smartdiffusion.ldm.aura.mmdit import MMDiT
-from smartdiffusion.ldm.hydit.models import HunYuanDiT
-from smartdiffusion.ldm.audio.dit import AudioDiffusionTransformer
+from smartdiffusion.ldm.aura.mmdit import MMDiT as AuraFlow_unet
+from smartdiffusion.ldm.hydit.models import HunYuanDiT as HunYuanDiT_unet
+from smartdiffusion.ldm.audio.dit import AudioDiffusionTransformer as StableAudio1_unet
 from smartdiffusion.ldm.audio.embedders import NumberConditioner
-from smartdiffusion.ldm.flux.model import Flux
+from smartdiffusion.ldm.flux.model import Flux as Flux_unet
 
 from smartdiffusion.model_sampling import (
     ModelSamplingFlux,
@@ -86,7 +89,11 @@ def model_sampling(model_config, model_type):
 
 class BaseModel(torch.nn.Module):
     def __init__(
-        self, model_config, model_type=ModelType.EPS, device=None, unet_model=UNetModel
+        self,
+        model_config,
+        model_type=ModelType.EPS,
+        device=None,
+        unet_model=BaseModel_unet,
     ):
         super().__init__()
 
@@ -236,9 +243,7 @@ class BaseModel(torch.nn.Module):
             out["c_crossattn"] = conds.CONDCrossAttn(cross_attn)
         cross_attn_cnet = kwargs.get("cross_attn_controlnet", None)
         if cross_attn_cnet is not None:
-            out["crossattn_controlnet"] = conds.CONDCrossAttn(
-                cross_attn_cnet
-            )
+            out["crossattn_controlnet"] = conds.CONDCrossAttn(cross_attn_cnet)
         c_concat = kwargs.get("noise_concat", None)
         if c_concat is not None:
             out["c_concat"] = conds.CONDNoiseShape(c_concat)
@@ -523,9 +528,7 @@ class SVD_img2vid(BaseModel):
         if cross_attn is not None:
             out["c_crossattn"] = conds.CONDCrossAttn(cross_attn)
         if "time_conditioning" in kwargs:
-            out["time_context"] = conds.CONDCrossAttn(
-                kwargs["time_conditioning"]
-            )
+            out["time_context"] = conds.CONDCrossAttn(kwargs["time_conditioning"])
         out["num_video_frames"] = conds.CONDConstant(noise.shape[0])
         return out
 
@@ -671,9 +674,7 @@ class IP2P:
             )
         image = utils.resize_to_batch_size(image, noise.shape[0])
 
-        out["c_concat"] = conds.CONDNoiseShape(
-            self.process_ip2p_image_in(image)
-        )
+        out["c_concat"] = conds.CONDNoiseShape(self.process_ip2p_image_in(image))
         adm = self.encode_adm(**kwargs)
         if adm is not None:
             out["y"] = conds.CONDRegular(adm)
@@ -690,8 +691,8 @@ class SDXL_instructpix2pix(IP2P, SDXL):
     def __init__(self, model_config, model_type=ModelType.EPS, device=None):
         super().__init__(model_config, model_type, device=device)
         if model_type == ModelType.V_PREDICTION_EDM:
-            self.process_ip2p_image_in = (
-                lambda image: SDXL().process_in(image)
+            self.process_ip2p_image_in = lambda image: SDXL().process_in(
+                image
             )  # cosxl ip2p
         else:
             self.process_ip2p_image_in = lambda image: image  # diffusers ip2p
@@ -762,7 +763,7 @@ class SD3(BaseModel):
             model_config,
             model_type,
             device=device,
-            unet_model=OpenAISignatureMMDITWrapper,
+            unet_model=SD3_unet,
         )
 
     def encode_adm(self, **kwargs):
@@ -782,7 +783,7 @@ class AuraFlow(BaseModel):
             model_config,
             model_type,
             device=device,
-            unet_model=MMDiT,
+            unet_model=AuraFlow_unet,
         )
 
     def extra_conds(self, **kwargs):
@@ -806,18 +807,10 @@ class StableAudio1(BaseModel):
             model_config,
             model_type,
             device=device,
-            unet_model=AudioDiffusionTransformer,
+            unet_model=StableAudio1_unet,
         )
-        self.seconds_start_embedder = (
-            NumberConditioner(
-                768, min_val=0, max_val=512
-            )
-        )
-        self.seconds_total_embedder = (
-            NumberConditioner(
-                768, min_val=0, max_val=512
-            )
-        )
+        self.seconds_start_embedder = NumberConditioner(768, min_val=0, max_val=512)
+        self.seconds_total_embedder = NumberConditioner(768, min_val=0, max_val=512)
         self.seconds_start_embedder.load_state_dict(seconds_start_embedder_weights)
         self.seconds_total_embedder.load_state_dict(seconds_total_embedder_weights)
 
@@ -876,7 +869,7 @@ class HunyuanDiT(BaseModel):
             model_config,
             model_type,
             device=device,
-            unet_model=HunYuanDiT,
+            unet_model=HunYuanDiT_unet,
         )
 
     def extra_conds(self, **kwargs):
@@ -886,19 +879,13 @@ class HunyuanDiT(BaseModel):
             out["c_crossattn"] = conds.CONDRegular(cross_attn)
         attention_mask = kwargs.get("attention_mask", None)
         if attention_mask is not None:
-            out["text_embedding_mask"] = conds.CONDRegular(
-                attention_mask
-            )
+            out["text_embedding_mask"] = conds.CONDRegular(attention_mask)
         conditioning_mt5xl = kwargs.get("conditioning_mt5xl", None)
         if conditioning_mt5xl is not None:
-            out["encoder_hidden_states_t5"] = conds.CONDRegular(
-                conditioning_mt5xl
-            )
+            out["encoder_hidden_states_t5"] = conds.CONDRegular(conditioning_mt5xl)
         attention_mask_mt5xl = kwargs.get("attention_mask_mt5xl", None)
         if attention_mask_mt5xl is not None:
-            out["text_embedding_mask_t5"] = conds.CONDRegular(
-                attention_mask_mt5xl
-            )
+            out["text_embedding_mask_t5"] = conds.CONDRegular(attention_mask_mt5xl)
         width = kwargs.get("width", 768)
         height = kwargs.get("height", 768)
         crop_w = kwargs.get("crop_w", 0)
@@ -918,7 +905,7 @@ class Flux(BaseModel):
             model_config,
             model_type,
             device=device,
-            unet_model=Flux,
+            unet_model=Flux_unet,
         )
 
     def encode_adm(self, **kwargs):
