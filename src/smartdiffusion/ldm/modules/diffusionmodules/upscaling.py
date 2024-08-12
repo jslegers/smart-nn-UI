@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 from functools import partial
 
-from .util import extract_into_tensor, make_beta_schedule
+from smartdiffusion.ldm.modules.diffusionmodules.util import extract_into_tensor, make_beta_schedule
 
 
 class AbstractLowScaleModel(nn.Module):
