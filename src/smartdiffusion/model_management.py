@@ -146,8 +146,8 @@ def get_total_memory(dev=None, torch_total_too=False):
     else:
         return mem_total
 
-total_vram = get_total_memory(get_torch_device())
 total_ram = psutil.virtual_memory().total
+total_vram = get_total_memory(get_torch_device())
 logging.info(
     "Total VRAM {:0.0f} MB, total RAM {:0.0f} MB".format(
         total_vram / (1024 * 1024),
