@@ -85,9 +85,10 @@ try:
         import torch.mps
 except:
     pass
-if args.cpu or (not is_nvidia() and not is_intel_xpu()):
-    cpu_state = CPUState.CPU
 
+def is_nvidia():
+    global cpu_state
+    return cpu_state == CPUState.GPU and torch.cuda.is_available()
 
 def is_intel_xpu():
     global cpu_state
@@ -97,6 +98,8 @@ def is_intel_xpu():
             return True
     return False
 
+if args.cpu or (not is_nvidia() and not is_intel_xpu()):
+    cpu_state = CPUState.CPU
 
 def get_torch_device():
     global directml_enabled
@@ -152,10 +155,10 @@ logging.info(
     )
 )
 
-if total_ram < 5 * (1024 * 1024) :
+if total_ram < 5 * (1000 * 1000) :
     set_vram_to = VRAMState.LOW_VRAM
     lowvram_available = True
-if total_ram > 15 * (1024 * 1024) :
+if total_ram > 15 * (1000 * 1000) :
     vram_state = VRAMState.HIGH_VRAM
 
 try:
@@ -197,12 +200,6 @@ else:
             pass
     except:
         XFORMERS_IS_AVAILABLE = False
-
-
-def is_nvidia():
-    global cpu_state
-    return cpu_state == CPUState.GPU and torch.cuda.is_available()
-
 
 ENABLE_PYTORCH_ATTENTION = False
 if args.use_pytorch_cross_attention:
