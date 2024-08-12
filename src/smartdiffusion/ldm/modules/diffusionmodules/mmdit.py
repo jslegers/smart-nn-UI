@@ -732,7 +732,7 @@ class MMDiT(nn.Module):
         self.learn_sigma = learn_sigma
         self.in_channels = in_channels
         default_out_channels = in_channels * 2 if learn_sigma else in_channels
-        self.out_channels = default_out_channels is out_channels is None else out_channels
+        self.out_channels = default_out_channels if out_channels is None else out_channels
         self.patch_size = patch_size
         self.pos_embed_scaling_factor = pos_embed_scaling_factor
         self.pos_embed_offset = pos_embed_offset
