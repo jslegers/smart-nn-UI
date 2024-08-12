@@ -101,6 +101,7 @@ def is_intel_xpu():
 if args.cpu or (not is_nvidia() and not is_intel_xpu()):
     cpu_state = CPUState.CPU
 
+
 def get_torch_device():
     global directml_enabled
     global cpu_state
@@ -155,11 +156,12 @@ logging.info(
     )
 )
 
-if total_ram < 5 * (1000 * 1000) :
-    set_vram_to = VRAMState.LOW_VRAM
-    lowvram_available = True
-if total_ram > 15 * (1000 * 1000) :
-    vram_state = VRAMState.HIGH_VRAM
+if cpu_state != CPUState.CPU:
+    if total_ram < 6 * (1024 * 1024 * 1024) :
+        set_vram_to = VRAMState.LOW_VRAM
+        lowvram_available = True
+    if total_ram > 12 * (1024 * 1024 * 1024) :
+        vram_state = VRAMState.HIGH_VRAM
 
 try:
     logging.info("pytorch version: {}".format(torch.version.__version__))
