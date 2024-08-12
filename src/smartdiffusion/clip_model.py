@@ -218,7 +218,7 @@ class CLIPTextModel_(torch.nn.Module):
         pooled_output = x[
             torch.arange(x.shape[0], device=x.device),
             (
-                torch.round(input_tokens).to(dtype=torch.int, device=x.device)
+                torch.round(input_tokens).to(dtype=torch.int32, device=x.device)
                 == self.eos_token_id
             )
             .int()

@@ -1,5 +1,5 @@
 import torch
-import numpy as np
+from numpy import linspace, float32, meshgrid, stack
 from typing import Union
 
 
@@ -50,10 +50,10 @@ def get_meshgrid(start, *args):
     else:
         raise ValueError(f"len(args) should be 0, 1 or 2, but got {len(args)}")
 
-    grid_h = np.linspace(start[0], stop[0], num[0], endpoint=False, dtype=np.float32)
-    grid_w = np.linspace(start[1], stop[1], num[1], endpoint=False, dtype=np.float32)
-    grid = np.meshgrid(grid_w, grid_h)  # here w goes first
-    grid = np.stack(grid, axis=0)   # [2, W, H]
+    grid_h = linspace(start[0], stop[0], num[0], endpoint=False, dtype=float32)
+    grid_w = linspace(start[1], stop[1], num[1], endpoint=False, dtype=float32)
+    grid = meshgrid(grid_w, grid_h)  # here w goes first
+    grid = stack(grid, axis=0)   # [2, W, H]
     return grid
 
 #################################################################################
@@ -68,10 +68,10 @@ def get_2d_sincos_pos_embed(embed_dim, start, *args, cls_token=False, extra_toke
     pos_embed: [grid_size*grid_size, embed_dim] or [1+grid_size*grid_size, embed_dim] (w/ or w/o cls_token)
     """
     grid = get_meshgrid(start, *args)   # [2, H, w]
-    # grid_h = np.arange(grid_size, dtype=np.float32)
-    # grid_w = np.arange(grid_size, dtype=np.float32)
-    # grid = np.meshgrid(grid_w, grid_h)  # here w goes first
-    # grid = np.stack(grid, axis=0)   # [2, W, H]
+    # grid_h = np.arange(grid_size, dtype=float32)
+    # grid_w = np.arange(grid_size, dtype=float32)
+    # grid = meshgrid(grid_w, grid_h)  # here w goes first
+    # grid = stack(grid, axis=0)   # [2, W, H]
 
     grid = grid.reshape([2, 1, *grid.shape[1:]])
     pos_embed = get_2d_sincos_pos_embed_from_grid(embed_dim, grid)

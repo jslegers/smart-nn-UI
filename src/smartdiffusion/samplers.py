@@ -440,10 +440,10 @@ def beta_scheduler(model_sampling, steps, alpha=0.6, beta=0.6):
 
 def get_mask_aabb(masks):
     if masks.numel() == 0:
-        return torch.zeros((0, 4), device=masks.device, dtype=torch.int)
+        return torch.zeros((0, 4), device=masks.device, dtype=torch.int32)
     b = masks.shape[0]
 
-    bounding_boxes = torch.zeros((b, 4), device=masks.device, dtype=torch.int)
+    bounding_boxes = torch.zeros((b, 4), device=masks.device, dtype=torch.int32)
     is_empty = torch.zeros((b), device=masks.device, dtype=torch.bool)
     for i in range(b):
         mask = masks[i]

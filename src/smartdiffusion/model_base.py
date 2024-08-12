@@ -156,7 +156,7 @@ class BaseModel(torch.nn.Module):
         for o in kwargs:
             extra = kwargs[o]
             if hasattr(extra, "dtype"):
-                if extra.dtype != torch.int and extra.dtype != torch.long:
+                if extra.dtype != torch.int32 and extra.dtype != torch.long:
                     extra = extra.to(dtype)
             extra_conds[o] = extra
         model_output = self.diffusion_model(
