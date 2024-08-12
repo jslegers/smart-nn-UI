@@ -1,14 +1,17 @@
 # code adapted from: https://github.com/Stability-AI/stable-audio-tools
 
 
-from torch import nn, log, randn_like, sin, zeros, ones, exp
+from torch import log, randn_like, sin, zeros, ones, exp
+from torch.nn import Module, ELU
+from torch.nn.functional import softplus, Parameter
+from torch.nn.utils import parametrizations, weight_norm
 from typing import Literal, Dict, Any
 from math import ceil
 from smartdiffusion.ops import disable_weight_init
 
 
 def vae_sample(mean, scale):
-    stdev = nn.functional.softplus(scale) + 1e-4
+    stdev = softplus(scale) + 1e-4
     var = stdev * stdev
     logvar = log(var)
     latents = randn_like(mean) * stdev + mean
@@ -18,7 +21,7 @@ def vae_sample(mean, scale):
     return latents, kl
 
 
-class VAEBottleneck(nn.Module):
+class VAEBottleneck(Module):
     def __init__(self):
         super().__init__()
         self.is_discrete = False
@@ -48,7 +51,7 @@ def snake_beta(x, alpha, beta):
 # Adapted from https://github.com/NVIDIA/BigVGAN/blob/main/activations.py under MIT license
 
 
-class SnakeBeta(nn.Module):
+class SnakeBeta(Module):
 
     def __init__(
         self, in_features, alpha=1.0, alpha_trainable=True, alpha_logscale=True
@@ -60,11 +63,11 @@ class SnakeBeta(nn.Module):
 
         self.alpha_logscale = alpha_logscale
         if self.alpha_logscale:  # log scale alphas initialized to zeros
-            self.alpha = nn.Parameter(zeros(in_features) * alpha)
-            self.beta = nn.Parameter(zeros(in_features) * alpha)
+            self.alpha = Parameter(zeros(in_features) * alpha)
+            self.beta = Parameter(zeros(in_features) * alpha)
         else:  # linear scale alphas initialized to ones
-            self.alpha = nn.Parameter(ones(in_features) * alpha)
-            self.beta = nn.Parameter(ones(in_features) * alpha)
+            self.alpha = Parameter(ones(in_features) * alpha)
+            self.beta = Parameter(ones(in_features) * alpha)
         # self.alpha.requires_grad = alpha_trainable
         # self.beta.requires_grad = alpha_trainable
 
@@ -85,31 +88,29 @@ class SnakeBeta(nn.Module):
 
 def WNConv1d(*args, **kwargs):
     try:
-        return nn.utils.parametrizations.weight_norm(
-            disable_weight_init.Conv1d(*args, **kwargs)
-        )
+        return parametrizations.weight_norm(disable_weight_init.Conv1d(*args, **kwargs))
     except:
-        return nn.utils.weight_norm(
+        return weight_norm(
             disable_weight_init.Conv1d(*args, **kwargs)
         )  # support pytorch 2.1 and older
 
 
 def WNConvTranspose1d(*args, **kwargs):
     try:
-        return nn.utils.parametrizations.weight_norm(
+        return parametrizations.weight_norm(
             disable_weight_init.ConvTranspose1d(*args, **kwargs)
         )
     except:
-        return nn.utils.weight_norm(
+        return weight_norm(
             disable_weight_init.ConvTranspose1d(*args, **kwargs)
         )  # support pytorch 2.1 and older
 
 
 def get_activation(
     activation: Literal["elu", "snake", "none"], antialias=False, channels=None
-) -> nn.Module:
+) -> Module:
     if activation == "elu":
-        act = nn.ELU()
+        act = ELU()
     elif activation == "snake":
         act = SnakeBeta(channels)
     elif activation == "none":
@@ -121,7 +122,7 @@ def get_activation(
     return act
 
 
-class ResidualUnit(nn.Module):
+class ResidualUnit(Module):
     def __init__(
         self,
         in_channels,
@@ -169,7 +170,7 @@ class ResidualUnit(nn.Module):
         return x + res
 
 
-class EncoderBlock(nn.Module):
+class EncoderBlock(Module):
     def __init__(
         self,
         in_channels,
@@ -217,7 +218,7 @@ class EncoderBlock(nn.Module):
         return self.layers(x)
 
 
-class DecoderBlock(nn.Module):
+class DecoderBlock(Module):
     def __init__(
         self,
         in_channels,
@@ -280,7 +281,7 @@ class DecoderBlock(nn.Module):
         return self.layers(x)
 
 
-class OobleckEncoder(nn.Module):
+class OobleckEncoder(Module):
     def __init__(
         self,
         in_channels=2,
@@ -335,7 +336,7 @@ class OobleckEncoder(nn.Module):
         return self.layers(x)
 
 
-class OobleckDecoder(nn.Module):
+class OobleckDecoder(Module):
     def __init__(
         self,
         out_channels=2,
@@ -396,7 +397,7 @@ class OobleckDecoder(nn.Module):
         return self.layers(x)
 
 
-class AudioOobleckVAE(nn.Module):
+class AudioOobleckVAE(Module):
     def __init__(
         self,
         in_channels=2,

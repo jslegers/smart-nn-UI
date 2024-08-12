@@ -2,7 +2,7 @@ import os
 import json
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
-import numpy as np
+from numpy import clip, uint8
 from smartdiffusion.cli_args import args
 from smartdiffusion import folder_paths
 
@@ -47,7 +47,7 @@ class SaveImage:
         results = list()
         for batch_number, image in enumerate(images):
             i = 255.0 * image.cpu().numpy()
-            img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
+            img = Image.fromarray(clip(i, 0, 255).astype(uint8))
             metadata = None
             if not args.disable_metadata:
                 metadata = PngInfo()

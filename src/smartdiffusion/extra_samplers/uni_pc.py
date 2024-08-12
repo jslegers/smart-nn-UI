@@ -2,7 +2,7 @@
 
 import torch
 import math
-from tqdm.auto import trange, tqdm
+from tqdm.auto import trange
 
 
 class NoiseScheduleVP:

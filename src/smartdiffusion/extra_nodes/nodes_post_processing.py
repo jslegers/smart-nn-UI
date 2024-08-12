@@ -1,11 +1,22 @@
-import numpy as np
-import torch
-import torch.nn.functional as F
+from numpy import zeros, bmat, array, float32
+from torch import (
+    Tensor,
+    clamp,
+    where,
+    sqrt,
+    meshgrid,
+    linspace,
+    from_numpy,
+    uint8,
+    zeros_like,
+    tensor,
+)
+from torch.nn.functional import pad, conv2d
 from PIL import Image
 import math
 
-from smartdiffusion import utils
-from smartdiffusion import model_management
+from smartdiffusion.utils import common_upscale
+from smartdiffusion.model_management import get_torch_device, intermediate_device
 
 
 class Blend:
@@ -42,15 +53,15 @@ class Blend:
 
     def blend_images(
         self,
-        image1: torch.Tensor,
-        image2: torch.Tensor,
+        image1: Tensor,
+        image2: Tensor,
         blend_factor: float,
         blend_mode: str,
     ):
         image2 = image2.to(image1.device)
         if image1.shape != image2.shape:
             image2 = image2.permute(0, 3, 1, 2)
-            image2 = utils.common_upscale(
+            image2 = common_upscale(
                 image2,
                 image1.shape[2],
                 image1.shape[1],
@@ -60,7 +71,7 @@ class Blend:
             image2 = image2.permute(0, 2, 3, 1)
         blended_image = self.blend_mode(image1, image2, blend_mode)
         blended_image = image1 * (1 - blend_factor) + blended_image * blend_factor
-        blended_image = torch.clamp(blended_image, 0, 1)
+        blended_image = clamp(blended_image, 0, 1)
         return (blended_image,)
 
     def blend_mode(self, img1, img2, mode):
@@ -71,11 +82,9 @@ class Blend:
         elif mode == "screen":
             return 1 - (1 - img1) * (1 - img2)
         elif mode == "overlay":
-            return torch.where(
-                img1 <= 0.5, 2 * img1 * img2, 1 - 2 * (1 - img1) * (1 - img2)
-            )
+            return where(img1 <= 0.5, 2 * img1 * img2, 1 - 2 * (1 - img1) * (1 - img2))
         elif mode == "soft_light":
-            return torch.where(
+            return where(
                 img2 <= 0.5,
                 img1 - (1 - 2 * img2) * img1 * (1 - img1),
                 img1 + (2 * img2 - 1) * (self.g(img1) - img1),
@@ -86,17 +95,17 @@ class Blend:
             raise ValueError(f"Unsupported blend mode: {mode}")
 
     def g(self, x):
-        return torch.where(x <= 0.25, ((16 * x - 12) * x + 4) * x, torch.sqrt(x))
+        return where(x <= 0.25, ((16 * x - 12) * x + 4) * x, sqrt(x))
 
 
 def gaussian_kernel(kernel_size: int, sigma: float, device=None):
-    x, y = torch.meshgrid(
-        torch.linspace(-1, 1, kernel_size, device=device),
-        torch.linspace(-1, 1, kernel_size, device=device),
+    x, y = meshgrid(
+        linspace(-1, 1, kernel_size, device=device),
+        linspace(-1, 1, kernel_size, device=device),
         indexing="ij",
     )
-    d = torch.sqrt(x * x + y * y)
-    g = torch.exp(-(d * d) / (2.0 * sigma * sigma))
+    d = sqrt(x * x + y * y)
+    g = exp(-(d * d) / (2.0 * sigma * sigma))
     return g / g.sum()
 
 
@@ -122,10 +131,10 @@ class Blur:
 
     CATEGORY = "image/postprocessing"
 
-    def blur(self, image: torch.Tensor, blur_radius: int, sigma: float):
+    def blur(self, image: Tensor, blur_radius: int, sigma: float):
         if blur_radius == 0:
             return (image,)
-        image = image.to(model_management.get_torch_device())
+        image = image.to(get_torch_device())
         batch_size, height, width, channels = image.shape
 
         kernel_size = blur_radius * 2 + 1
@@ -138,15 +147,15 @@ class Blur:
         image = image.permute(
             0, 3, 1, 2
         )  # Torch wants (B, C, H, W) we use (B, H, W, C)
-        padded_image = F.pad(
+        padded_image = pad(
             image, (blur_radius, blur_radius, blur_radius, blur_radius), "reflect"
         )
-        blurred = F.conv2d(
+        blurred = conv2d(
             padded_image, kernel, padding=kernel_size // 2, groups=channels
         )[:, :, blur_radius:-blur_radius, blur_radius:-blur_radius]
         blurred = blurred.permute(0, 2, 3, 1)
 
-        return (blurred.to(model_management.intermediate_device()),)
+        return (blurred.to(intermediate_device()),)
 
 
 class Quantize:
@@ -180,34 +189,34 @@ class Quantize:
     def bayer(im, pal_im, order):
         def normalized_bayer_matrix(n):
             if n == 0:
-                return np.zeros((1, 1), "float32")
+                return zeros((1, 1), "float32")
             else:
                 q = 4**n
                 m = q * normalized_bayer_matrix(n - 1)
-                return np.bmat(((m - 1.5, m + 0.5), (m + 1.5, m - 0.5))) / q
+                return bmat(((m - 1.5, m + 0.5), (m + 1.5, m - 0.5))) / q
 
         num_colors = len(pal_im.getpalette()) // 3
         spread = 2 * 256 / num_colors
         bayer_n = int(math.log2(order))
-        bayer_matrix = torch.from_numpy(spread * normalized_bayer_matrix(bayer_n) + 0.5)
+        bayer_matrix = from_numpy(spread * normalized_bayer_matrix(bayer_n) + 0.5)
 
-        result = torch.from_numpy(np.array(im).astype(np.float32))
+        result = from_numpy(array(im).astype(float32))
         tw = math.ceil(result.shape[0] / bayer_matrix.shape[0])
         th = math.ceil(result.shape[1] / bayer_matrix.shape[1])
         tiled_matrix = bayer_matrix.tile(tw, th).unsqueeze(-1)
         result.add_(tiled_matrix[: result.shape[0], : result.shape[1]]).clamp_(0, 255)
-        result = result.to(dtype=torch.uint8)
+        result = result.to(dtype=uint8)
 
         im = Image.fromarray(result.cpu().numpy())
         im = im.quantize(palette=pal_im, dither=Image.Dither.NONE)
         return im
 
-    def quantize(self, image: torch.Tensor, colors: int, dither: str):
+    def quantize(self, image: Tensor, colors: int, dither: str):
         batch_size, height, width, _ = image.shape
-        result = torch.zeros_like(image)
+        result = zeros_like(image)
 
         for b in range(batch_size):
-            im = Image.fromarray((image[b] * 255).to(torch.uint8).numpy(), mode="RGB")
+            im = Image.fromarray((image[b] * 255).to(uint8).numpy(), mode="RGB")
 
             pal_im = im.quantize(
                 colors=colors
@@ -223,7 +232,7 @@ class Quantize:
                 order = int(dither.split("-")[-1])
                 quantized_image = Quantize.bayer(im, pal_im, order)
             quantized_array = (
-                torch.tensor(np.array(quantized_image.convert("RGB"))).float() / 255
+                tensor(array(quantized_image.convert("RGB"))).float() / 255
             )
             result[b] = quantized_array
         return (result,)
@@ -258,13 +267,11 @@ class Sharpen:
 
     CATEGORY = "image/postprocessing"
 
-    def sharpen(
-        self, image: torch.Tensor, sharpen_radius: int, sigma: float, alpha: float
-    ):
+    def sharpen(self, image: Tensor, sharpen_radius: int, sigma: float, alpha: float):
         if sharpen_radius == 0:
             return (image,)
         batch_size, height, width, channels = image.shape
-        image = image.to(model_management.get_torch_device())
+        image = image.to(get_torch_device())
 
         kernel_size = sharpen_radius * 2 + 1
         kernel = gaussian_kernel(kernel_size, sigma, device=image.device) * -(
@@ -277,19 +284,19 @@ class Sharpen:
         tensor_image = image.permute(
             0, 3, 1, 2
         )  # Torch wants (B, C, H, W) we use (B, H, W, C)
-        tensor_image = F.pad(
+        tensor_image = pad(
             tensor_image,
             (sharpen_radius, sharpen_radius, sharpen_radius, sharpen_radius),
             "reflect",
         )
-        sharpened = F.conv2d(tensor_image, kernel, padding=center, groups=channels)[
+        sharpened = conv2d(tensor_image, kernel, padding=center, groups=channels)[
             :, :, sharpen_radius:-sharpen_radius, sharpen_radius:-sharpen_radius
         ]
         sharpened = sharpened.permute(0, 2, 3, 1)
 
-        result = torch.clamp(sharpened, 0, 1)
+        result = clamp(sharpened, 0, 1)
 
-        return (result.to(model_management.intermediate_device()),)
+        return (result.to(intermediate_device()),)
 
 
 class ImageScaleToTotalPixels:
@@ -322,7 +329,7 @@ class ImageScaleToTotalPixels:
         width = round(samples.shape[3] * scale_by)
         height = round(samples.shape[2] * scale_by)
 
-        s = utils.common_upscale(samples, width, height, upscale_method, "disabled")
+        s = common_upscale(samples, width, height, upscale_method, "disabled")
         s = s.movedim(1, -1)
         return (s,)
 
