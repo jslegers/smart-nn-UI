@@ -1,4 +1,4 @@
-import torch
+from torch import cat, arange, from_numpy, outer, polar, ones_like
 from numpy import (
     linspace,
     float32,
@@ -178,11 +178,11 @@ def get_2d_rotary_pos_embed_from_grid(embed_dim, grid, use_real=False):
     )  # (H*W, D/4)
 
     if use_real:
-        cos = torch.cat([emb_h[0], emb_w[0]], dim=1)  # (H*W, D/2)
-        sin = torch.cat([emb_h[1], emb_w[1]], dim=1)  # (H*W, D/2)
+        cos = cat([emb_h[0], emb_w[0]], dim=1)  # (H*W, D/2)
+        sin = cat([emb_h[1], emb_w[1]], dim=1)  # (H*W, D/2)
         return cos, sin
     else:
-        emb = torch.cat([emb_h, emb_w], dim=1)  # (H*W, D/2)
+        emb = cat([emb_h, emb_w], dim=1)  # (H*W, D/2)
         return emb
 
 
@@ -209,19 +209,15 @@ def get_1d_rotary_pos_embed(
     """
     if isinstance(pos, int):
         pos = arange(pos)
-    freqs = 1.0 / (
-        theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim)
-    )  # [D/2]
-    t = torch.from_numpy(pos).to(freqs.device)  # type: ignore  # [S]
-    freqs = torch.outer(t, freqs).float()  # type: ignore   # [S, D/2]
+    freqs = 1.0 / (theta ** (arange(0, dim, 2)[: (dim // 2)].float() / dim))  # [D/2]
+    t = from_numpy(pos).to(freqs.device)  # type: ignore  # [S]
+    freqs = outer(t, freqs).float()  # type: ignore   # [S, D/2]
     if use_real:
         freqs_cos = freqs.cos().repeat_interleave(2, dim=1)  # [S, D]
         freqs_sin = freqs.sin().repeat_interleave(2, dim=1)  # [S, D]
         return freqs_cos, freqs_sin
     else:
-        freqs_cis = torch.polar(
-            torch.ones_like(freqs), freqs
-        )  # complex64     # [S, D/2]
+        freqs_cis = polar(ones_like(freqs), freqs)  # complex64     # [S, D/2]
         return freqs_cis
 
 
