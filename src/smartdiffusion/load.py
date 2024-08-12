@@ -142,6 +142,8 @@ def get_module_from_code(code):
         sys.modules[code] = mod
         return mod
 
+def camel_to_snake(s : str) -> str :
+  return ''.join(['_'+c.lower() if c.isupper() else c for c in s]).lstrip('_')
 
 def all_files_in_path(*args, **kwargs):
     if not args[0]:
@@ -151,13 +153,14 @@ def all_files_in_path(*args, **kwargs):
     package_path = args[0]
     package_file = "__init__.py"
     exclude_files = kwargs.setdefault("exclude_files", [package_file])
-    extension = kwargs.setdefault("extension", None)
+    skip_snakecase_python_files = kwargs.setdefault("skip_snakecase_python_files", True)
+    extensions = kwargs.setdefault("extension", None)
     path_from_package = kwargs.setdefault("path_from_package", "")
     path = (
         package_path if not path_from_package else join(package_path, path_from_package)
     )
-    if extension is not None:
-        extension = extension.lower()
+    if extensions is not None:
+        extensions = [extension.lower() for extension in extensions]
     path_from_package_dot_notation = '.'.join(PurePath(path_from_package).parts)
     dict = {}
     entries = scandir(path)
@@ -176,7 +179,12 @@ def all_files_in_path(*args, **kwargs):
                 dict.update(all_files_in_path(package_path, **kwargs))
         elif entry_name not in exclude_files:
             file_name, file_extension = splitext(entry_name)
-            if extension is None or file_extension.lower() == extension:
+            file_extension = file_extension.lower()
+            if extensions is None or file_extension in extensions:
+                if file_extension == '.py' and skip_snakecase_python_files:
+                    file_name_snake = camel_to_snake(file_name)
+                    if file_name == file_name_snake :
+                        continue
                 dict[
                     '.'
                     + '.'.join(
@@ -202,7 +210,7 @@ class LazyModule(ModuleType):
         module_dir = dirname(module.__file__)
         super().__init__(module.__name__)
         if import_structure is None:
-            import_structure = all_files_in_path(module_dir, extension=".py")
+            import_structure = all_files_in_path(module_dir, extensions=[".py"])
         self.__LAZY_MODULE__class_to_module = {}
         if import_structure:
             modules = import_structure.keys()
@@ -260,7 +268,8 @@ class LazyModule(ModuleType):
         if name in self.__LAZY_MODULE__class_to_module.keys():
             module_name = self.__LAZY_MODULE__class_to_module[name]
             module = self.__get_module(self.__name__ + module_name)
-            value = module if name.lower() == name else getattr(module, name)
+            value = getattr(module, name)
+            # value = module if name.lower() == name else getattr(module, name)
         elif full_name in self.__LAZY_MODULE__modules:
             value = self.__get_module(full_name)
         elif f".{name}" in self.__LAZY_MODULE__modules:

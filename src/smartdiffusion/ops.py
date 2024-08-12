@@ -16,6 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from torch import float16, bfloat16
+
 from torch.nn import (
     Linear as nn_Linear,
     Conv1d as nn_Conv1d,
@@ -235,8 +237,8 @@ class disable_weight_init:
         def forward_smartdiffusion_cast_weights(self, input, out_dtype=None):
             output_dtype = out_dtype
             if (
-                self.weight.dtype == torch.float16
-                or self.weight.dtype == torch.bfloat16
+                self.weight.dtype == float16
+                or self.weight.dtype == bfloat16
             ):
                 out_dtype = None
             weight, bias = cast_bias_weight(self, device=input.device, dtype=out_dtype)
