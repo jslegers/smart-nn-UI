@@ -270,7 +270,8 @@ class LazyModule(ModuleType):
         if name in self.__LAZY_MODULE__class_to_module.keys():
             module_name = self.__LAZY_MODULE__class_to_module[name]
             module = self.__get_module(self.__name__ + module_name)
-            value = module if name.lower() == name else getattr(module, name)
+            value = getattr(module, name)
+            # value = module if name.lower() == name else getattr(module, name)
         elif full_name in self.__LAZY_MODULE__modules:
             value = self.__get_module(full_name)
         elif f".{name}" in self.__LAZY_MODULE__modules:
