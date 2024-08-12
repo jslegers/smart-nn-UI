@@ -10,10 +10,6 @@ from smartdiffusion.ldm.modules.diffusionmodules.util import timestep_embedding
 from smartdiffusion.ops import cast_to_input
 from smartdiffusion.ldm.common_dit import pad_to_patch_size
 
-def default(x, y):
-    if x is not None:
-        return x
-    return y
 
 class Mlp(nn.Module):
     """ MLP as used in Vision Transformer, MLP-Mixer and related networks
@@ -881,7 +877,7 @@ class MMDiT(nn.Module):
             context = torch.cat(
                 (
                     repeat(self.register, "1 ... -> b ...", b=x.shape[0]),
-                    default(context, torch.Tensor([]).type_as(x)),
+                    torch.Tensor([]).type_as(x) if context is not None else context,
                 ),
                 1,
             )

@@ -11,8 +11,12 @@ from smartdiffusion.ldm.modules.diffusionmodules.model import (
     Decoder,
     ResnetBlock,
 )
-from smartdiffusion.ldm.modules.diffusionmodules.openaimodel import ResBlock, timestep_embedding
+from smartdiffusion.ldm.modules.diffusionmodules.openaimodel import (
+    ResBlock,
+    timestep_embedding,
+)
 from smartdiffusion.ldm.modules.attention import BasicTransformerBlock
+
 
 def partialclass(cls, *args, **kwargs):
     class NewCls(cls):
@@ -71,7 +75,6 @@ class VideoResBlock(ResnetBlock):
         b, c, h, w = x.shape
         if timesteps is None:
             timesteps = b
-
         x = super().forward(x, temb)
 
         if not skip_video:
@@ -95,7 +98,6 @@ class AE3DConv(disable_weight_init.Conv2d):
             padding = [int(k // 2) for k in video_kernel_size]
         else:
             padding = int(video_kernel_size // 2)
-
         self.time_mix_conv = disable_weight_init.Conv3d(
             in_channels=out_channels,
             out_channels=out_channels,
@@ -120,6 +122,7 @@ class AttnVideoBlock(AttnBlock):
     ):
         super().__init__(in_channels)
         # no context, single headed, as in base class
+
         self.time_mix_block = BasicTransformerBlock(
             dim=in_channels,
             n_heads=1,
@@ -148,10 +151,8 @@ class AttnVideoBlock(AttnBlock):
     def forward(self, x, timesteps=None, skip_time_block=False):
         if skip_time_block:
             return super().forward(x)
-
         if timesteps is None:
             timesteps = x.shape[0]
-
         x_in = x
         x = self.attention(x)
         h, w = x.shape[2:]
@@ -184,7 +185,6 @@ class AttnVideoBlock(AttnBlock):
             return torch.sigmoid(self.mix_factor)
         else:
             raise NotImplementedError(f"unknown merge strategy {self.merge_strategy}")
-
 
 
 def make_time_attn(
@@ -225,12 +225,20 @@ class VideoDecoder(Decoder):
         ), f"time_mode parameter has to be in {self.available_time_modes}"
 
         if self.time_mode != "attn-only":
-            kwargs["conv_out_op"] = partialclass(AE3DConv, video_kernel_size=self.video_kernel_size)
+            kwargs["conv_out_op"] = partialclass(
+                AE3DConv, video_kernel_size=self.video_kernel_size
+            )
         if self.time_mode not in ["conv-only", "only-last-conv"]:
-            kwargs["attn_op"] = partialclass(make_time_attn, alpha=self.alpha, merge_strategy=self.merge_strategy)
+            kwargs["attn_op"] = partialclass(
+                make_time_attn, alpha=self.alpha, merge_strategy=self.merge_strategy
+            )
         if self.time_mode not in ["attn-only", "only-last-conv"]:
-            kwargs["resnet_op"] = partialclass(VideoResBlock, video_kernel_size=self.video_kernel_size, alpha=self.alpha, merge_strategy=self.merge_strategy)
-
+            kwargs["resnet_op"] = partialclass(
+                VideoResBlock,
+                video_kernel_size=self.video_kernel_size,
+                alpha=self.alpha,
+                merge_strategy=self.merge_strategy,
+            )
         super().__init__(*args, **kwargs)
 
     def get_last_layer(self, skip_time_mix=False, **kwargs):

@@ -138,7 +138,7 @@ class BaseModel(torch.nn.Module):
         c_crossattn=None,
         control=None,
         transformer_options={},
-        **kwargs
+        **kwargs,
     ):
         sigma = t
         xc = self.model_sampling.calculate_input(sigma, x)
@@ -165,7 +165,7 @@ class BaseModel(torch.nn.Module):
             context=context,
             control=control,
             transformer_options=transformer_options,
-            **extra_conds
+            **extra_conds,
         ).float()
         return self.model_sampling.calculate_denoised(sigma, model_output, x)
 

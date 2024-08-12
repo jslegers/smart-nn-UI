@@ -590,6 +590,7 @@ class VAE:
         return self.first_stage_model.state_dict()
 
 
+
 class StyleModel:
     def __init__(self, model, device="cpu"):
         self.model = model

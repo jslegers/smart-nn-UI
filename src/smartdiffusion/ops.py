@@ -27,7 +27,7 @@ from torch.nn import (
     LayerNorm as nn_LayerNorm,
     ConvTranspose2d as nn_ConvTranspose2d,
     ConvTranspose1d as nn_ConvTranspose1d,
-    Embedding as nn_Embedding
+    Embedding as nn_Embedding,
 )
 from torch.nn.functional import (
     linear,
@@ -236,10 +236,7 @@ class disable_weight_init:
 
         def forward_smartdiffusion_cast_weights(self, input, out_dtype=None):
             output_dtype = out_dtype
-            if (
-                self.weight.dtype == float16
-                or self.weight.dtype == bfloat16
-            ):
+            if self.weight.dtype == float16 or self.weight.dtype == bfloat16:
                 out_dtype = None
             weight, bias = cast_bias_weight(self, device=input.device, dtype=out_dtype)
             return embedding(

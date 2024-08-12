@@ -1,13 +1,17 @@
 # sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "smartdiffusion"))
 
+
 from smartdiffusion import model_management
 from smartdiffusion.load import module
+
 
 def before_node_execution():
     model_management.throw_exception_if_processing_interrupted()
 
+
 def interrupt_processing(value=True):
     model_management.interrupt_current_processing(value)
+
 
 NODE_CLASS_MAPPINGS = {
     "KSampler": module("smartdiffusion", "KSampler"),
@@ -33,12 +37,16 @@ NODE_CLASS_MAPPINGS = {
     "ImageBatch": module("smartdiffusion", "ImageBatch"),
     "ImagePadForOutpaint": module("smartdiffusion", "ImagePadForOutpaint"),
     "EmptyImage": module("smartdiffusion", "EmptyImage"),
-    "ConditioningAverage": module("smartdiffusion", "ConditioningAverage") ,
+    "ConditioningAverage": module("smartdiffusion", "ConditioningAverage"),
     "ConditioningCombine": module("smartdiffusion", "ConditioningCombine"),
     "ConditioningConcat": module("smartdiffusion", "ConditioningConcat"),
     "ConditioningSetArea": module("smartdiffusion", "ConditioningSetArea"),
-    "ConditioningSetAreaPercentage": module("smartdiffusion", "ConditioningSetAreaPercentage"),
-    "ConditioningSetAreaStrength": module("smartdiffusion", "ConditioningSetAreaStrength"),
+    "ConditioningSetAreaPercentage": module(
+        "smartdiffusion", "ConditioningSetAreaPercentage"
+    ),
+    "ConditioningSetAreaStrength": module(
+        "smartdiffusion", "ConditioningSetAreaStrength"
+    ),
     "ConditioningSetMask": module("smartdiffusion", "ConditioningSetMask"),
     "KSamplerAdvanced": module("smartdiffusion", "KSamplerAdvanced"),
     "SetLatentNoiseMask": module("smartdiffusion", "SetLatentNoiseMask"),
@@ -66,15 +74,14 @@ NODE_CLASS_MAPPINGS = {
     "GLIGENLoader": module("smartdiffusion", "GLIGENLoader"),
     "GLIGENTextBoxApply": module("smartdiffusion", "GLIGENTextBoxApply"),
     "InpaintModelConditioning": module("smartdiffusion", "InpaintModelConditioning"),
-
     "CheckpointLoader": module("smartdiffusion", "CheckpointLoader"),
     "DiffusersLoader": module("smartdiffusion", "DiffusersLoader"),
-
     "LoadLatent": module("smartdiffusion", "LoadLatent"),
     "SaveLatent": module("smartdiffusion", "SaveLatent"),
-
     "ConditioningZeroOut": module("smartdiffusion", "ConditioningZeroOut"),
-    "ConditioningSetTimestepRange": module("smartdiffusion", "ConditioningSetTimestepRange"),
+    "ConditioningSetTimestepRange": module(
+        "smartdiffusion", "ConditioningSetTimestepRange"
+    ),
     "LoraLoaderModelOnly": module("smartdiffusion", "LoraLoaderModelOnly"),
 }
 
@@ -120,7 +127,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LatentUpscaleBy": "Upscale Latent By",
     "LatentComposite": "Latent Composite",
     "LatentBlend": "Latent Blend",
-    "LatentFromBatch" : "Latent From Batch",
+    "LatentFromBatch": "Latent From Batch",
     "RepeatLatentBatch": "Repeat Latent Batch",
     # Image
     "SaveImage": "Save Image",
@@ -141,12 +148,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 EXTENSION_WEB_DIRS = {}
 
 
-
-
-
-
-
 import os
+
 
 def get_module_name(module_path: str) -> str:
     """
@@ -170,19 +173,16 @@ def get_module_name(module_path: str) -> str:
     return base_path
 
 
-
-
-
-
-
-
 import os
 import sys
 import traceback
 import logging
 import importlib
 
-def load_custom_node(module_path: str, ignore=set(), module_parent="custom_nodes") -> bool:
+
+def load_custom_node(
+    module_path: str, ignore=set(), module_parent="custom_nodes"
+) -> bool:
     module_name = os.path.basename(module_path)
     if os.path.isfile(module_path):
         sp = os.path.splitext(module_path)
@@ -190,31 +190,48 @@ def load_custom_node(module_path: str, ignore=set(), module_parent="custom_nodes
     try:
         logging.debug("Trying to load custom node {}".format(module_path))
         if os.path.isfile(module_path):
-            module_spec = importlib.util.spec_from_file_location(module_name, module_path)
+            module_spec = importlib.util.spec_from_file_location(
+                module_name, module_path
+            )
             module_dir = os.path.split(module_path)[0]
         else:
-            module_spec = importlib.util.spec_from_file_location(module_name, os.path.join(module_path, "__init__.py"))
+            module_spec = importlib.util.spec_from_file_location(
+                module_name, os.path.join(module_path, "__init__.py")
+            )
             module_dir = module_path
-
         module = importlib.util.module_from_spec(module_spec)
         sys.modules[module_name] = module
         module_spec.loader.exec_module(module)
 
-        if hasattr(module, "WEB_DIRECTORY") and getattr(module, "WEB_DIRECTORY") is not None:
-            web_dir = os.path.abspath(os.path.join(module_dir, getattr(module, "WEB_DIRECTORY")))
+        if (
+            hasattr(module, "WEB_DIRECTORY")
+            and getattr(module, "WEB_DIRECTORY") is not None
+        ):
+            web_dir = os.path.abspath(
+                os.path.join(module_dir, getattr(module, "WEB_DIRECTORY"))
+            )
             if os.path.isdir(web_dir):
                 EXTENSION_WEB_DIRS[module_name] = web_dir
-
-        if hasattr(module, "NODE_CLASS_MAPPINGS") and getattr(module, "NODE_CLASS_MAPPINGS") is not None:
+        if (
+            hasattr(module, "NODE_CLASS_MAPPINGS")
+            and getattr(module, "NODE_CLASS_MAPPINGS") is not None
+        ):
             for name, node_cls in module.NODE_CLASS_MAPPINGS.items():
                 if name not in ignore:
                     NODE_CLASS_MAPPINGS[name] = node_cls
-                    node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(module_parent, get_module_name(module_path))
-            if hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS") and getattr(module, "NODE_DISPLAY_NAME_MAPPINGS") is not None:
+                    node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
+                        module_parent, get_module_name(module_path)
+                    )
+            if (
+                hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS")
+                and getattr(module, "NODE_DISPLAY_NAME_MAPPINGS") is not None
+            ):
                 NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
             return True
         else:
-            logging.warning(f"Skip {module_path} module for custom nodes due to the lack of NODE_CLASS_MAPPINGS.")
+            logging.warning(
+                f"Skip {module_path} module for custom nodes due to the lack of NODE_CLASS_MAPPINGS."
+            )
             return False
     except Exception as e:
         logging.warning(traceback.format_exc())
@@ -222,11 +239,11 @@ def load_custom_node(module_path: str, ignore=set(), module_parent="custom_nodes
         return False
 
 
-
 import os
 import time
 import logging
 from smartdiffusion import folder_paths
+
 
 def init_external_custom_nodes():
     """
@@ -245,15 +262,22 @@ def init_external_custom_nodes():
         possible_modules = os.listdir(os.path.realpath(custom_node_path))
         if "__pycache__" in possible_modules:
             possible_modules.remove("__pycache__")
-
         for possible_module in possible_modules:
             module_path = os.path.join(custom_node_path, possible_module)
-            if os.path.isfile(module_path) and os.path.splitext(module_path)[1] != ".py": continue
-            if module_path.endswith(".disabled"): continue
+            if (
+                os.path.isfile(module_path)
+                and os.path.splitext(module_path)[1] != ".py"
+            ):
+                continue
+            if module_path.endswith(".disabled"):
+                continue
             time_before = time.perf_counter()
-            success = load_custom_node(module_path, base_node_names, module_parent="custom_nodes")
-            node_import_times.append((time.perf_counter() - time_before, module_path, success))
-
+            success = load_custom_node(
+                module_path, base_node_names, module_parent="custom_nodes"
+            )
+            node_import_times.append(
+                (time.perf_counter() - time_before, module_path, success)
+            )
     if len(node_import_times) > 0:
         logging.info("\nImport times for custom nodes:")
         for n in sorted(node_import_times):
@@ -265,13 +289,8 @@ def init_external_custom_nodes():
         logging.info("")
 
 
-
-
-
-
-
-
 import os
+
 
 def init_builtin_extra_nodes():
     """
@@ -283,20 +302,22 @@ def init_builtin_extra_nodes():
     Returns:
         None
     """
-    extras_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "extra_nodes")
+    extras_dir = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "extra_nodes"
+    )
     extras_files = os.listdir()
     import_failed = []
     for node_file in extras_files:
-        if not load_custom_node(os.path.join(extras_dir, node_file), module_parent="extra_nodes"):
+        if not load_custom_node(
+            os.path.join(extras_dir, node_file), module_parent="extra_nodes"
+        ):
             import_failed.append(node_file)
-
     return import_failed
-
-
 
 
 import logging
 from smartdiffusion.cli_args import args
+
 
 def init_extra_nodes(init_custom_nodes=True):
     import_failed = init_builtin_extra_nodes()
@@ -305,14 +326,19 @@ def init_extra_nodes(init_custom_nodes=True):
         init_external_custom_nodes()
     else:
         logging.info("Skipping loading of custom nodes")
-
     if len(import_failed) > 0:
-        logging.warning("WARNING: some extra_nodes/ nodes did not import correctly. This may be because they are missing some dependencies.\n")
+        logging.warning(
+            "WARNING: some extra_nodes/ nodes did not import correctly. This may be because they are missing some dependencies.\n"
+        )
         for node in import_failed:
             logging.warning("IMPORT FAILED: {}".format(node))
-        logging.warning("\nThis issue might be caused by new missing dependencies added the last time you updated smartdiffusionui.")
+        logging.warning(
+            "\nThis issue might be caused by new missing dependencies added the last time you updated smartdiffusionui."
+        )
         if args.windows_standalone_build:
-            logging.warning("Please run the update script: update/update_smartdiffusionui.bat")
+            logging.warning(
+                "Please run the update script: update/update_smartdiffusionui.bat"
+            )
         else:
             logging.warning("Please do a: pip install -r requirements.txt")
         logging.warning("")

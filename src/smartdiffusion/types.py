@@ -20,12 +20,15 @@ class UnetApplyConds(TypedDict):
 
 class UnetParams(TypedDict):
     # Tensor of shape [B, C, H, W]
+
     input: torch.Tensor
     # Tensor of shape [B]
+
     timestep: torch.Tensor
     c: UnetApplyConds
     # List of [0, 1], [0], [1], ...
     # 0 means conditional, 1 means conditional unconditional
+
     cond_or_uncond: List[int]
 
 
