@@ -1,4 +1,5 @@
 from smartdiffusion.config import MAX_RESOLUTION
+from smartdiffusion.node_helpers import conditioning_set_values
 
 
 class ConditioningSetArea:
@@ -36,12 +37,13 @@ class ConditioningSetArea:
     CATEGORY = "conditioning"
 
     def append(self, conditioning, width, height, x, y, strength):
-        c = node_helpers.conditioning_set_values(
-            conditioning,
-            {
-                "area": (height // 8, width // 8, y // 8, x // 8),
-                "strength": strength,
-                "set_area_to_bounds": False,
-            },
+        return (
+            conditioning_set_values(
+                conditioning,
+                {
+                    "area": (height // 8, width // 8, y // 8, x // 8),
+                    "strength": strength,
+                    "set_area_to_bounds": False,
+                },
+            ),
         )
-        return (c,)

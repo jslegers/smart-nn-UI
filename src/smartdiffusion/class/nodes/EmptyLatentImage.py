@@ -1,11 +1,11 @@
-import torch
-from smartdiffusion import model_management
+from torch import zeros
+from smartdiffusion.model_management import intermediate_device
 from smartdiffusion.config import MAX_RESOLUTION
 
 
 class EmptyLatentImage:
     def __init__(self):
-        self.device = model_management.intermediate_device()
+        self.device = intermediate_device()
 
     @classmethod
     def INPUT_TYPES(s):
@@ -29,7 +29,10 @@ class EmptyLatentImage:
     CATEGORY = "latent"
 
     def generate(self, width, height, batch_size=1):
-        latent = torch.zeros(
-            [batch_size, 4, height // 8, width // 8], device=self.device
+        return (
+            {
+                "samples": zeros(
+                    [batch_size, 4, height // 8, width // 8], device=self.device
+                )
+            },
         )
-        return ({"samples": latent},)

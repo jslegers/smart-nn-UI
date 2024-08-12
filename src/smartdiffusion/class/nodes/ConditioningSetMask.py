@@ -1,4 +1,4 @@
-from smartdiffusion import node_helpers
+from smartdiffusion.node_helpers import conditioning_set_values
 
 
 class ConditioningSetMask:
@@ -22,17 +22,13 @@ class ConditioningSetMask:
     CATEGORY = "conditioning"
 
     def append(self, conditioning, mask, set_cond_area, strength):
-        set_area_to_bounds = False
-        if set_cond_area != "default":
-            set_area_to_bounds = True
-        if len(mask.shape) < 3:
-            mask = mask.unsqueeze(0)
-        c = node_helpers.conditioning_set_values(
-            conditioning,
-            {
-                "mask": mask,
-                "set_area_to_bounds": set_area_to_bounds,
-                "mask_strength": strength,
-            },
+        return (
+            conditioning_set_values(
+                conditioning,
+                {
+                    "mask": mask.unsqueeze(0) if len(mask.shape) < 3 else mask,
+                    "set_area_to_bounds": set_cond_area != "default",
+                    "mask_strength": strength,
+                },
+            ),
         )
-        return (c,)

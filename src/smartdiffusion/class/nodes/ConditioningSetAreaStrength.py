@@ -1,4 +1,4 @@
-from smartdiffusion import node_helpers
+from smartdiffusion.node_helpers import conditioning_set_values
 
 
 class ConditioningSetAreaStrength:
@@ -20,5 +20,4 @@ class ConditioningSetAreaStrength:
     CATEGORY = "conditioning"
 
     def append(self, conditioning, strength):
-        c = node_helpers.conditioning_set_values(conditioning, {"strength": strength})
-        return (c,)
+        return (conditioning_set_values(conditioning, {"strength": strength}),)

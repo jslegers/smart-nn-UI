@@ -1,5 +1,5 @@
-from smartdiffusion import controlnet
-from smartdiffusion import folder_paths
+from smartdiffusion.controlnet import load_controlnet
+from smartdiffusion.folder_paths import get_filename_list, get_full_path
 
 
 class DiffControlNetLoader:
@@ -8,7 +8,7 @@ class DiffControlNetLoader:
         return {
             "required": {
                 "model": ("MODEL",),
-                "control_net_name": (folder_paths.get_filename_list("controlnet"),),
+                "control_net_name": (get_filename_list("controlnet"),),
             }
         }
 
@@ -18,6 +18,4 @@ class DiffControlNetLoader:
     CATEGORY = "loaders"
 
     def load_controlnet(self, model, control_net_name):
-        controlnet_path = folder_paths.get_full_path("controlnet", control_net_name)
-        controlnet = controlnet.load_controlnet(controlnet_path, model)
-        return (controlnet,)
+        return (load_controlnet(get_full_path("controlnet", control_net_name), model),)

@@ -1,4 +1,4 @@
-from smartdiffusion import clip_vision
+from smartdiffusion.clip_vision import encode_image
 
 
 class CLIPVisionEncode:
@@ -12,5 +12,4 @@ class CLIPVisionEncode:
     CATEGORY = "conditioning"
 
     def encode(self, clip_vision, image):
-        output = clip_vision.encode_image(image)
-        return (output,)
+        return (encode_image(image),)

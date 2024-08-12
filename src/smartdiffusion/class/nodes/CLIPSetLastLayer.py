@@ -17,6 +17,4 @@ class CLIPSetLastLayer:
     CATEGORY = "conditioning"
 
     def set_last_layer(self, clip, stop_at_clip_layer):
-        clip = clip.clone()
-        clip.clip_layer(stop_at_clip_layer)
-        return (clip,)
+        return (clip.clone().clip_layer(stop_at_clip_layer),)

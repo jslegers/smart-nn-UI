@@ -1,5 +1,19 @@
-from smartdiffusion import sd
-from smartdiffusion import folder_paths
+from smartdiffusion.sd import CLIPType, load_clip
+from smartdiffusion.folder_paths import (
+    get_filename_list,
+    get_full_path,
+    get_folder_paths,
+)
+
+
+def __getClipType(type):
+    if type == "stable_cascade":
+        return CLIPType.STABLE_CASCADE
+    if type == "sd3":
+        return CLIPType.SD3
+    if type == "stable_audio":
+        return CLIPType.STABLE_AUDIO
+    return CLIPType.STABLE_DIFFUSION
 
 
 class CLIPLoader:
@@ -7,7 +21,7 @@ class CLIPLoader:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "clip_name": (folder_paths.get_filename_list("clip"),),
+                "clip_name": (get_filename_list("clip"),),
                 "type": (
                     ["stable_diffusion", "stable_cascade", "sd3", "stable_audio"],
                 ),
@@ -20,18 +34,10 @@ class CLIPLoader:
     CATEGORY = "advanced/loaders"
 
     def load_clip(self, clip_name, type="stable_diffusion"):
-        if type == "stable_cascade":
-            clip_type = sd.CLIPType.STABLE_CASCADE
-        elif type == "sd3":
-            clip_type = sd.CLIPType.SD3
-        elif type == "stable_audio":
-            clip_type = sd.CLIPType.STABLE_AUDIO
-        else:
-            clip_type = sd.CLIPType.STABLE_DIFFUSION
-        clip_path = folder_paths.get_full_path("clip", clip_name)
-        clip = sd.load_clip(
-            ckpt_paths=[clip_path],
-            embedding_directory=folder_paths.get_folder_paths("embeddings"),
-            clip_type=clip_type,
+        return (
+            load_clip(
+                ckpt_paths=[get_full_path("clip", clip_name)],
+                embedding_directory=get_folder_paths("embeddings"),
+                clip_type=__getClipType(type),
+            ),
         )
-        return (clip,)

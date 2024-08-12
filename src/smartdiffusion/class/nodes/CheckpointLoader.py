@@ -1,5 +1,9 @@
 from smartdiffusion.sd import load_checkpoint
-from smartdiffusion.folder_paths import get_full_path, get_filename_list, get_folder_paths
+from smartdiffusion.folder_paths import (
+    get_full_path,
+    get_filename_list,
+    get_folder_paths,
+)
 
 
 class CheckpointLoader:
@@ -18,11 +22,9 @@ class CheckpointLoader:
     CATEGORY = "advanced/loaders"
 
     def load_checkpoint(self, config_name, ckpt_name):
-        config_path = get_full_path("configs", config_name)
-        ckpt_path = get_full_path("checkpoints", ckpt_name)
         return load_checkpoint(
-            config_path,
-            ckpt_path,
+            get_full_path("configs", config_name),
+            get_full_path("checkpoints", ckpt_name),
             output_vae=True,
             output_clip=True,
             embedding_directory=get_folder_paths("embeddings"),

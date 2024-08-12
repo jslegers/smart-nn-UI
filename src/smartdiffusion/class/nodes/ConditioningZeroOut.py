@@ -1,4 +1,4 @@
-import torch
+from torch import zeros_like
 
 
 class ConditioningZeroOut:
@@ -17,7 +17,7 @@ class ConditioningZeroOut:
             d = t[1].copy()
             pooled_output = d.get("pooled_output", None)
             if pooled_output is not None:
-                d["pooled_output"] = torch.zeros_like(pooled_output)
-            n = [torch.zeros_like(t[0]), d]
+                d["pooled_output"] = zeros_like(pooled_output)
+            n = [zeros_like(t[0]), d]
             c.append(n)
         return (c,)
