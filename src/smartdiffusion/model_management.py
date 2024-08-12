@@ -654,12 +654,14 @@ def dtype_size(dtype):
 
 
 def unet_offload_device():
+    global vram_state
+    global VRAMState
     print("cpu_state != CPUState.CPU = " + str(cpu_state != CPUState.CPU))
     print("total_ram = " + str(total_ram))
     print("6 * (1024 * 1024 * 1024) = " + str(6 * (1024 * 1024 * 1024)))
     print("12 * (1024 * 1024 * 1024) = " + str(total_ram > 12 * (1024 * 1024 * 1024)))
     print("vram_state " + str(vram_state))
-    print("VRAMState.HIGH_VRAM " + str(RAMState.HIGH_VRAM))
+    print("VRAMState.HIGH_VRAM " + str(VRAMState.HIGH_VRAM))
     print("vram_state == VRAMState.HIGH_VRAM) " + str(vram_state == VRAMState.HIGH_VRAM))
     if vram_state == VRAMState.HIGH_VRAM:
         return get_torch_device()
