@@ -161,7 +161,7 @@ if cpu_state != CPUState.CPU:
     if total_ram < 6 * (1024 * 1024 * 1024) :
         set_vram_to = VRAMState.LOW_VRAM
         lowvram_available = True
-    if total_ram > 24 * (1024 * 1024 * 1024) :
+    if total_ram > 48 * (1024 * 1024 * 1024) :
         vram_state = VRAMState.HIGH_VRAM
 
 try:
