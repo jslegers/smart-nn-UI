@@ -153,6 +153,7 @@ def all_files_in_path(*args, **kwargs):
     package_path = args[0]
     package_file = "__init__.py"
     exclude_files = kwargs.setdefault("exclude_files", [package_file])
+    skip_snakecase_python_files = kwargs.setdefault("skip_snakecase_python_files", True)
     extensions = kwargs.setdefault("extension", None)
     path_from_package = kwargs.setdefault("path_from_package", "")
     path = (
@@ -209,10 +210,7 @@ class LazyModule(ModuleType):
         module_dir = dirname(module.__file__)
         super().__init__(module.__name__)
         if import_structure is None:
-            import_structure = all_files_in_path(
-                module_dir, extensions=[".py"],
-                skip_snakecase_python_files = True
-            )
+            import_structure = all_files_in_path(module_dir, extensions=[".py"])
         self.__LAZY_MODULE__class_to_module = {}
         if import_structure:
             modules = import_structure.keys()
