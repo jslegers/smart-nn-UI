@@ -161,7 +161,7 @@ if cpu_state != CPUState.CPU:
     if total_ram < 6 * (1024 * 1024 * 1024) :
         set_vram_to = VRAMState.LOW_VRAM
         lowvram_available = True
-    if total_ram > 12 * (1024 * 1024 * 1024) :
+    if total_ram > 24 * (1024 * 1024 * 1024) :
         vram_state = VRAMState.HIGH_VRAM
 
 try:
@@ -261,11 +261,6 @@ if cpu_state != CPUState.GPU:
 if cpu_state == CPUState.MPS:
     vram_state = VRAMState.SHARED
 logging.info(f"Set vram state to: {vram_state.name}")
-
-print("cpu_state != CPUState.CPU = " + str(cpu_state != CPUState.CPU))
-print("total_ram = " + str(total_ram))
-print("6 * (1024 * 1024 * 1024) = " + str(6 * (1024 * 1024 * 1024)))
-print("12 * (1024 * 1024 * 1024) = " + str(total_ram > 12 * (1024 * 1024 * 1024)))
 
 DISABLE_SMART_MEMORY = args.disable_smart_memory
 
@@ -654,18 +649,9 @@ def dtype_size(dtype):
 
 
 def unet_offload_device():
-    global vram_state
-    global VRAMState
-    print("cpu_state != CPUState.CPU = " + str(cpu_state != CPUState.CPU))
-    print("total_ram = " + str(total_ram))
-    print("6 * (1024 * 1024 * 1024) = " + str(6 * (1024 * 1024 * 1024)))
-    print("12 * (1024 * 1024 * 1024) = " + str(total_ram > 12 * (1024 * 1024 * 1024)))
-    print("vram_state " + str(vram_state))
-    print("VRAMState.HIGH_VRAM " + str(VRAMState.HIGH_VRAM))
-    print("vram_state == VRAMState.HIGH_VRAM) " + str(vram_state == VRAMState.HIGH_VRAM))
     if vram_state == VRAMState.HIGH_VRAM:
         return get_torch_device()
-    else:
+    elif total_ram > total_vram:
         return torch.device("cpu")
 
 
