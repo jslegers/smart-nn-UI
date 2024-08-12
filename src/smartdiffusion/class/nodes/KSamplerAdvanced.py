@@ -1,4 +1,4 @@
-from smartdiffusion import samplers
+from smartdiffusion.samplers import KSampler
 from smartdiffusion.node_helpers import common_ksampler
 
 
@@ -24,8 +24,8 @@ class KSamplerAdvanced:
                         "round": 0.01,
                     },
                 ),
-                "sampler_name": (samplers.KSampler.SAMPLERS,),
-                "scheduler": (samplers.KSampler.SCHEDULERS,),
+                "sampler_name": (KSampler.SAMPLERS,),
+                "scheduler": (KSampler.SCHEDULERS,),
                 "positive": ("CONDITIONING",),
                 "negative": ("CONDITIONING",),
                 "latent_image": ("LATENT",),
@@ -57,12 +57,6 @@ class KSamplerAdvanced:
         return_with_leftover_noise,
         denoise=1.0,
     ):
-        force_full_denoise = True
-        if return_with_leftover_noise == "enable":
-            force_full_denoise = False
-        disable_noise = False
-        if add_noise == "disable":
-            disable_noise = True
         return common_ksampler(
             model,
             noise_seed,
@@ -74,8 +68,8 @@ class KSamplerAdvanced:
             negative,
             latent_image,
             denoise=denoise,
-            disable_noise=disable_noise,
+            disable_noise=add_noise == "disable",
             start_step=start_at_step,
             last_step=end_at_step,
-            force_full_denoise=force_full_denoise,
+            force_full_denoise=return_with_leftover_noise != "enable",
         )

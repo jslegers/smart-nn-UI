@@ -1,4 +1,4 @@
-import torch
+from torch import ones_like
 from smartdiffusion.config import MAX_RESOLUTION
 
 
@@ -47,7 +47,7 @@ class LatentComposite:
             samples_from = samples_from[
                 :, :, : samples_to.shape[2] - y, : samples_to.shape[3] - x
             ]
-            mask = torch.ones_like(samples_from)
+            mask = ones_like(samples_from)
             for t in range(feather):
                 if y != 0:
                     mask[:, :, t : 1 + t, :] *= (1.0 / feather) * (t + 1)
@@ -61,7 +61,7 @@ class LatentComposite:
                     mask[:, :, :, mask.shape[3] - 1 - t : mask.shape[3] - t] *= (
                         1.0 / feather
                     ) * (t + 1)
-            rev_mask = torch.ones_like(mask) - mask
+            rev_mask = ones_like(mask) - mask
             s[:, :, y : y + samples_from.shape[2], x : x + samples_from.shape[3]] = (
                 samples_from[:, :, : samples_to.shape[2] - y, : samples_to.shape[3] - x]
                 * mask

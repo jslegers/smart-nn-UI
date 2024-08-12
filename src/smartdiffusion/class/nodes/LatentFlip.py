@@ -1,4 +1,4 @@
-import torch
+from torch import flip
 
 
 class LatentFlip:
@@ -19,7 +19,7 @@ class LatentFlip:
     def flip(self, samples, flip_method):
         s = samples.copy()
         if flip_method.startswith("x"):
-            s["samples"] = torch.flip(samples["samples"], dims=[2])
+            s["samples"] = flip(samples["samples"], dims=[2])
         elif flip_method.startswith("y"):
-            s["samples"] = torch.flip(samples["samples"], dims=[3])
+            s["samples"] = flip(samples["samples"], dims=[3])
         return (s,)

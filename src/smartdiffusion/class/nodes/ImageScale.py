@@ -1,4 +1,4 @@
-from smartdiffusion import utils
+from smartdiffusion.utils import common_upscale
 from smartdiffusion.config import MAX_RESOLUTION
 
 
@@ -39,6 +39,6 @@ class ImageScale:
                 width = max(1, round(samples.shape[3] * height / samples.shape[2]))
             elif height == 0:
                 height = max(1, round(samples.shape[2] * width / samples.shape[3]))
-            s = utils.common_upscale(samples, width, height, upscale_method, crop)
+            s = common_upscale(samples, width, height, upscale_method, crop)
             s = s.movedim(1, -1)
         return (s,)

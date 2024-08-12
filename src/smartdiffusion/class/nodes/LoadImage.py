@@ -3,19 +3,19 @@ from os import path, listdir
 from hashlib import sha256
 from PIL import Image, ImageOps, ImageSequence
 from numpy import array, float32
-from smartdiffusion import folder_paths
-from smartdiffusion import node_helpers
+from smartdiffusion.folder_paths import (
+    get_input_directory,
+    get_annotated_filepath,
+    exists_annotated_filepath,
+)
+from smartdiffusion.node_helpers import pillow
 
 
 class LoadImage:
     @classmethod
     def INPUT_TYPES(s):
-        input_dir = folder_paths.get_input_directory()
-        files = [
-            f
-            for f in listdir(input_dir)
-            if path.isfile(path.join(input_dir, f))
-        ]
+        input_dir = get_input_directory()
+        files = [f for f in listdir(input_dir) if path.isfile(path.join(input_dir, f))]
         return {
             "required": {"image": (sorted(files), {"image_upload": True})},
         }
@@ -26,9 +26,9 @@ class LoadImage:
     FUNCTION = "load_image"
 
     def load_image(self, image):
-        image_path = folder_paths.get_annotated_filepath(image)
+        image_path = get_annotated_filepath(image)
 
-        img = node_helpers.pillow(Image.open, image_path)
+        img = pillow(Image.open, image_path)
 
         output_images = []
         output_masks = []
@@ -37,7 +37,7 @@ class LoadImage:
         excluded_formats = ["MPO"]
 
         for i in ImageSequence.Iterator(img):
-            i = node_helpers.pillow(ImageOps.exif_transpose, i)
+            i = pillow(ImageOps.exif_transpose, i)
 
             if i.mode == "I":
                 i = i.point(lambda i: i * (1 / 255))
@@ -67,7 +67,7 @@ class LoadImage:
 
     @classmethod
     def IS_CHANGED(s, image):
-        image_path = folder_paths.get_annotated_filepath(image)
+        image_path = get_annotated_filepath(image)
         m = sha256()
         with open(image_path, "rb") as f:
             m.update(f.read())
@@ -75,6 +75,6 @@ class LoadImage:
 
     @classmethod
     def VALIDATE_INPUTS(s, image):
-        if not folder_paths.exists_annotated_filepath(image):
+        if not exists_annotated_filepath(image):
             return "Invalid image file: {}".format(image)
         return True

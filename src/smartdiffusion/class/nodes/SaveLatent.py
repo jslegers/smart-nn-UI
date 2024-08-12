@@ -1,13 +1,13 @@
-import os
-import json
-from smartdiffusion import utils
+from os import path
+from json import dumps
+from smartdiffusion.utils import save_torch_file
 from smartdiffusion.cli_args import args
-from smartdiffusion import folder_paths
+from smartdiffusion.folder_paths import get_output_directory, get_save_image_path
 
 
 class SaveLatent:
     def __init__(self):
-        self.output_dir = folder_paths.get_output_directory()
+        self.output_dir = get_output_directory()
 
     @classmethod
     def INPUT_TYPES(s):
@@ -34,30 +34,32 @@ class SaveLatent:
         extra_pnginfo=None,
     ):
         full_output_folder, filename, counter, subfolder, filename_prefix = (
-            folder_paths.get_save_image_path(filename_prefix, self.output_dir)
+            get_save_image_path(filename_prefix, self.output_dir)
         )
 
         # support save metadata for latent sharing
 
         prompt_info = ""
         if prompt is not None:
-            prompt_info = json.dumps(prompt)
+            prompt_info = dumps(prompt)
         metadata = None
         if not args.disable_metadata:
             metadata = {"prompt": prompt_info}
             if extra_pnginfo is not None:
                 for x in extra_pnginfo:
-                    metadata[x] = json.dumps(extra_pnginfo[x])
-        file = f"{filename}_{counter:05}_.latent"
+                    metadata[x] = dumps(extra_pnginfo[x])
+        filename = f"{filename}_{counter:05}_.latent"
 
         results = list()
-        results.append({"filename": file, "subfolder": subfolder, "type": "output"})
+        results.append({"filename": filename, "subfolder": subfolder, "type": "output"})
 
-        file = os.path.join(full_output_folder, file)
+        save_torch_file(
+            {
+                "latent_tensor": samples["samples"],
+                "latent_format_version_0": torch.tensor([]),
+            },
+            path.join(full_output_folder, filename),
+            metadata=metadata,
+        )
 
-        output = {}
-        output["latent_tensor"] = samples["samples"]
-        output["latent_format_version_0"] = torch.tensor([])
-
-        utils.save_torch_file(output, file, metadata=metadata)
         return {"ui": {"latents": results}}

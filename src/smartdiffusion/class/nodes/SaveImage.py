@@ -1,15 +1,15 @@
-import os
-import json
+from os import path
+from json import dumps
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 from numpy import clip, uint8
 from smartdiffusion.cli_args import args
-from smartdiffusion import folder_paths
+from smartdiffusion.folder_paths import get_output_directory, get_save_image_path
 
 
 class SaveImage:
     def __init__(self):
-        self.output_dir = folder_paths.get_output_directory()
+        self.output_dir = get_output_directory()
         self.type = "output"
         self.prefix_append = ""
         self.compress_level = 4
@@ -40,7 +40,7 @@ class SaveImage:
     ):
         filename_prefix += self.prefix_append
         full_output_folder, filename, counter, subfolder, filename_prefix = (
-            folder_paths.get_save_image_path(
+            get_save_image_path(
                 filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0]
             )
         )
@@ -52,14 +52,14 @@ class SaveImage:
             if not args.disable_metadata:
                 metadata = PngInfo()
                 if prompt is not None:
-                    metadata.add_text("prompt", json.dumps(prompt))
+                    metadata.add_text("prompt", dumps(prompt))
                 if extra_pnginfo is not None:
                     for x in extra_pnginfo:
-                        metadata.add_text(x, json.dumps(extra_pnginfo[x]))
+                        metadata.add_text(x, dumps(extra_pnginfo[x]))
             filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
             file = f"{filename_with_batch_num}_{counter:05}_.png"
             img.save(
-                os.path.join(full_output_folder, file),
+                path.join(full_output_folder, file),
                 pnginfo=metadata,
                 compress_level=self.compress_level,
             )

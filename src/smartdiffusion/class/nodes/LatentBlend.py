@@ -1,4 +1,4 @@
-from smartdiffusion import utils
+from smartdiffusion.utils import common_upscale
 
 
 class LatentBlend:
@@ -30,7 +30,7 @@ class LatentBlend:
 
         if samples1.shape != samples2.shape:
             samples2.permute(0, 3, 1, 2)
-            samples2 = utils.common_upscale(
+            samples2 = common_upscale(
                 samples2, samples1.shape[3], samples1.shape[2], "bicubic", crop="center"
             )
             samples2.permute(0, 2, 3, 1)

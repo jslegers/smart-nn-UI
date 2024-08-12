@@ -1,13 +1,13 @@
-import random
-from smartdiffusion import folder_paths
+from random import choice
+from smartdiffusion.folder_paths import folder_paths
 
 
 class PreviewImage(SaveImage):
     def __init__(self):
-        self.output_dir = folder_paths.get_temp_directory()
+        self.output_dir = get_temp_directory()
         self.type = "temp"
         self.prefix_append = "_temp_" + "".join(
-            random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5)
+            choice("abcdefghijklmnopqrstupvxyz") for x in range(5)
         )
         self.compress_level = 1
 
