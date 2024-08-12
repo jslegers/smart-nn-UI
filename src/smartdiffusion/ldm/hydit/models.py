@@ -2,16 +2,14 @@ from typing import Any
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-import smartdiffusion.ops
 from smartdiffusion.ldm.modules.diffusionmodules.mmdit import Mlp, TimestepEmbedder, PatchEmbed, RMSNorm
 from smartdiffusion.ldm.modules.diffusionmodules.util import timestep_embedding
 from torch.utils import checkpoint
 
-from .attn_layers import Attention, CrossAttention
-from .poolers import AttentionPool
-from .posemb_layers import get_2d_rotary_pos_embed, get_fill_resize_and_crop
+from smartdiffusion.ldm.hydit.attn_layers import Attention, CrossAttention
+from smartdiffusion.ldm.hydit.poolers import AttentionPool
+from smartdiffusion.ldm.hydit.posemb_layers import get_2d_rotary_pos_embed, get_fill_resize_and_crop
 
 def calc_rope(x, patch_size, head_size):
     th = (x.shape[2] + (patch_size // 2)) // patch_size
@@ -21,7 +19,7 @@ def calc_rope(x, patch_size, head_size):
     sub_args = [start, stop, (th, tw)]
     # head_size = HUNYUAN_DIT_CONFIG['DiT-g/2']['hidden_size'] // HUNYUAN_DIT_CONFIG['DiT-g/2']['num_heads']
     rope = get_2d_rotary_pos_embed(head_size, *sub_args)
-    return rope
+    return (rope[0].to(x), rope[1].to(x))
 
 
 def modulate(x, shift, scale):
@@ -322,7 +320,7 @@ class HunYuanDiT(nn.Module):
         b_t5, l_t5, c_t5 = text_states_t5.shape
         text_states_t5 = self.mlp_t5(text_states_t5.view(-1, c_t5)).view(b_t5, l_t5, -1)
 
-        padding = smartdiffusion.ops.cast_to_input(self.text_embedding_padding, text_states)
+        padding = cast_to_input(self.text_embedding_padding, text_states)
 
         text_states[:,-self.text_len:] = torch.where(text_states_mask[:,-self.text_len:].unsqueeze(2), text_states[:,-self.text_len:], padding[:self.text_len])
         text_states_t5[:,-self.text_len_t5:] = torch.where(text_states_t5_mask[:,-self.text_len_t5:].unsqueeze(2), text_states_t5[:,-self.text_len_t5:], padding[self.text_len:])

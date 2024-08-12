@@ -1,6 +1,7 @@
 import os
 
-import smartdiffusion.sd
+from smartdiffusion import sd
+from smartdiffusion.utils import load_torch_file
 
 def first_file(path, filenames):
     for f in filenames:
@@ -22,15 +23,14 @@ def load_diffusers(model_path, output_vae=True, output_clip=True, embedding_dire
     if text_encoder2_path is not None:
         text_encoder_paths.append(text_encoder2_path)
 
-    unet = smartdiffusion.sd.load_unet(unet_path)
+    unet = sd.load_unet(unet_path)
 
     clip = None
     if output_clip:
-        clip = smartdiffusion.sd.load_clip(text_encoder_paths, embedding_directory=embedding_directory)
+        clip = sd.load_clip(text_encoder_paths, embedding_directory=embedding_directory)
 
     vae = None
     if output_vae:
-        sd = smartdiffusion.utils.load_torch_file(vae_path)
-        vae = smartdiffusion.sd.VAE(sd=sd)
+        vae = sd.VAE(sd=load_torch_file(vae_path))
 
     return (unet, clip, vae)

@@ -127,7 +127,7 @@ def get_caller_module(depth: int = 1) -> ModuleType:
 
 
 def get_module_from_code(code):
-    print(code)
+    #print(code)
 
     def run_code(fullname, source_code=None):
         spec = util.spec_from_loader(fullname, loader=None)
@@ -314,10 +314,10 @@ def module(module, attrs=None):
 
         def __init__(self, value):
             self.name = value
-            print(f"INIT --  self.name = {value}")
+            #print(f"INIT --  self.name = {value}")
 
         def __get__(self, instance, owner):
-            print(f"GET --  instance.__dict__[{self.name}]")
+            #print(f"GET --  instance.__dict__[{self.name}]")
             return instance.__storage__.get_by_proxy(self.name)
 
     class Module_proxy_shared:
@@ -362,7 +362,7 @@ def module(module, attrs=None):
             return self.dependency[key]
 
         def get_first_attr(self):
-            print(dir(self))
+            #print(dir(self))
             return self.get_attr(self.attribute_names[0])
 
         def get_attr(self, attr):
@@ -372,7 +372,7 @@ def module(module, attrs=None):
         def activate(self):
             if not self.activated:
                 self.activated = True
-                print("ACTIVATE")
+                #print("ACTIVATE")
                 mod = get_mod(self.module_name, self.attribute_names)
                 if not self.attribute_names:
                     self.dependency = mod
@@ -384,7 +384,7 @@ def module(module, attrs=None):
                         setattr(self.dependency, key, attr)
                     self.attributes_proxy = None
                     self.proxy = None
-                print(self.dependency)
+                #print(self.dependency)
             return
 
     class Module_proxy_child:
@@ -395,15 +395,15 @@ def module(module, attrs=None):
             self.__storage__ = storage
 
         def __getattr__(self, key):
-            print('child.__getitem__')
-            print(key)
+            #print('child.__getitem__')
+            #print(key)
             return getattr(self.__storage__.get_attr(self.__name__), key)
 
         def __str__(self):
             return str(self.__storage__.get_attr(self.__name__))
 
         def __call__(self, *args, **kwargs):
-            print('child.__call__')
+            #print('child.__call__')
             return self.__storage__.get_attr(self.__name__)(*args, **kwargs)
 
     class Module_proxy:
@@ -413,15 +413,15 @@ def module(module, attrs=None):
 
         def __getattr__(self, key):
             try:
-                print('parent.__getattr__')
-                print(key)
+                #print('parent.__getattr__')
+                #print(key)
                 return self.__storage__.get_attr(key)
             except Exception as e:
                 return getattr(self.__storage__.get_first_attr(), key)
 
         def __getitem__(self, key):
-            print('parent.__getitem__')
-            print(key)
+            #print('parent.__getitem__')
+            #print(key)
             return self.__storage__.get_item(key)
 
         def __call__(self, *args, **kwargs):

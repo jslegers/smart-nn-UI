@@ -4,11 +4,10 @@ import torch
 import json
 import logging
 
-import smartdiffusion.ops
-import smartdiffusion.model_patcher
-import smartdiffusion.model_management
-import smartdiffusion.utils
-import smartdiffusion.clip_model
+from smartdiffusion.ops import manual_cast
+from smartdiffusion.model_patcher import ModelPatcher
+from smartdiffusion import model_management
+from smartdiffusion.clip_model import CLIPVisionModelProjection
 
 class Output:
     def __getitem__(self, key):
@@ -35,13 +34,13 @@ class ClipVisionModel():
             config = json.load(f)
 
         self.image_size = config.get("image_size", 224)
-        self.load_device = smartdiffusion.model_management.text_encoder_device()
-        offload_device = smartdiffusion.model_management.text_encoder_offload_device()
-        self.dtype = smartdiffusion.model_management.text_encoder_dtype(self.load_device)
-        self.model = smartdiffusion.clip_model.CLIPVisionModelProjection(config, self.dtype, offload_device, smartdiffusion.ops.manual_cast)
+        self.load_device = model_management.text_encoder_device()
+        offload_device = model_management.text_encoder_offload_device()
+        self.dtype = model_management.text_encoder_dtype(self.load_device)
+        self.model = CLIPVisionModelProjection(config, self.dtype, offload_device, manual_cast)
         self.model.eval()
 
-        self.patcher = smartdiffusion.model_patcher.ModelPatcher(self.model, load_device=self.load_device, offload_device=offload_device)
+        self.patcher = ModelPatcher(self.model, load_device=self.load_device, offload_device=offload_device)
 
     def load_sd(self, sd):
         return self.model.load_state_dict(sd, strict=False)
@@ -50,14 +49,14 @@ class ClipVisionModel():
         return self.model.state_dict()
 
     def encode_image(self, image):
-        smartdiffusion.model_management.load_model_gpu(self.patcher)
+        model_management.load_model_gpu(self.patcher)
         pixel_values = clip_preprocess(image.to(self.load_device), size=self.image_size).float()
         out = self.model(pixel_values=pixel_values, intermediate_output=-2)
 
         outputs = Output()
-        outputs["last_hidden_state"] = out[0].to(smartdiffusion.model_management.intermediate_device())
-        outputs["image_embeds"] = out[2].to(smartdiffusion.model_management.intermediate_device())
-        outputs["penultimate_hidden_states"] = out[1].to(smartdiffusion.model_management.intermediate_device())
+        outputs["last_hidden_state"] = out[0].to(model_management.intermediate_device())
+        outputs["image_embeds"] = out[2].to(model_management.intermediate_device())
+        outputs["penultimate_hidden_states"] = out[1].to(model_management.intermediate_device())
         return outputs
 
 def convert_to_transformers(sd, prefix):

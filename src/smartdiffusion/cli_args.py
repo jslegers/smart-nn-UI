@@ -2,7 +2,7 @@ import argparse
 import enum
 import os
 from typing import Optional
-import smartdiffusion.options
+from smartdiffusion.options import args_parsing
 
 
 class EnumAction(argparse.Action):
@@ -161,7 +161,7 @@ parser.add_argument(
     help="The local filesystem path to the directory where the frontend is located. Overrides --front-end-version.",
 )
 
-if smartdiffusion.options.args_parsing:
+if args_parsing:
     args = parser.parse_args()
 else:
     args = parser.parse_args([])

@@ -2,17 +2,16 @@ import torch
 import math
 import os
 import logging
-import smartdiffusion.utils
-import smartdiffusion.model_management
-import smartdiffusion.model_detection
-import smartdiffusion.model_patcher
-import smartdiffusion.ops
-import smartdiffusion.latent_formats
+from smartdiffusion import utils
+from smartdiffusion import model_management
+from smartdiffusion import model_detection
+from smartdiffusion import model_patcher
+from smartdiffusion import ops
+from smartdiffusion import latent_formats
 
-import smartdiffusion.cldm.cldm
-import smartdiffusion.t2i_adapter.adapter
-import smartdiffusion.ldm.cascade.controlnet
-import smartdiffusion.cldm.mmdit
+from smartdiffusion.cldm import cldm, mmdit
+from smartdiffusion.t2i_adapter import adapter
+from smartdiffusion.ldm.cascade import controlnet
 
 
 def broadcast_image_to(tensor, target_batch_size, batched_number):
@@ -48,7 +47,7 @@ class ControlBase:
         self.extra_args = {}
 
         if device is None:
-            device = smartdiffusion.model_management.get_torch_device()
+            device = model_management.get_torch_device()
         self.device = device
         self.previous_controlnet = None
 
@@ -147,7 +146,7 @@ class ControlNet(ControlBase):
         self.control_model = control_model
         self.load_device = load_device
         if control_model is not None:
-            self.control_model_wrapped = smartdiffusion.model_patcher.ModelPatcher(self.control_model, load_device=load_device, offload_device=smartdiffusion.model_management.unet_offload_device())
+            self.control_model_wrapped = model_patcher.ModelPatcher(self.control_model, load_device=load_device, offload_device=model_management.unet_offload_device())
 
         self.compression_ratio = compression_ratio
         self.global_average_pooling = global_average_pooling
@@ -179,11 +178,11 @@ class ControlNet(ControlBase):
             compression_ratio = self.compression_ratio
             if self.vae is not None:
                 compression_ratio *= self.vae.downscale_ratio
-            self.cond_hint = smartdiffusion.utils.common_upscale(self.cond_hint_original, x_noisy.shape[3] * compression_ratio, x_noisy.shape[2] * compression_ratio, self.upscale_algorithm, "center")
+            self.cond_hint = utils.common_upscale(self.cond_hint_original, x_noisy.shape[3] * compression_ratio, x_noisy.shape[2] * compression_ratio, self.upscale_algorithm, "center")
             if self.vae is not None:
-                loaded_models = smartdiffusion.model_management.loaded_models(only_currently_used=True)
+                loaded_models = model_management.loaded_models(only_currently_used=True)
                 self.cond_hint = self.vae.encode(self.cond_hint.movedim(1, -1))
-                smartdiffusion.model_management.load_models_gpu(loaded_models)
+                model_management.load_models_gpu(loaded_models)
             if self.latent_format is not None:
                 self.cond_hint = self.latent_format.process_in(self.cond_hint)
             self.cond_hint = self.cond_hint.to(device=self.device, dtype=dtype)
@@ -224,7 +223,7 @@ class ControlNet(ControlBase):
         super().cleanup()
 
 class ControlLoraOps:
-    class Linear(torch.nn.Module, smartdiffusion.ops.CastWeightBiasOp):
+    class Linear(torch.nn.Module, ops.CastWeightBiasOp):
         def __init__(self, in_features: int, out_features: int, bias: bool = True,
                     device=None, dtype=None) -> None:
             factory_kwargs = {'device': device, 'dtype': dtype}
@@ -237,13 +236,13 @@ class ControlLoraOps:
             self.bias = None
 
         def forward(self, input):
-            weight, bias = smartdiffusion.ops.cast_bias_weight(self, input)
+            weight, bias = ops.cast_bias_weight(self, input)
             if self.up is not None:
                 return torch.nn.functional.linear(input, weight + (torch.mm(self.up.flatten(start_dim=1), self.down.flatten(start_dim=1))).reshape(self.weight.shape).type(input.dtype), bias)
             else:
                 return torch.nn.functional.linear(input, weight, bias)
 
-    class Conv2d(torch.nn.Module, smartdiffusion.ops.CastWeightBiasOp):
+    class Conv2d(torch.nn.Module, ops.CastWeightBiasOp):
         def __init__(
             self,
             in_channels,
@@ -277,7 +276,7 @@ class ControlLoraOps:
 
 
         def forward(self, input):
-            weight, bias = smartdiffusion.ops.cast_bias_weight(self, input)
+            weight, bias = ops.cast_bias_weight(self, input)
             if self.up is not None:
                 return torch.nn.functional.conv2d(input, weight + (torch.mm(self.up.flatten(start_dim=1), self.down.flatten(start_dim=1))).reshape(self.weight.shape).type(input.dtype), bias, self.stride, self.padding, self.dilation, self.groups)
             else:
@@ -289,6 +288,7 @@ class ControlLora(ControlNet):
         ControlBase.__init__(self, device)
         self.control_weights = control_weights
         self.global_average_pooling = global_average_pooling
+        self.extra_conds += ["y"]
 
     def pre_run(self, model, percent_to_timestep_function):
         super().pre_run(model, percent_to_timestep_function)
@@ -298,17 +298,17 @@ class ControlLora(ControlNet):
         self.manual_cast_dtype = model.manual_cast_dtype
         dtype = model.get_dtype()
         if self.manual_cast_dtype is None:
-            class control_lora_ops(ControlLoraOps, smartdiffusion.ops.disable_weight_init):
+            class control_lora_ops(ControlLoraOps, ops.disable_weight_init):
                 pass
         else:
-            class control_lora_ops(ControlLoraOps, smartdiffusion.ops.manual_cast):
+            class control_lora_ops(ControlLoraOps, ops.manual_cast):
                 pass
             dtype = self.manual_cast_dtype
 
         controlnet_config["operations"] = control_lora_ops
         controlnet_config["dtype"] = dtype
-        self.control_model = smartdiffusion.cldm.cldm.ControlNet(**controlnet_config)
-        self.control_model.to(smartdiffusion.model_management.get_torch_device())
+        self.control_model = cldm.ControlNet(**controlnet_config)
+        self.control_model.to(model_management.get_torch_device())
         diffusion_model = model.diffusion_model
         sd = diffusion_model.state_dict()
         cm = self.control_model.state_dict()
@@ -316,13 +316,13 @@ class ControlLora(ControlNet):
         for k in sd:
             weight = sd[k]
             try:
-                smartdiffusion.utils.set_attr_param(self.control_model, k, weight)
+                utils.set_attr_param(self.control_model, k, weight)
             except:
                 pass
 
         for k in self.control_weights:
             if k not in {"lora_controlnet"}:
-                smartdiffusion.utils.set_attr_param(self.control_model, k, self.control_weights[k].to(dtype).to(smartdiffusion.model_management.get_torch_device()))
+                utils.set_attr_param(self.control_model, k, self.control_weights[k].to(dtype).to(model_management.get_torch_device()))
 
     def copy(self):
         c = ControlLora(self.control_weights, global_average_pooling=self.global_average_pooling)
@@ -339,21 +339,21 @@ class ControlLora(ControlNet):
         return out
 
     def inference_memory_requirements(self, dtype):
-        return smartdiffusion.utils.calculate_parameters(self.control_weights) * smartdiffusion.model_management.dtype_size(dtype) + ControlBase.inference_memory_requirements(self, dtype)
+        return utils.calculate_parameters(self.control_weights) * model_management.dtype_size(dtype) + ControlBase.inference_memory_requirements(self, dtype)
 
 def controlnet_config(sd):
-    model_config = smartdiffusion.model_detection.model_config_from_unet(sd, "", True)
+    model_config = model_detection.model_config_from_unet(sd, "", True)
 
     supported_inference_dtypes = model_config.supported_inference_dtypes
 
     controlnet_config = model_config.unet_config
-    unet_dtype = smartdiffusion.model_management.unet_dtype(supported_dtypes=supported_inference_dtypes)
-    load_device = smartdiffusion.model_management.get_torch_device()
-    manual_cast_dtype = smartdiffusion.model_management.unet_manual_cast(unet_dtype, load_device)
+    unet_dtype = model_management.unet_dtype(supported_dtypes=supported_inference_dtypes)
+    load_device = model_management.get_torch_device()
+    manual_cast_dtype = model_management.unet_manual_cast(unet_dtype, load_device)
     if manual_cast_dtype is not None:
-        operations = smartdiffusion.ops.manual_cast
+        operations = ops.manual_cast
     else:
-        operations = smartdiffusion.ops.disable_weight_init
+        operations = ops.disable_weight_init
 
     return model_config, operations, load_device, unet_dtype, manual_cast_dtype
 
@@ -368,23 +368,23 @@ def controlnet_load_state_dict(control_model, sd):
     return control_model
 
 def load_controlnet_mmdit(sd):
-    new_sd = smartdiffusion.model_detection.convert_diffusers_mmdit(sd, "")
+    new_sd = model_detection.convert_diffusers_mmdit(sd, "")
     model_config, operations, load_device, unet_dtype, manual_cast_dtype = controlnet_config(new_sd)
-    num_blocks = smartdiffusion.model_detection.count_blocks(new_sd, 'joint_blocks.{}.')
+    num_blocks = model_detection.count_blocks(new_sd, 'joint_blocks.{}.')
     for k in sd:
         new_sd[k] = sd[k]
 
-    control_model = smartdiffusion.cldm.mmdit.ControlNet(num_blocks=num_blocks, operations=operations, device=load_device, dtype=unet_dtype, **model_config.unet_config)
+    control_model = mmdit.ControlNet(num_blocks=num_blocks, operations=operations, device=load_device, dtype=unet_dtype, **model_config.unet_config)
     control_model = controlnet_load_state_dict(control_model, new_sd)
 
-    latent_format = smartdiffusion.latent_formats.SD3()
+    latent_format = latent_formats.SD3()
     latent_format.shift_factor = 0 #SD3 controlnet weirdness
     control = ControlNet(control_model, compression_ratio=1, latent_format=latent_format, load_device=load_device, manual_cast_dtype=manual_cast_dtype)
     return control
 
 
 def load_controlnet(ckpt_path, model=None):
-    controlnet_data = smartdiffusion.utils.load_torch_file(ckpt_path, safe_load=True)
+    controlnet_data = utils.load_torch_file(ckpt_path, safe_load=True)
     if "lora_controlnet" in controlnet_data:
         return ControlLora(controlnet_data)
 
@@ -392,8 +392,8 @@ def load_controlnet(ckpt_path, model=None):
     supported_inference_dtypes = None
 
     if "controlnet_cond_embedding.conv_in.weight" in controlnet_data: #diffusers format
-        controlnet_config = smartdiffusion.model_detection.unet_config_from_diffusers_unet(controlnet_data)
-        diffusers_keys = smartdiffusion.utils.unet_to_diffusers(controlnet_config)
+        controlnet_config = model_detection.unet_config_from_diffusers_unet(controlnet_data)
+        diffusers_keys = utils.unet_to_diffusers(controlnet_config)
         diffusers_keys["controlnet_mid_block.weight"] = "middle_block_out.0.weight"
         diffusers_keys["controlnet_mid_block.bias"] = "middle_block_out.0.bias"
 
@@ -460,28 +460,28 @@ def load_controlnet(ckpt_path, model=None):
         return net
 
     if controlnet_config is None:
-        model_config = smartdiffusion.model_detection.model_config_from_unet(controlnet_data, prefix, True)
+        model_config = model_detection.model_config_from_unet(controlnet_data, prefix, True)
         supported_inference_dtypes = model_config.supported_inference_dtypes
         controlnet_config = model_config.unet_config
 
-    load_device = smartdiffusion.model_management.get_torch_device()
+    load_device = model_management.get_torch_device()
     if supported_inference_dtypes is None:
-        unet_dtype = smartdiffusion.model_management.unet_dtype()
+        unet_dtype = model_management.unet_dtype()
     else:
-        unet_dtype = smartdiffusion.model_management.unet_dtype(supported_dtypes=supported_inference_dtypes)
+        unet_dtype = model_management.unet_dtype(supported_dtypes=supported_inference_dtypes)
 
-    manual_cast_dtype = smartdiffusion.model_management.unet_manual_cast(unet_dtype, load_device)
+    manual_cast_dtype = model_management.unet_manual_cast(unet_dtype, load_device)
     if manual_cast_dtype is not None:
-        controlnet_config["operations"] = smartdiffusion.ops.manual_cast
+        controlnet_config["operations"] = ops.manual_cast
     controlnet_config["dtype"] = unet_dtype
     controlnet_config.pop("out_channels")
     controlnet_config["hint_channels"] = controlnet_data["{}input_hint_block.0.weight".format(prefix)].shape[1]
-    control_model = smartdiffusion.cldm.cldm.ControlNet(**controlnet_config)
+    control_model = cldm.ControlNet(**controlnet_config)
 
     if pth:
         if 'difference' in controlnet_data:
             if model is not None:
-                smartdiffusion.model_management.load_models_gpu([model])
+                model_management.load_models_gpu([model])
                 model_sd = model.model_state_dict()
                 for x in controlnet_data:
                     c_m = "control_model."
@@ -548,7 +548,7 @@ class T2IAdapter(ControlBase):
             self.control_input = None
             self.cond_hint = None
             width, height = self.scale_image_to(x_noisy.shape[3] * self.compression_ratio, x_noisy.shape[2] * self.compression_ratio)
-            self.cond_hint = smartdiffusion.utils.common_upscale(self.cond_hint_original, width, height, self.upscale_algorithm, "center").float().to(self.device)
+            self.cond_hint = utils.common_upscale(self.cond_hint_original, width, height, self.upscale_algorithm, "center").float().to(self.device)
             if self.channels_in == 1 and self.cond_hint.shape[1] > 1:
                 self.cond_hint = torch.mean(self.cond_hint, 1, keepdim=True)
         if x_noisy.shape[0] != self.cond_hint.shape[0]:
@@ -583,12 +583,12 @@ def load_t2i_adapter(t2i_data):
                 prefix_replace["adapter.body.{}.resnets.{}.".format(i, j)] = "body.{}.".format(i * 2 + j)
             prefix_replace["adapter.body.{}.".format(i, j)] = "body.{}.".format(i * 2)
         prefix_replace["adapter."] = ""
-        t2i_data = smartdiffusion.utils.state_dict_prefix_replace(t2i_data, prefix_replace)
+        t2i_data = utils.state_dict_prefix_replace(t2i_data, prefix_replace)
     keys = t2i_data.keys()
 
     if "body.0.in_conv.weight" in keys:
         cin = t2i_data['body.0.in_conv.weight'].shape[1]
-        model_ad = smartdiffusion.t2i_adapter.adapter.Adapter_light(cin=cin, channels=[320, 640, 1280, 1280], nums_rb=4)
+        model_ad = adapter.Adapter_light(cin=cin, channels=[320, 640, 1280, 1280], nums_rb=4)
     elif 'conv_in.weight' in keys:
         cin = t2i_data['conv_in.weight'].shape[1]
         channel = t2i_data['conv_in.weight'].shape[0]
@@ -600,13 +600,13 @@ def load_t2i_adapter(t2i_data):
         xl = False
         if cin == 256 or cin == 768:
             xl = True
-        model_ad = smartdiffusion.t2i_adapter.adapter.Adapter(cin=cin, channels=[channel, channel*2, channel*4, channel*4][:4], nums_rb=2, ksize=ksize, sk=True, use_conv=use_conv, xl=xl)
+        model_ad = adapter.Adapter(cin=cin, channels=[channel, channel*2, channel*4, channel*4][:4], nums_rb=2, ksize=ksize, sk=True, use_conv=use_conv, xl=xl)
     elif "backbone.0.0.weight" in keys:
-        model_ad = smartdiffusion.ldm.cascade.controlnet.ControlNet(c_in=t2i_data['backbone.0.0.weight'].shape[1], proj_blocks=[0, 4, 8, 12, 51, 55, 59, 63])
+        model_ad = controlnet.ControlNet(c_in=t2i_data['backbone.0.0.weight'].shape[1], proj_blocks=[0, 4, 8, 12, 51, 55, 59, 63])
         compression_ratio = 32
         upscale_algorithm = 'bilinear'
     elif "backbone.10.blocks.0.weight" in keys:
-        model_ad = smartdiffusion.ldm.cascade.controlnet.ControlNet(c_in=t2i_data['backbone.0.weight'].shape[1], bottleneck_mode="large", proj_blocks=[0, 4, 8, 12, 51, 55, 59, 63])
+        model_ad = controlnet.ControlNet(c_in=t2i_data['backbone.0.weight'].shape[1], bottleneck_mode="large", proj_blocks=[0, 4, 8, 12, 51, 55, 59, 63])
         compression_ratio = 1
         upscale_algorithm = 'nearest-exact'
     else:

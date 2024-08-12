@@ -1,13 +1,18 @@
 from smartdiffusion import sd
 from smartdiffusion import folder_paths
 
+
 class DualCLIPLoader:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "clip_name1": (folder_paths.get_filename_list("clip"), ),
-                              "clip_name2": (folder_paths.get_filename_list("clip"), ),
-                              "type": (["sdxl", "sd3", "flux"], ),
-                             }}
+        return {
+            "required": {
+                "clip_name1": (folder_paths.get_filename_list("clip"),),
+                "clip_name2": (folder_paths.get_filename_list("clip"),),
+                "type": (["sdxl", "sd3", "flux"],),
+            }
+        }
+
     RETURN_TYPES = ("CLIP",)
     FUNCTION = "load_clip"
 
@@ -24,6 +29,9 @@ class DualCLIPLoader:
         elif type == "flux":
             clip_type = sd.CLIPType.FLUX
             clip_path2 = folder_paths.get_full_path("t5", clip_name2)
-
-        clip = sd.load_clip(ckpt_paths=[clip_path1, clip_path2], embedding_directory=folder_paths.get_folder_paths("embeddings"), clip_type=clip_type)
+        clip = sd.load_clip(
+            ckpt_paths=[clip_path1, clip_path2],
+            embedding_directory=folder_paths.get_folder_paths("embeddings"),
+            clip_type=clip_type,
+        )
         return (clip,)

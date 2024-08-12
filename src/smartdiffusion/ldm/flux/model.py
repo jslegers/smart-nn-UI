@@ -2,10 +2,9 @@
 
 from dataclasses import dataclass
 
-import torch
-from torch import Tensor, nn
+from torch import Tensor, nn, zeros, cat, linspace
 
-from .layers import (
+from smartdiffusion.ldm.flux.layers import (
     DoubleStreamBlock,
     EmbedND,
     LastLayer,
@@ -15,7 +14,7 @@ from .layers import (
 )
 
 from einops import rearrange, repeat
-import smartdiffusion.ldm.common_dit
+from smartdiffusion.ldm.common_dit import pad_to_patch_size
 
 @dataclass
 class FluxParams:
@@ -109,13 +108,13 @@ class Flux(nn.Module):
         vec = vec + self.vector_in(y)
         txt = self.txt_in(txt)
 
-        ids = torch.cat((txt_ids, img_ids), dim=1)
+        ids = cat((txt_ids, img_ids), dim=1)
         pe = self.pe_embedder(ids)
 
         for block in self.double_blocks:
             img, txt = block(img=img, txt=txt, vec=vec, pe=pe)
 
-        img = torch.cat((txt, img), 1)
+        img = cat((txt, img), 1)
         for block in self.single_blocks:
             img = block(img, vec=vec, pe=pe)
         img = img[:, txt.shape[1] :, ...]
@@ -126,17 +125,17 @@ class Flux(nn.Module):
     def forward(self, x, timestep, context, y, guidance, **kwargs):
         bs, c, h, w = x.shape
         patch_size = 2
-        x = smartdiffusion.ldm.common_dit.pad_to_patch_size(x, (patch_size, patch_size))
+        x = pad_to_patch_size(x, (patch_size, patch_size))
 
         img = rearrange(x, "b c (h ph) (w pw) -> b (h w) (c ph pw)", ph=patch_size, pw=patch_size)
 
         h_len = ((h + (patch_size // 2)) // patch_size)
         w_len = ((w + (patch_size // 2)) // patch_size)
-        img_ids = torch.zeros((h_len, w_len, 3), device=x.device, dtype=x.dtype)
-        img_ids[..., 1] = img_ids[..., 1] + torch.linspace(0, h_len - 1, steps=h_len, device=x.device, dtype=x.dtype)[:, None]
-        img_ids[..., 2] = img_ids[..., 2] + torch.linspace(0, w_len - 1, steps=w_len, device=x.device, dtype=x.dtype)[None, :]
+        img_ids = zeros((h_len, w_len, 3), device=x.device, dtype=x.dtype)
+        img_ids[..., 1] = img_ids[..., 1] + linspace(0, h_len - 1, steps=h_len, device=x.device, dtype=x.dtype)[:, None]
+        img_ids[..., 2] = img_ids[..., 2] + linspace(0, w_len - 1, steps=w_len, device=x.device, dtype=x.dtype)[None, :]
         img_ids = repeat(img_ids, "h w c -> b (h w) c", b=bs)
 
-        txt_ids = torch.zeros((bs, context.shape[1], 3), device=x.device, dtype=x.dtype)
+        txt_ids = zeros((bs, context.shape[1], 3), device=x.device, dtype=x.dtype)
         out = self.forward_orig(img, img_ids, context, txt_ids, timestep, y, guidance)
         return rearrange(out, "b (h w) (c ph pw) -> b c (h ph) (w pw)", h=h_len, w=w_len, ph=2, pw=2)[:,:,:h,:w]

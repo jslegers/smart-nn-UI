@@ -1,12 +1,12 @@
 import os
 
 from transformers import CLIPTokenizer
-import smartdiffusion.ops
+from smartdiffusion.ops import manual_cast
 import torch
 import traceback
 import zipfile
 from smartdiffusion import model_management
-from smartdiffusion import clip_model
+from smartdiffusion.clip_model import CLIPTextModel
 import json
 import logging
 import numbers
@@ -82,7 +82,7 @@ class SDClipModel(torch.nn.Module, ClipTokenWeightEncoder):
         "hidden"
     ]
     def __init__(self, version="openai/clip-vit-large-patch14", device="cpu", max_length=77,
-                 freeze=True, layer="last", layer_idx=None, textmodel_json_config=None, dtype=None, model_class=smartdiffusion.clip_model.CLIPTextModel,
+                 freeze=True, layer="last", layer_idx=None, textmodel_json_config=None, dtype=None, model_class=CLIPTextModel,
                  special_tokens={"start": 49406, "end": 49407, "pad": 49407}, layer_norm_hidden_state=True, enable_attention_masks=False, zero_out_masked=False,
                  return_projected_pooled=True, return_attention_masks=False):  # clip-vit-base-patch32
         super().__init__()
@@ -94,7 +94,7 @@ class SDClipModel(torch.nn.Module, ClipTokenWeightEncoder):
         with open(textmodel_json_config) as f:
             config = json.load(f)
 
-        self.operations = smartdiffusion.ops.manual_cast
+        self.operations = manual_cast
         self.transformer = model_class(config, dtype, device, self.operations)
         self.num_layers = self.transformer.num_layers
 

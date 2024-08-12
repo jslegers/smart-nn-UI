@@ -1,11 +1,14 @@
 class CLIPTextEncodeHunyuanDiT:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {
-            "clip": ("CLIP", ),
-            "bert": ("STRING", {"multiline": True, "dynamicPrompts": True}),
-            "mt5xl": ("STRING", {"multiline": True, "dynamicPrompts": True}),
-            }}
+        return {
+            "required": {
+                "clip": ("CLIP",),
+                "bert": ("STRING", {"multiline": True, "dynamicPrompts": True}),
+                "mt5xl": ("STRING", {"multiline": True, "dynamicPrompts": True}),
+            }
+        }
+
     RETURN_TYPES = ("CONDITIONING",)
     FUNCTION = "encode"
 
@@ -17,7 +20,8 @@ class CLIPTextEncodeHunyuanDiT:
 
         output = clip.encode_from_tokens(tokens, return_pooled=True, return_dict=True)
         cond = output.pop("cond")
-        return ([[cond, output]], )
+        return ([[cond, output]],)
+
 
 NODE_CLASS_MAPPINGS = {
     "CLIPTextEncodeHunyuanDiT": CLIPTextEncodeHunyuanDiT,

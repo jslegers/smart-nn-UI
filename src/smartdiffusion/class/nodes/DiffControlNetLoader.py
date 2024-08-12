@@ -1,11 +1,16 @@
 from smartdiffusion import controlnet
 from smartdiffusion import folder_paths
 
+
 class DiffControlNetLoader:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "model": ("MODEL",),
-                              "control_net_name": (folder_paths.get_filename_list("controlnet"), )}}
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "control_net_name": (folder_paths.get_filename_list("controlnet"),),
+            }
+        }
 
     RETURN_TYPES = ("CONTROL_NET",)
     FUNCTION = "load_controlnet"

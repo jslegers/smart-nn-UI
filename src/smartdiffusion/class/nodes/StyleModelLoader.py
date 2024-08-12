@@ -1,10 +1,15 @@
 from smartdiffusion import sd
 from smartdiffusion import folder_paths
 
+
 class StyleModelLoader:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "style_model_name": (folder_paths.get_filename_list("style_models"), )}}
+        return {
+            "required": {
+                "style_model_name": (folder_paths.get_filename_list("style_models"),)
+            }
+        }
 
     RETURN_TYPES = ("STYLE_MODEL",)
     FUNCTION = "load_style_model"

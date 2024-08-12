@@ -1,11 +1,16 @@
 import torch
 
+
 class LatentFlip:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "samples": ("LATENT",),
-                              "flip_method": (["x-axis: vertically", "y-axis: horizontally"],),
-                              }}
+        return {
+            "required": {
+                "samples": ("LATENT",),
+                "flip_method": (["x-axis: vertically", "y-axis: horizontally"],),
+            }
+        }
+
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "flip"
 
@@ -17,5 +22,4 @@ class LatentFlip:
             s["samples"] = torch.flip(samples["samples"], dims=[2])
         elif flip_method.startswith("y"):
             s["samples"] = torch.flip(samples["samples"], dims=[3])
-
         return (s,)

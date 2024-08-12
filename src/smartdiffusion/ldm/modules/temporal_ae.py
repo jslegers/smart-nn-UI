@@ -4,16 +4,15 @@ from typing import Callable, Iterable, Union
 import torch
 from einops import rearrange, repeat
 
-import smartdiffusion.ops
-ops = smartdiffusion.ops.disable_weight_init
+from smartdiffusion.disable_weight_init import disable_weight_init
 
-from .diffusionmodules.model import (
+from smartdiffusion.ldm.modules.diffusionmodules.model import (
     AttnBlock,
     Decoder,
     ResnetBlock,
 )
-from .diffusionmodules.openaimodel import ResBlock, timestep_embedding
-from .attention import BasicTransformerBlock
+from smartdiffusion.ldm.modules.diffusionmodules.openaimodel import ResBlock, timestep_embedding
+from smartdiffusion.ldm.modules.attention import BasicTransformerBlock
 
 def partialclass(cls, *args, **kwargs):
     class NewCls(cls):
@@ -89,7 +88,7 @@ class VideoResBlock(ResnetBlock):
         return x
 
 
-class AE3DConv(ops.Conv2d):
+class AE3DConv(disable_weight_init.Conv2d):
     def __init__(self, in_channels, out_channels, video_kernel_size=3, *args, **kwargs):
         super().__init__(in_channels, out_channels, *args, **kwargs)
         if isinstance(video_kernel_size, Iterable):
@@ -97,7 +96,7 @@ class AE3DConv(ops.Conv2d):
         else:
             padding = int(video_kernel_size // 2)
 
-        self.time_mix_conv = ops.Conv3d(
+        self.time_mix_conv = disable_weight_init.Conv3d(
             in_channels=out_channels,
             out_channels=out_channels,
             kernel_size=video_kernel_size,
@@ -131,9 +130,9 @@ class AttnVideoBlock(AttnBlock):
 
         time_embed_dim = self.in_channels * 4
         self.video_time_embed = torch.nn.Sequential(
-            ops.Linear(self.in_channels, time_embed_dim),
+            disable_weight_init.Linear(self.in_channels, time_embed_dim),
             torch.nn.SiLU(),
-            ops.Linear(time_embed_dim, self.in_channels),
+            disable_weight_init.Linear(time_embed_dim, self.in_channels),
         )
 
         self.merge_strategy = merge_strategy

@@ -1,74 +1,49 @@
 import math
 import torch
-import torch.nn.functional as F
+from torch.nn.functional import gelu
 from torch import nn, einsum
 from einops import rearrange, repeat
 from typing import Optional
 import logging
 
-from .diffusionmodules.util import AlphaBlender, timestep_embedding
-from .sub_quadratic_attention import efficient_dot_product_attention
+from smartdiffusion.ldm.modules.diffusionmodules.util import AlphaBlender, timestep_embedding
+from smartdiffusion.ldm.modules.sub_quadratic_attention import efficient_dot_product_attention
 
 from smartdiffusion import model_management
 
 if model_management.xformers_enabled():
     import xformers
-    import xformers.ops
+    from xformers.ops import memory_efficient_attention
 
 from smartdiffusion.cli_args import args
-import smartdiffusion.ops
-ops = smartdiffusion.ops.disable_weight_init
+from smartdiffusion.ops import disable_weight_init
 
 FORCE_UPCAST_ATTENTION_DTYPE = model_management.force_upcast_attention_dtype()
 
 def get_attn_precision(attn_precision):
     if args.dont_upcast_attention:
         return None
-    if FORCE_UPCAST_ATTENTION_DTYPE is not None:
-        return FORCE_UPCAST_ATTENTION_DTYPE
-    return attn_precision
-
-def exists(val):
-    return val is not None
-
-
-def uniq(arr):
-    return{el: True for el in arr}.keys()
-
-
-def default(val, d):
-    if exists(val):
-        return val
-    return d
-
-
-def max_neg_value(t):
-    return -torch.finfo(t.dtype).max
-
-
-def init_(tensor):
-    dim = tensor.shape[-1]
-    std = 1 / math.sqrt(dim)
-    tensor.uniform_(-std, std)
-    return tensor
-
+    if FORCE_UPCAST_ATTENTION_DTYPE is None:
+        return attn_precision
+    return FORCE_UPCAST_ATTENTION_DTYPE
 
 # feedforward
 class GEGLU(nn.Module):
-    def __init__(self, dim_in, dim_out, dtype=None, device=None, operations=ops):
+    def __init__(self, dim_in, dim_out, dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
         self.proj = operations.Linear(dim_in, dim_out * 2, dtype=dtype, device=device)
 
     def forward(self, x):
         x, gate = self.proj(x).chunk(2, dim=-1)
-        return x * F.gelu(gate)
+        return x * gelu(gate)
 
 
 class FeedForward(nn.Module):
-    def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0., dtype=None, device=None, operations=ops):
+    def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0., dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
         inner_dim = int(dim * mult)
-        dim_out = default(dim_out, dim)
+        if dim_out is None:
+            dim_out = dim
         project_in = nn.Sequential(
             operations.Linear(dim, inner_dim, dtype=dtype, device=device),
             nn.GELU()
@@ -121,7 +96,7 @@ def attention_basic(q, k, v, heads, mask=None, attn_precision=None, skip_reshape
 
     del q, k
 
-    if exists(mask):
+    if mask is not None:
         if mask.dtype == torch.bool:
             mask = rearrange(mask, 'b ... -> b (...)') #TODO: check if this bool part matches pytorch attention
             max_neg_value = -torch.finfo(sim.dtype).max
@@ -308,7 +283,7 @@ def attention_split(q, k, v, heads, mask=None, attn_precision=None, skip_reshape
                 r1[:, i:end] = einsum('b i j, b j d -> b i d', s2, v)
                 del s2
             break
-        except model_management.OOM_EXCEPTION as e:
+        except model_management.OutOfMemoryError as e:
             if first_op_done == False:
                 model_management.soft_empty_cache(True)
                 if cleared_cache == False:
@@ -377,7 +352,7 @@ def attention_xformers(q, k, v, heads, mask=None, attn_precision=None, skip_resh
         mask_out[:, :, :mask.shape[-1]] = mask
         mask = mask_out[:, :, :mask.shape[-1]]
 
-    out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=mask)
+    out = memory_efficient_attention(q, k, v, attn_bias=mask)
 
     if skip_reshape:
         out = (
@@ -446,10 +421,11 @@ def optimized_attention_for_device(device, mask=False, small_input=False):
 
 
 class CrossAttention(nn.Module):
-    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0., attn_precision=None, dtype=None, device=None, operations=ops):
+    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0., attn_precision=None, dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
         inner_dim = dim_head * heads
-        context_dim = default(context_dim, query_dim)
+        if context_dim is None:
+            context_dim = query_dim
         self.attn_precision = attn_precision
 
         self.heads = heads
@@ -463,7 +439,8 @@ class CrossAttention(nn.Module):
 
     def forward(self, x, context=None, value=None, mask=None):
         q = self.to_q(x)
-        context = default(context, x)
+        if context is None:
+            context = x
         k = self.to_k(context)
         if value is not None:
             v = self.to_v(value)
@@ -480,7 +457,7 @@ class CrossAttention(nn.Module):
 
 class BasicTransformerBlock(nn.Module):
     def __init__(self, dim, n_heads, d_head, dropout=0., context_dim=None, gated_ff=True, checkpoint=True, ff_in=False, inner_dim=None,
-                 disable_self_attn=False, disable_temporal_crossattention=False, switch_temporal_ca_to_sa=False, attn_precision=None, dtype=None, device=None, operations=ops):
+                 disable_self_attn=False, disable_temporal_crossattention=False, switch_temporal_ca_to_sa=False, attn_precision=None, dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
 
         self.ff_in = ff_in or inner_dim is not None
@@ -647,9 +624,9 @@ class SpatialTransformer(nn.Module):
     def __init__(self, in_channels, n_heads, d_head,
                  depth=1, dropout=0., context_dim=None,
                  disable_self_attn=False, use_linear=False,
-                 use_checkpoint=True, attn_precision=None, dtype=None, device=None, operations=ops):
+                 use_checkpoint=True, attn_precision=None, dtype=None, device=None, operations=disable_weight_init):
         super().__init__()
-        if exists(context_dim) and not isinstance(context_dim, list):
+        if context_dim is not None and not isinstance(context_dim, list):
             context_dim = [context_dim] * depth
         self.in_channels = in_channels
         inner_dim = n_heads * d_head
@@ -722,7 +699,7 @@ class SpatialVideoTransformer(SpatialTransformer):
         disable_temporal_crossattention=False,
         max_time_embed_period: int = 10000,
         attn_precision=None,
-        dtype=None, device=None, operations=ops
+        dtype=None, device=None, operations=disable_weight_init
     ):
         super().__init__(
             in_channels,
@@ -799,7 +776,7 @@ class SpatialVideoTransformer(SpatialTransformer):
         _, _, h, w = x.shape
         x_in = x
         spatial_context = None
-        if exists(context):
+        if context is not None:
             spatial_context = context
 
         if self.use_spatial_context:
@@ -861,5 +838,3 @@ class SpatialVideoTransformer(SpatialTransformer):
             x = self.proj_out(x)
         out = x + x_in
         return out
-
-

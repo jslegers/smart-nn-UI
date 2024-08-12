@@ -1,7 +1,5 @@
-from smartdiffusion import config
-import folder_paths
-
-MAX_RESOLUTION = config.MAX_RESOLUTION
+from smartdiffusion.config import MAX_RESOLUTION
+from smartdiffusion import folder_paths
 
 
 class WebcamCapture(config.LoadImage):
@@ -10,11 +8,18 @@ class WebcamCapture(config.LoadImage):
         return {
             "required": {
                 "image": ("WEBCAM", {}),
-                "width": ("INT", {"default": 0, "min": 0, "max": MAX_RESOLUTION, "step": 1}),
-                "height": ("INT", {"default": 0, "min": 0, "max": MAX_RESOLUTION, "step": 1}),
+                "width": (
+                    "INT",
+                    {"default": 0, "min": 0, "max": MAX_RESOLUTION, "step": 1},
+                ),
+                "height": (
+                    "INT",
+                    {"default": 0, "min": 0, "max": MAX_RESOLUTION, "step": 1},
+                ),
                 "capture_on_queue": ("BOOLEAN", {"default": True}),
             }
         }
+
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "load_capture"
 

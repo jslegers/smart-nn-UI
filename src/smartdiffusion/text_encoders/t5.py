@@ -1,7 +1,7 @@
 import torch
 import math
 from smartdiffusion.ldm.modules.attention import optimized_attention_for_device
-import smartdiffusion.ops
+from smartdiffusion.ops import cast_to_input
 
 class T5LayerNorm(torch.nn.Module):
     def __init__(self, hidden_size, eps=1e-6, dtype=None, device=None, operations=None):
@@ -12,7 +12,7 @@ class T5LayerNorm(torch.nn.Module):
     def forward(self, x):
         variance = x.pow(2).mean(-1, keepdim=True)
         x = x * torch.rsqrt(variance + self.variance_epsilon)
-        return smartdiffusion.ops.cast_to_input(self.weight, x) * x
+        return cast_to_input(self.weight, x) * x
 
 activations = {
     "gelu_pytorch_tanh": lambda a: torch.nn.functional.gelu(a, approximate="tanh"),

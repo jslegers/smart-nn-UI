@@ -1,13 +1,12 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch.nn import Module, Parameter
 from smartdiffusion.ldm.modules.attention import optimized_attention
-import smartdiffusion.ops
+from smartdiffusion.ops import cast_to_input
 
-class AttentionPool(nn.Module):
+class AttentionPool(Module):
     def __init__(self, spacial_dim: int, embed_dim: int, num_heads: int, output_dim: int = None, dtype=None, device=None, operations=None):
         super().__init__()
-        self.positional_embedding = nn.Parameter(torch.empty(spacial_dim + 1, embed_dim, dtype=dtype, device=device))
+        self.positional_embedding = Parameter(torch.empty(spacial_dim + 1, embed_dim, dtype=dtype, device=device))
         self.k_proj = operations.Linear(embed_dim, embed_dim, dtype=dtype, device=device)
         self.q_proj = operations.Linear(embed_dim, embed_dim, dtype=dtype, device=device)
         self.v_proj = operations.Linear(embed_dim, embed_dim, dtype=dtype, device=device)
@@ -19,7 +18,7 @@ class AttentionPool(nn.Module):
         x = x[:,:self.positional_embedding.shape[0] - 1]
         x = x.permute(1, 0, 2)  # NLC -> LNC
         x = torch.cat([x.mean(dim=0, keepdim=True), x], dim=0)  # (L+1)NC
-        x = x + smartdiffusion.ops.cast_to_input(self.positional_embedding[:, None, :], x) # (L+1)NC
+        x = x + cast_to_input(self.positional_embedding[:, None, :], x) # (L+1)NC
 
         q = self.q_proj(x[:1])
         k = self.k_proj(x)

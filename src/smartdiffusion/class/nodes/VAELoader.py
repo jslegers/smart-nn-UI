@@ -3,6 +3,7 @@ from smartdiffusion import sd
 from smartdiffusion import utils
 from smartdiffusion import folder_paths
 
+
 class VAELoader:
     @staticmethod
     def vae_list():
@@ -41,17 +42,19 @@ class VAELoader:
         taesd = {}
         approx_vaes = folder_paths.get_filename_list("vae_approx")
 
-        encoder = next(filter(lambda a: a.startswith("{}_encoder.".format(name)), approx_vaes))
-        decoder = next(filter(lambda a: a.startswith("{}_decoder.".format(name)), approx_vaes))
+        encoder = next(
+            filter(lambda a: a.startswith("{}_encoder.".format(name)), approx_vaes)
+        )
+        decoder = next(
+            filter(lambda a: a.startswith("{}_decoder.".format(name)), approx_vaes)
+        )
 
         enc = utils.load_torch_file(folder_paths.get_full_path("vae_approx", encoder))
         for k in enc:
             taesd["taesd_encoder.{}".format(k)] = enc[k]
-
         dec = utils.load_torch_file(folder_paths.get_full_path("vae_approx", decoder))
         for k in dec:
             taesd["taesd_decoder.{}".format(k)] = dec[k]
-
         if name == "taesd":
             taesd["vae_scale"] = torch.tensor(0.18215)
             taesd["vae_shift"] = torch.tensor(0.0)
@@ -65,13 +68,15 @@ class VAELoader:
 
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "vae_name": (s.vae_list(), )}}
+        return {"required": {"vae_name": (s.vae_list(),)}}
+
     RETURN_TYPES = ("VAE",)
     FUNCTION = "load_vae"
 
     CATEGORY = "loaders"
 
-    #TODO: scale factor?
+    # TODO: scale factor?
+
     def load_vae(self, vae_name):
         if vae_name in ["taesd", "taesdxl", "taesd3"]:
             vae = self.load_taesd(vae_name)

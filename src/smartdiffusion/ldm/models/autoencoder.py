@@ -2,11 +2,14 @@ import torch
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from smartdiffusion.ldm.modules.distributions.distributions import DiagonalGaussianDistribution
+from smartdiffusion.ldm.modules.distributions.distributions import (
+    DiagonalGaussianDistribution,
+)
 
 from smartdiffusion.ldm.util import instantiate_from_config
 from smartdiffusion.ldm.modules.ema import LitEma
-import smartdiffusion.ops
+from smartdiffusion.ops import disable_weight_init
+
 
 class DiagonalGaussianRegularizer(torch.nn.Module):
     def __init__(self, sample: bool = True):
@@ -49,7 +52,6 @@ class AbstractAutoencoder(torch.nn.Module):
         self.use_ema = ema_decay is not None
         if monitor is not None:
             self.monitor = monitor
-
         if self.use_ema:
             self.model_ema = LitEma(self, decay=ema_decay)
             logpy.info(f"Keeping EMAs of {len(list(self.model_ema.buffers()))}.")
@@ -59,6 +61,7 @@ class AbstractAutoencoder(torch.nn.Module):
 
     def on_train_batch_end(self, *args, **kwargs):
         # for EMA computation
+
         if self.use_ema:
             self.model_ema(self)
 
@@ -160,12 +163,14 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
             },
             **kwargs,
         )
-        self.quant_conv = smartdiffusion.ops.disable_weight_init.Conv2d(
+        self.quant_conv = disable_weight_init.Conv2d(
             (1 + ddconfig["double_z"]) * ddconfig["z_channels"],
             (1 + ddconfig["double_z"]) * embed_dim,
             1,
         )
-        self.post_quant_conv = smartdiffusion.ops.disable_weight_init.Conv2d(embed_dim, ddconfig["z_channels"], 1)
+        self.post_quant_conv = disable_weight_init.Conv2d(
+            embed_dim, ddconfig["z_channels"], 1
+        )
         self.embed_dim = embed_dim
 
     def get_autoencoder_params(self) -> list:
@@ -188,7 +193,6 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
                 z_batch = self.quant_conv(z_batch)
                 z.append(z_batch)
             z = torch.cat(z, 0)
-
         z, reg_log = self.regularization(z)
         if return_reg_log:
             return z, reg_log
@@ -208,7 +212,6 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
                 dec_batch = self.decoder(dec_batch, **decoder_kwargs)
                 dec.append(dec_batch)
             dec = torch.cat(dec, 0)
-
         return dec
 
 
