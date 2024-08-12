@@ -85,7 +85,7 @@ try:
         import torch.mps
 except:
     pass
-if args.cpu:
+if args.cpu or (not is_nvidia() and not is_intel_xpu()):
     cpu_state = CPUState.CPU
 
 
@@ -201,10 +201,7 @@ else:
 
 def is_nvidia():
     global cpu_state
-    if cpu_state == CPUState.GPU:
-        if torch.version.cuda:
-            return True
-    return False
+    return cpu_state == CPUState.GPU and torch.cuda.is_available()
 
 
 ENABLE_PYTORCH_ATTENTION = False
@@ -217,11 +214,7 @@ try:
     if is_nvidia():
         torch_version = torch.version.__version__
         if int(torch_version[0]) >= 2:
-            if (
-                ENABLE_PYTORCH_ATTENTION == False
-                and args.use_split_cross_attention == False
-                and args.use_quad_cross_attention == False
-            ):
+            if not args.use_split_cross_attention and not args.use_quad_cross_attention:
                 ENABLE_PYTORCH_ATTENTION = True
             if (
                 torch.cuda.is_bf16_supported()
@@ -1158,12 +1151,9 @@ def soft_empty_cache(force=False):
         torch.mps.empty_cache()
     elif is_intel_xpu():
         torch.xpu.empty_cache()
-    elif torch.cuda.is_available():
-        if (
-            force or is_nvidia()
-        ):  # This seems to make things worse on ROCm so I only do it for cuda
-            torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()
+    elif force or is_nvidia():  # This seems to make things worse on ROCm so I only do it for cuda
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
 
 
 def unload_all_models():
