@@ -182,7 +182,7 @@ def all_files_in_path(*args, **kwargs):
             if extension is None or file_extension in extensions:
                 if file_extension == '.py' and skip_snakecase_python_files:
                     file_name_snake = camel_to_snake(file_name)
-                    if file_name == file_name_snake
+                    if file_name == file_name_snake :
                         continue
                 dict[
                     '.'
