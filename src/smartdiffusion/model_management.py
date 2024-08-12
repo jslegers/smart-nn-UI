@@ -156,6 +156,10 @@ logging.info(
     )
 )
 
+print("cpu_state != CPUState.CPU = " + cpu_state != CPUState.CPU)
+print("total_ram = " + total_ram)
+print("6 * (1024 * 1024 * 1024) = " + 6 * (1024 * 1024 * 1024))
+print("12 * (1024 * 1024 * 1024) = " + total_ram > 12 * (1024 * 1024 * 1024))
 if cpu_state != CPUState.CPU:
     if total_ram < 6 * (1024 * 1024 * 1024) :
         set_vram_to = VRAMState.LOW_VRAM
