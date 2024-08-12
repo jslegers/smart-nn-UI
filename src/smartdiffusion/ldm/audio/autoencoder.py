@@ -2,7 +2,8 @@
 
 
 from torch import log, randn_like, sin, zeros, ones, exp
-from torch.nn import Module, ELU, functional
+from torch.nn import Module, ELU, Parameter
+from torch.nn.functional import softplus
 from torch.nn.utils import parametrizations, weight_norm
 from typing import Literal, Dict, Any
 from math import ceil
@@ -10,7 +11,7 @@ from smartdiffusion.ops import disable_weight_init
 
 
 def vae_sample(mean, scale):
-    stdev = functional.softplus(scale) + 1e-4
+    stdev = softplus(scale) + 1e-4
     var = stdev * stdev
     logvar = log(var)
     latents = randn_like(mean) * stdev + mean
@@ -62,11 +63,11 @@ class SnakeBeta(Module):
 
         self.alpha_logscale = alpha_logscale
         if self.alpha_logscale:  # log scale alphas initialized to zeros
-            self.alpha = functional.Parameter(zeros(in_features) * alpha)
-            self.beta = functional.Parameter(zeros(in_features) * alpha)
+            self.alpha = Parameter(zeros(in_features) * alpha)
+            self.beta = Parameter(zeros(in_features) * alpha)
         else:  # linear scale alphas initialized to ones
-            self.alpha = functional.Parameter(ones(in_features) * alpha)
-            self.beta = functional.Parameter(ones(in_features) * alpha)
+            self.alpha = Parameter(ones(in_features) * alpha)
+            self.beta = Parameter(ones(in_features) * alpha)
         # self.alpha.requires_grad = alpha_trainable
         # self.beta.requires_grad = alpha_trainable
 
