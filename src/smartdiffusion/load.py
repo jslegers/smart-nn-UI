@@ -179,7 +179,7 @@ def all_files_in_path(*args, **kwargs):
         elif entry_name not in exclude_files:
             file_name, file_extension = splitext(entry_name)
             file_extension = file_extension.lower()
-            if extension is None or file_extension in extensions:
+            if extensions is None or file_extension in extensions:
                 if file_extension == '.py' and skip_snakecase_python_files:
                     file_name_snake = camel_to_snake(file_name)
                     if file_name == file_name_snake :
