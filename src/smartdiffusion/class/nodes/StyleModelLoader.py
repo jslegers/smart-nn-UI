@@ -1,15 +1,11 @@
-from smartdiffusion import sd
-from smartdiffusion import folder_paths
+from smartdiffusion.sd import load_style_model
+from smartdiffusion.folder_paths import get_full_path, get_filename_list
 
 
 class StyleModelLoader:
     @classmethod
     def INPUT_TYPES(s):
-        return {
-            "required": {
-                "style_model_name": (folder_paths.get_filename_list("style_models"),)
-            }
-        }
+        return {"required": {"style_model_name": (get_filename_list("style_models"),)}}
 
     RETURN_TYPES = ("STYLE_MODEL",)
     FUNCTION = "load_style_model"
@@ -17,6 +13,4 @@ class StyleModelLoader:
     CATEGORY = "loaders"
 
     def load_style_model(self, style_model_name):
-        style_model_path = folder_paths.get_full_path("style_models", style_model_name)
-        style_model = sd.load_style_model(style_model_path)
-        return (style_model,)
+        return (load_style_model(get_full_path("style_models", style_model_name)),)

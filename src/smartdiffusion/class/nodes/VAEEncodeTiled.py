@@ -18,9 +18,12 @@ class VAEEncodeTiled:
     CATEGORY = "_for_testing"
 
     def encode(self, vae, pixels, tile_size):
-        t = vae.encode_tiled(
-            pixels[:, :, :, :3],
-            tile_x=tile_size,
-            tile_y=tile_size,
+        return (
+            {
+                "samples": vae.encode_tiled(
+                    pixels[:, :, :, :3],
+                    tile_x=tile_size,
+                    tile_y=tile_size,
+                )
+            },
         )
-        return ({"samples": t},)

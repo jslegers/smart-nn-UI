@@ -1,6 +1,3 @@
-import torch
-
-
 class SetLatentNoiseMask:
     @classmethod
     def INPUT_TYPES(s):

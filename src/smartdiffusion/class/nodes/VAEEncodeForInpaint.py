@@ -1,5 +1,6 @@
-import torch
-import math
+from torch.nn.functional import interpolate, conv2d
+from torch import ones, clamp
+from math import ceil
 
 
 class VAEEncodeForInpaint:
@@ -22,7 +23,7 @@ class VAEEncodeForInpaint:
     def encode(self, vae, pixels, mask, grow_mask_by=6):
         x = (pixels.shape[1] // vae.downscale_ratio) * vae.downscale_ratio
         y = (pixels.shape[2] // vae.downscale_ratio) * vae.downscale_ratio
-        mask = torch.nn.functional.interpolate(
+        mask = interpolate(
             mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])),
             size=(pixels.shape[1], pixels.shape[2]),
             mode="bilinear",
@@ -39,13 +40,11 @@ class VAEEncodeForInpaint:
         if grow_mask_by == 0:
             mask_erosion = mask
         else:
-            kernel_tensor = torch.ones((1, 1, grow_mask_by, grow_mask_by))
-            padding = math.ceil((grow_mask_by - 1) / 2)
+            kernel_tensor = ones((1, 1, grow_mask_by, grow_mask_by))
+            padding = ceil((grow_mask_by - 1) / 2)
 
-            mask_erosion = torch.clamp(
-                torch.nn.functional.conv2d(
-                    mask.round(), kernel_tensor, padding=padding
-                ),
+            mask_erosion = clamp(
+                conv2d(mask.round(), kernel_tensor, padding=padding),
                 0,
                 1,
             )
