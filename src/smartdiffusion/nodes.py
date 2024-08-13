@@ -155,13 +155,13 @@ def get_module_name(module_path: str) -> str:
     """
     Returns the module name based on the given module path.
     Examples:
-        get_module_name("C:/Users/username/smartdiffusion/custom_nodes/my_custom_node.py") -> "my_custom_node"
-        get_module_name("C:/Users/username/smartdiffusion/custom_nodes/my_custom_node") -> "my_custom_node"
-        get_module_name("C:/Users/username/smartdiffusion/custom_nodes/my_custom_node/") -> "my_custom_node"
-        get_module_name("C:/Users/username/smartdiffusion/custom_nodes/my_custom_node/__init__.py") -> "my_custom_node"
-        get_module_name("C:/Users/username/smartdiffusion/custom_nodes/my_custom_node/__init__") -> "my_custom_node"
-        get_module_name("C:/Users/username/smartdiffusion/custom_nodes/my_custom_node/__init__/") -> "my_custom_node"
-        get_module_name("C:/Users/username/smartdiffusion/custom_nodes/my_custom_node.disabled") -> "custom_nodes
+        get_module_name("C:/Users/username/smartdiffusionserver/custom_nodes/my_custom_node.py") -> "my_custom_node"
+        get_module_name("C:/Users/username/smartdiffusionserver/custom_nodes/my_custom_node") -> "my_custom_node"
+        get_module_name("C:/Users/username/smartdiffusionserver/custom_nodes/my_custom_node/") -> "my_custom_node"
+        get_module_name("C:/Users/username/smartdiffusionserver/custom_nodes/my_custom_node/__init__.py") -> "my_custom_node"
+        get_module_name("C:/Users/username/smartdiffusionserver/custom_nodes/my_custom_node/__init__") -> "my_custom_node"
+        get_module_name("C:/Users/username/smartdiffusionserver/custom_nodes/my_custom_node/__init__/") -> "my_custom_node"
+        get_module_name("C:/Users/username/smartdiffusionserver/custom_nodes/my_custom_node.disabled") -> "custom_nodes
     Args:
         module_path (str): The path of the module.
     Returns:
@@ -294,9 +294,9 @@ import os
 
 def init_builtin_extra_nodes():
     """
-    Initializes the built-in extra nodes in smartdiffusion.
+    Initializes the built-in extra nodes in Smart Diffusion Server.
 
-    This function loads the extra node files located in the "extra_nodes" directory and imports them into smartdiffusion.
+    This function loads the extra node files located in the "extra_nodes" directory and imports them into Smart Diffusion Server.
     If any of the extra node files fail to import, a warning message is logged.
 
     Returns:
@@ -305,7 +305,8 @@ def init_builtin_extra_nodes():
     extras_dir = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "extra_nodes"
     )
-    extras_files = os.listdir()
+    extras_files = os.listdir(extras_dir)
+
     import_failed = []
     for node_file in extras_files:
         if not load_custom_node(
@@ -333,11 +334,11 @@ def init_extra_nodes(init_custom_nodes=True):
         for node in import_failed:
             logging.warning("IMPORT FAILED: {}".format(node))
         logging.warning(
-            "\nThis issue might be caused by new missing dependencies added the last time you updated smartdiffusion."
+            "\nThis issue might be caused by new missing dependencies added the last time you updated Smart Diffusion Server."
         )
         if args.windows_standalone_build:
             logging.warning(
-                "Please run the update script: update/update_smartdiffusion.bat"
+                "Please run the update script: update/update_smartdiffusionserver.bat"
             )
         else:
             logging.warning("Please do a: pip install -r requirements.txt")
