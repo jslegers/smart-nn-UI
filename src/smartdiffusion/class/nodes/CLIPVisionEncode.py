@@ -1,6 +1,3 @@
-from smartdiffusion.clip_vision import encode_image
-
-
 class CLIPVisionEncode:
     @classmethod
     def INPUT_TYPES(s):
@@ -12,4 +9,4 @@ class CLIPVisionEncode:
     CATEGORY = "conditioning"
 
     def encode(self, clip_vision, image):
-        return (encode_image(image),)
+        return (clip_vision.encode_image(image),)
