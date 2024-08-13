@@ -1,6 +1,6 @@
 import sys
 from os import scandir
-from os.path import join, dirname, splitext, isfile, isdir
+from os.path import join, dirname, abspath, splitext, isfile, isdir
 from pathlib import PurePath
 from importlib import import_module, util
 from types import ModuleType, FrameType
@@ -209,7 +209,7 @@ class LazyModule(ModuleType):
         module, *_ = unpack(*args)
         import_structure = kwargs.get("import_structure", None)
         extra_objects = kwargs.get("extra_objects", None)
-        module_dir = dirname(module.__file__)
+        module_dir = abspath(dirname(module.__file__))
         super().__init__(module.__name__)
         if import_structure is None:
             import_structure = all_files_in_path(module_dir, extensions=[".py"])
