@@ -625,11 +625,11 @@ def load_diffusion_model_state_dict(sd, model_options={}): #load unet in diffuse
                 else:
                     logging.warning("{} {}".format(diffusers_keys[k], k))
 
-    offload_device = model_management.unet_offload_device()
     if dtype is None:
         unet_dtype = model_management.unet_dtype(model_params=parameters, supported_dtypes=model_config.supported_inference_dtypes)
     else:
         unet_dtype = dtype
+    offload_device = model_management.unet_offload_device(parameters, unet_dtype)
 
     manual_cast_dtype = model_management.unet_manual_cast(unet_dtype, load_device, model_config.supported_inference_dtypes)
     model_config.set_inference_dtype(unet_dtype, manual_cast_dtype)
