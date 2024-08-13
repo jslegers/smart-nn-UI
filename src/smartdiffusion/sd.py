@@ -548,7 +548,7 @@ def load_state_dict_guess_config(sd, output_vae=True, output_clip=True, output_c
 
     if output_model:
         inital_load_device = model_management.unet_inital_load_device(parameters, unet_dtype)
-        offload_device = model_management.unet_offload_device()
+        offload_device = model_management.unet_offload_device(parameters, unet_dtype)
         model = model_config.get_model(sd, diffusion_model_prefix, device=inital_load_device)
         model.load_model_weights(sd, diffusion_model_prefix)
 
@@ -582,7 +582,7 @@ def load_state_dict_guess_config(sd, output_vae=True, output_clip=True, output_c
         logging.debug("left over keys: {}".format(left_over))
 
     if output_model:
-        model_patcher = smartdiffusion.model_patcher.ModelPatcher(model, load_device=load_device, offload_device=model_management.unet_offload_device())
+        model_patcher = smartdiffusion.model_patcher.ModelPatcher(model, load_device=load_device, offload_device=model_management.unet_offload_device(parameters, unet_dtype))
         if inital_load_device != torch.device("cpu"):
             logging.info("loaded straight to GPU")
             model_management.load_models_gpu([model_patcher], force_full_load=True)
