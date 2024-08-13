@@ -1,4 +1,4 @@
-from smartdiffusion.samplers import s_KSampler
+from smartdiffusion.samplers import KSampler as s_KSampler
 from smartdiffusion.node_helpers import common_ksampler
 
 
