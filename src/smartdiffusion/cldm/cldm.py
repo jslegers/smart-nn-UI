@@ -5,7 +5,6 @@
 from torch import Tensor, sigmoid, float32, empty, zeros, mean, cat
 from torch.nn import Module, Sequential, SiLU, Embedding, Linear, Parameter
 from torch.nn.functional import silu
-from smartdiffusion.ldm.util import exists
 from smartdiffusion.ldm.modules.attention import SpatialTransformer, optimized_attention
 from smartdiffusion.ldm.modules.diffusionmodules.util import (
     zero_module,
@@ -319,12 +318,12 @@ class ControlNet(Module):
                             if use_spatial_transformer
                             else num_head_channels
                         )
-                    if exists(disable_self_attentions):
-                        disabled_sa = disable_self_attentions[level]
-                    else:
+                    if disable_self_attentions is None:
                         disabled_sa = False
+                    else:
+                        disabled_sa = disable_self_attentions[level]
                     if (
-                        not exists(num_attention_blocks)
+                        num_attention_blocks is None
                         or nr < num_attention_blocks[level]
                     ):
                         layers.append(
