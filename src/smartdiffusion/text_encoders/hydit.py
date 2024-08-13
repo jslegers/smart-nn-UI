@@ -10,7 +10,7 @@ import torch
 class HyditBertModel(sd1_clip.SDClipModel):
     def __init__(self, device="cpu", layer="last", layer_idx=None, dtype=None):
         textmodel_json_config = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "hydit_clip.json"
+            os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "hydit_clip.json"
         )
         super().__init__(
             device=device,
@@ -28,7 +28,7 @@ class HyditBertModel(sd1_clip.SDClipModel):
 class HyditBertTokenizer(sd1_clip.SDTokenizer):
     def __init__(self, embedding_directory=None, tokenizer_data={}):
         tokenizer_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "hydit_clip_tokenizer"
+            os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "hydit_clip_tokenizer"
         )
         super().__init__(
             tokenizer_path,
@@ -45,7 +45,7 @@ class HyditBertTokenizer(sd1_clip.SDTokenizer):
 class MT5XLModel(sd1_clip.SDClipModel):
     def __init__(self, device="cpu", layer="last", layer_idx=None, dtype=None):
         textmodel_json_config = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "mt5_config_xl.json"
+            os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "mt5_config_xl.json"
         )
         super().__init__(
             device=device,
@@ -62,7 +62,7 @@ class MT5XLModel(sd1_clip.SDClipModel):
 
 class MT5XLTokenizer(sd1_clip.SDTokenizer):
     def __init__(self, embedding_directory=None, tokenizer_data={}):
-        # tokenizer_path = os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), "mt5_tokenizer"), "spiece.model")
+        # tokenizer_path = os.path.join(os.path.join(os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "mt5_tokenizer"), "spiece.model")
 
         tokenizer = tokenizer_data.get("spiece_model", None)
         super().__init__(

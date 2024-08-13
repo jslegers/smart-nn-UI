@@ -17,7 +17,7 @@ class SDXLClipG(sd1_clip.SDClipModel):
             layer = "hidden"
             layer_idx = -2
         textmodel_json_config = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "clip_config_bigg.json"
+            os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "clip_config_bigg.json"
         )
         super().__init__(
             device=device,
@@ -141,7 +141,7 @@ class StableCascadeClipG(sd1_clip.SDClipModel):
         dtype=None,
     ):
         textmodel_json_config = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "clip_config_bigg.json"
+            os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "clip_config_bigg.json"
         )
         super().__init__(
             device=device,

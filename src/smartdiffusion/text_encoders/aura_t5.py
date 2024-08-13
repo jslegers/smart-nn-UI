@@ -7,7 +7,7 @@ import os
 class PT5XlModel(sd1_clip.SDClipModel):
     def __init__(self, device="cpu", layer="last", layer_idx=None, dtype=None):
         textmodel_json_config = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "t5_pile_config_xl.json"
+            os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "t5_pile_config_xl.json"
         )
         super().__init__(
             device=device,
@@ -26,7 +26,7 @@ class PT5XlTokenizer(sd1_clip.SDTokenizer):
     def __init__(self, embedding_directory=None, tokenizer_data={}):
         tokenizer_path = os.path.join(
             os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "t5_pile_tokenizer"
+                os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "t5_pile_tokenizer"
             ),
             "tokenizer.model",
         )

@@ -1,4 +1,4 @@
-# sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "smartdiffusion"))
+# sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "smartdiffusion"))
 
 
 from smartdiffusion import model_management
@@ -303,7 +303,7 @@ def init_builtin_extra_nodes():
         None
     """
     extras_dir = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "extra_nodes"
+        os.path.abspath(os.path.abspath(os.path.dirname(os.path.realpath(__file__)))), "extra_nodes"
     )
     extras_files = os.listdir(extras_dir)
 

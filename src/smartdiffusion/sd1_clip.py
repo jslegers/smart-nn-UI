@@ -107,7 +107,7 @@ class SDClipModel(torch.nn.Module, ClipTokenWeightEncoder):
 
         if textmodel_json_config is None:
             textmodel_json_config = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "sd1_clip_config.json"
+                os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "sd1_clip_config.json"
             )
         with open(textmodel_json_config) as f:
             config = json.load(f)
@@ -466,7 +466,7 @@ class SDTokenizer:
     ):
         if tokenizer_path is None:
             tokenizer_path = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "sd1_tokenizer"
+                os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "sd1_tokenizer"
             )
         self.tokenizer = tokenizer_class.from_pretrained(tokenizer_path)
         self.max_length = max_length
