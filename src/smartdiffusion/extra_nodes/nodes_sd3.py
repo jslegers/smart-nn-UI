@@ -1,6 +1,4 @@
-from smartdiffusion import folder_paths
-from smartdiffusion import sd
-from smartdiffusion import model_management
+from smartdiffusion import folder_paths, sd, model_management, ControlNetApplyAdvanced
 from smartdiffusion.config import MAX_RESOLUTION
 import torch
 
@@ -107,7 +105,7 @@ class CLIPTextEncodeSD3:
         return ([[cond, {"pooled_output": pooled}]],)
 
 
-class ControlNetApplySD3(config.ControlNetApplyAdvanced):
+class ControlNetApplySD3(ControlNetApplyAdvanced):
     @classmethod
     def INPUT_TYPES(s):
         return {

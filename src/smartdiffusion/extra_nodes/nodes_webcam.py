@@ -1,8 +1,8 @@
 from smartdiffusion.config import MAX_RESOLUTION
-from smartdiffusion import folder_paths
+from smartdiffusion import folder_paths, LoadImage
 
 
-class WebcamCapture(config.LoadImage):
+class WebcamCapture(LoadImage):
     @classmethod
     def INPUT_TYPES(s):
         return {

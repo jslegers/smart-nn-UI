@@ -307,6 +307,8 @@ def init_builtin_extra_nodes():
         os.path.abspath(os.path.abspath(os.path.dirname(os.path.realpath(__file__)))), "extra_nodes"
     )
     extras_files = os.listdir(extras_dir)
+    if "__pycache__" in extras_files:
+        extras_files.remove("__pycache__")
 
     import_failed = []
     for node_file in extras_files:

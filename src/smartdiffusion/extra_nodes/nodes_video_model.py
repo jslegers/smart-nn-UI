@@ -1,9 +1,7 @@
 import torch
-from smartdiffusion import utils
-from smartdiffusion import sd
-from smartdiffusion import folder_paths
+from smartdiffusion import utils, sd, folder_paths
 from smartdiffusion.config import MAX_RESOLUTION
-from smartdiffusion.extra_nodes import config_model_merging
+from smartdiffusion.extra_nodes.nodes_model_merging import CheckpointSave
 
 
 class ImageOnlyCheckpointLoader:
@@ -195,7 +193,7 @@ class VideoTriangleCFGGuidance:
         return (m,)
 
 
-class ImageOnlyCheckpointSave(config_model_merging.CheckpointSave):
+class ImageOnlyCheckpointSave(CheckpointSave):
     CATEGORY = "_for_testing"
 
     @classmethod

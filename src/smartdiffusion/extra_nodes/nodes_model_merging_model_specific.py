@@ -1,7 +1,7 @@
-import extra_nodes.nodes_model_merging
+from smartdiffusion.extra_nodes.nodes_model_merging import ModelMergeBlocks
 
 
-class ModelMergeSD1(extra_nodes.nodes_model_merging.ModelMergeBlocks):
+class ModelMergeSD1(ModelMergeBlocks):
     CATEGORY = "advanced/model_merging/model_specific"
 
     @classmethod
@@ -24,7 +24,7 @@ class ModelMergeSD1(extra_nodes.nodes_model_merging.ModelMergeBlocks):
         return {"required": arg_dict}
 
 
-class ModelMergeSDXL(extra_nodes.nodes_model_merging.ModelMergeBlocks):
+class ModelMergeSDXL(ModelMergeBlocks):
     CATEGORY = "advanced/model_merging/model_specific"
 
     @classmethod
@@ -47,7 +47,7 @@ class ModelMergeSDXL(extra_nodes.nodes_model_merging.ModelMergeBlocks):
         return {"required": arg_dict}
 
 
-class ModelMergeSD3_2B(extra_nodes.nodes_model_merging.ModelMergeBlocks):
+class ModelMergeSD3_2B(ModelMergeBlocks):
     CATEGORY = "advanced/model_merging/model_specific"
 
     @classmethod
@@ -69,7 +69,7 @@ class ModelMergeSD3_2B(extra_nodes.nodes_model_merging.ModelMergeBlocks):
         return {"required": arg_dict}
 
 
-class ModelMergeFlux1(extra_nodes.nodes_model_merging.ModelMergeBlocks):
+class ModelMergeFlux1(ModelMergeBlocks):
     CATEGORY = "advanced/model_merging/model_specific"
 
     @classmethod
