@@ -302,6 +302,7 @@ def init_builtin_extra_nodes():
     Returns:
         None
     """
+    print("__file__ = " + __file__)
     extras_dir = os.path.join(
         os.path.abspath(os.path.abspath(os.path.dirname(os.path.realpath(__file__)))), "extra_nodes"
     )
