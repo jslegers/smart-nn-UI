@@ -83,7 +83,7 @@ def pillow(fn, arg):
         OSError,
         UnidentifiedImageError,
         ValueError,
-    ):  # PIL issues #4472 and #2445, also fixes smartdiffusionui issue #3416
+    ):  # PIL issues #4472 and #2445, also fixes ComfyUI issue #3416
         prev_value = ImageFile.LOAD_TRUNCATED_IMAGES
         ImageFile.LOAD_TRUNCATED_IMAGES = True
         x = fn(arg)

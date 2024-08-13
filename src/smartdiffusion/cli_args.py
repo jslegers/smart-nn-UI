@@ -89,24 +89,24 @@ parser.add_argument(
     "--output-directory",
     type=str,
     default=None,
-    help="Set the smartdiffusionui output directory.",
+    help="Set the Smart Diffusion Server output directory.",
 )
 parser.add_argument(
     "--temp-directory",
     type=str,
     default=None,
-    help="Set the smartdiffusionui temp directory (default is in the smartdiffusionui directory).",
+    help="Set the Smart Diffusion Server temp directory (default is in the Smart Diffusion Server directory).",
 )
 parser.add_argument(
     "--input-directory",
     type=str,
     default=None,
-    help="Set the smartdiffusionui input directory.",
+    help="Set the Smart Diffusion Server input directory.",
 )
 parser.add_argument(
     "--auto-launch",
     action="store_true",
-    help="Automatically launch smartdiffusionui in the default browser.",
+    help="Automatically launch Smart Diffusion Server in the default browser.",
 )
 parser.add_argument(
     "--disable-auto-launch",
@@ -292,7 +292,7 @@ parser.add_argument(
 parser.add_argument(
     "--disable-smart-memory",
     action="store_true",
-    help="Force smartdiffusionui to agressively offload to regular ram instead of keeping models in vram when it can.",
+    help="Force Smart Diffusion Server to agressively offload to regular ram instead of keeping models in vram when it can.",
 )
 parser.add_argument(
     "--deterministic",
@@ -331,7 +331,7 @@ parser.add_argument("--verbose", action="store_true", help="Enables more debug p
 
 # The default built-in provider hosted under web/
 
-DEFAULT_VERSION_STRING = "jslegers/smartdiffusionui@latest"
+DEFAULT_VERSION_STRING = "jslegers/smartdiffusionserver@latest"
 
 parser.add_argument(
     "--front-end-version",

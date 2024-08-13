@@ -14,7 +14,7 @@ class SaveLatent:
         return {
             "required": {
                 "samples": ("LATENT",),
-                "filename_prefix": ("STRING", {"default": "latents/smartdiffusionui"}),
+                "filename_prefix": ("STRING", {"default": "latents/smartdiffusion"}),
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
@@ -29,7 +29,7 @@ class SaveLatent:
     def save(
         self,
         samples,
-        filename_prefix="smartdiffusionui",
+        filename_prefix="smartdiffusion",
         prompt=None,
         extra_pnginfo=None,
     ):

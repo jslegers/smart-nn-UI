@@ -207,7 +207,7 @@ class ImageOnlyCheckpointSave(config_model_merging.CheckpointSave):
                 "vae": ("VAE",),
                 "filename_prefix": (
                     "STRING",
-                    {"default": "checkpoints/smartdiffusionui"},
+                    {"default": "checkpoints/smartdiffusion"},
                 ),
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},

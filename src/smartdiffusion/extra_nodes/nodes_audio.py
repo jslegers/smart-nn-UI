@@ -76,7 +76,7 @@ class VAEDecodeAudio:
 
 
 def create_vorbis_comment_block(comment_dict, last_block):
-    vendor_string = b"smartdiffusionui"
+    vendor_string = b"smartdiffusion"
     vendor_length = len(vendor_string)
 
     comments = []
@@ -155,7 +155,7 @@ class SaveAudio:
     CATEGORY = "audio"
 
     def save_audio(
-        self, audio, filename_prefix="smartdiffusionui", prompt=None, extra_pnginfo=None
+        self, audio, filename_prefix="smartdiffusion", prompt=None, extra_pnginfo=None
     ):
         filename_prefix += self.prefix_append
         full_output_folder, filename, counter, subfolder, filename_prefix = (

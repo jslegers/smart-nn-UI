@@ -305,7 +305,7 @@ class CheckpointSave:
                 "vae": ("VAE",),
                 "filename_prefix": (
                     "STRING",
-                    {"default": "checkpoints/smartdiffusionui"},
+                    {"default": "checkpoints/smartdiffusion"},
                 ),
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
@@ -339,7 +339,7 @@ class CLIPSave:
         return {
             "required": {
                 "clip": ("CLIP",),
-                "filename_prefix": ("STRING", {"default": "clip/smartdiffusionui"}),
+                "filename_prefix": ("STRING", {"default": "clip/smartdiffusion"}),
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
@@ -403,7 +403,7 @@ class VAESave:
         return {
             "required": {
                 "vae": ("VAE",),
-                "filename_prefix": ("STRING", {"default": "vae/smartdiffusionui_vae"}),
+                "filename_prefix": ("STRING", {"default": "vae/smartdiffusion_vae"}),
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }

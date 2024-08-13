@@ -106,7 +106,7 @@ class SaveAnimatedWEBP:
         return {
             "required": {
                 "images": ("IMAGE",),
-                "filename_prefix": ("STRING", {"default": "smartdiffusionui"}),
+                "filename_prefix": ("STRING", {"default": "smartdiffusion"}),
                 "fps": (
                     "FLOAT",
                     {"default": 6.0, "min": 0.01, "max": 1000.0, "step": 0.01},
@@ -196,7 +196,7 @@ class SaveAnimatedPNG:
         return {
             "required": {
                 "images": ("IMAGE",),
-                "filename_prefix": ("STRING", {"default": "smartdiffusionui"}),
+                "filename_prefix": ("STRING", {"default": "smartdiffusion"}),
                 "fps": (
                     "FLOAT",
                     {"default": 6.0, "min": 0.01, "max": 1000.0, "step": 0.01},
@@ -218,7 +218,7 @@ class SaveAnimatedPNG:
         images,
         fps,
         compress_level,
-        filename_prefix="smartdiffusionui",
+        filename_prefix="smartdiffusion",
         prompt=None,
         extra_pnginfo=None,
     ):

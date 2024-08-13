@@ -19,7 +19,7 @@ class SaveImage:
         return {
             "required": {
                 "images": ("IMAGE",),
-                "filename_prefix": ("STRING", {"default": "smartdiffusionui"}),
+                "filename_prefix": ("STRING", {"default": "smartdiffusion"}),
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
@@ -34,7 +34,7 @@ class SaveImage:
     def save_images(
         self,
         images,
-        filename_prefix="smartdiffusionui",
+        filename_prefix="smartdiffusion",
         prompt=None,
         extra_pnginfo=None,
     ):
