@@ -17,7 +17,7 @@ class SD2ClipHModel(sd1_clip.SDClipModel):
             layer = "hidden"
             layer_idx = -2
         textmodel_json_config = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "sd2_clip_config.json"
+            os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "sd2_clip_config.json"
         )
         super().__init__(
             device=device,

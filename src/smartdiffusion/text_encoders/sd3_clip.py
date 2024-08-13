@@ -11,7 +11,7 @@ import logging
 class T5XXLModel(sd1_clip.SDClipModel):
     def __init__(self, device="cpu", layer="last", layer_idx=None, dtype=None):
         textmodel_json_config = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "t5_config_xxl.json"
+            os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "t5_config_xxl.json"
         )
         super().__init__(
             device=device,
@@ -27,7 +27,7 @@ class T5XXLModel(sd1_clip.SDClipModel):
 class T5XXLTokenizer(sd1_clip.SDTokenizer):
     def __init__(self, embedding_directory=None, tokenizer_data={}):
         tokenizer_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "t5_tokenizer"
+            os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "t5_tokenizer"
         )
         super().__init__(
             tokenizer_path,

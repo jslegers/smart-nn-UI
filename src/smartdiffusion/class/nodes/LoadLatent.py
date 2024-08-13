@@ -11,12 +11,15 @@ from smartdiffusion.folder_paths import (
 class LoadLatent:
     @classmethod
     def INPUT_TYPES(s):
-        input_dir = get_input_directory()
-        files = [
-            f
-            for f in listdir(input_dir)
-            if path.isfile(path.join(input_dir, f)) and f.endswith(".latent")
-        ]
+        try :
+            input_dir = listdir(get_input_directory())
+            files = [
+                f
+                for f in list
+                if path.isfile(path.join(input_dir, f)) and f.endswith(".latent")
+            ]
+        except :
+            files = []
         return {
             "required": {
                 "latent": [
