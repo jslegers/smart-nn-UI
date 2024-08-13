@@ -10,7 +10,7 @@ class DiffusersLoader:
         paths = []
         for search_path in get_folder_paths("diffusers"):
             if path.exists(search_path):
-                for root, subdir, files in os.walk(search_path, followlinks=True):
+                for root, subdir, files in walk(search_path, followlinks=True):
                     if "model_index.json" in files:
                         paths.append(path.relpath(root, start=search_path))
         return {
