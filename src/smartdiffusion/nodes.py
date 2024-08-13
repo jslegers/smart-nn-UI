@@ -65,7 +65,7 @@ NODE_CLASS_MAPPINGS = {
     "ControlNetApply": module("smartdiffusion", "ControlNetApply"),
     "ControlNetApplyAdvanced": module("smartdiffusion", "ControlNetApplyAdvanced"),
     "ControlNetLoader": module("smartdiffusion", "ControlNetLoader"),
-    "DiffControlNetLoader": module("smartdiffusion", "DiffControlNetLoader", "DiffControlNetLoader"),
+    "DiffControlNetLoader": module("smartdiffusion", "DiffControlNetLoader"),
     "StyleModelLoader": module("smartdiffusion", "StyleModelLoader"),
     "CLIPVisionLoader": module("smartdiffusion", "CLIPVisionLoader"),
     "VAEDecodeTiled": module("smartdiffusion", "VAEDecodeTiled"),
