@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from torch import chunk, Tensor, float32, cat
-from torch.nn import Module, Sequential, SiLU, Identity
+from torch.nn import Module, ModuleList, Sequential, SiLU, Identity
 from torch.nn.functional import interpolate
 from einops import rearrange
 import logging

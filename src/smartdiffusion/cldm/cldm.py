@@ -3,7 +3,7 @@
 
 
 from torch import Tensor, sigmoid, float32, empty, zeros, mean, cat
-from torch.nn import Module, Sequential, SiLU, Embedding, Linear, Parameter
+from torch.nn import Module, ModuleList, Sequential, SiLU, Embedding, Linear, Parameter
 from torch.nn.functional import silu
 from smartdiffusion.ldm.modules.attention import SpatialTransformer, optimized_attention
 from smartdiffusion.ldm.modules.diffusionmodules.util import (

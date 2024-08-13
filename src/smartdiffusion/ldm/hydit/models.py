@@ -1,5 +1,5 @@
 from torch import where, cat, empty, zeros, einsum, int32
-from torch.nn import Module, GELU, Sequential, SiLU, Parameter
+from torch.nn import Module, ModuleList, GELU, Sequential, SiLU, Parameter
 
 from smartdiffusion.ldm.modules.diffusionmodules.mmdit import Mlp, TimestepEmbedder, PatchEmbed, RMSNorm
 from smartdiffusion.ldm.modules.diffusionmodules.util import timestep_embedding
