@@ -548,7 +548,7 @@ def load_state_dict_guess_config(sd, output_vae=True, output_clip=True, output_c
 
     if output_model:
         inital_load_device = model_management.unet_inital_load_device(parameters, unet_dtype)
-        offload_device = model_management.unet_offload_device(parameters, unet_dtype)
+        offload_device = model_management.unet_offload_device()
         model = model_config.get_model(sd, diffusion_model_prefix, device=inital_load_device)
         model.load_model_weights(sd, diffusion_model_prefix)
 
@@ -582,7 +582,7 @@ def load_state_dict_guess_config(sd, output_vae=True, output_clip=True, output_c
         logging.debug("left over keys: {}".format(left_over))
 
     if output_model:
-        model_patcher = smartdiffusion.model_patcher.ModelPatcher(model, load_device=load_device, offload_device=model_management.unet_offload_device(parameters, unet_dtype))
+        model_patcher = smartdiffusion.model_patcher.ModelPatcher(model, load_device=load_device, offload_device=model_management.unet_offload_device())
         if inital_load_device != torch.device("cpu"):
             logging.info("loaded straight to GPU")
             model_management.load_models_gpu([model_patcher], force_full_load=True)
@@ -625,11 +625,11 @@ def load_diffusion_model_state_dict(sd, model_options={}): #load unet in diffuse
                 else:
                     logging.warning("{} {}".format(diffusers_keys[k], k))
 
+    offload_device = model_management.unet_offload_device()
     if dtype is None:
         unet_dtype = model_management.unet_dtype(model_params=parameters, supported_dtypes=model_config.supported_inference_dtypes)
     else:
         unet_dtype = dtype
-    offload_device = model_management.unet_offload_device(parameters, unet_dtype)
 
     manual_cast_dtype = model_management.unet_manual_cast(unet_dtype, load_device, model_config.supported_inference_dtypes)
     model_config.set_inference_dtype(unet_dtype, manual_cast_dtype)

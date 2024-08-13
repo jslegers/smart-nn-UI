@@ -591,29 +591,11 @@ def dtype_size(dtype):
             pass
     return dtype_size
 
-def unet_offload_device(parameters = None, dtype = None):
-    if parameters is not None and dtype is not None:
-        torch_dev = get_torch_device()
-        if vram_state == VRAMState.HIGH_VRAM:
-            return torch_dev
-
-        cpu_dev = torch.device("cpu")
-        if DISABLE_SMART_MEMORY:
-            return cpu_dev
-
-        model_size = dtype_size(dtype) * parameters
-        mem_cpu = get_free_memory(cpu_dev)
-        if mem_cpu < model_size:
-            return torch_dev
-        else:
-            return cpu_dev
-
-    print("BOOOOH")
-    #if vram_state == VRAMState.HIGH_VRAM or total_ram < total_vram:
-    #    return get_torch_device()
-    #else:
-    #    return torch.device("cpu")
-    return torch.device("cpu")
+def unet_offload_device():
+    if vram_state == VRAMState.HIGH_VRAM or total_ram < total_vram:
+        return get_torch_device()
+    else:
+        return torch.device("cpu")
 
 def unet_inital_load_device(parameters, dtype):
     torch_dev = get_torch_device()
