@@ -373,7 +373,7 @@ def module(module, attrs=None):
             return self.dependency[key]
 
         def get_first_attr(self):
-            # print(dir(self))
+            print(dir(self))
 
             return self.get_attr(self.attribute_names[0])
 
