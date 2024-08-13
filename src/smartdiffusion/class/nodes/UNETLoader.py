@@ -18,13 +18,13 @@ class UNETLoader:
 
     CATEGORY = "advanced/loaders"
 
-    def load_unet(self, unet_name, weight_dtype):
+    def load_unet(self, unet_name, weight_dtype, path="unet"):
         model_options = {}
         if weight_dtype == "fp8_e4m3fn":
             model_options["dtype"] = float8_e4m3fn
         elif weight_dtype == "fp8_e5m2":
             model_options["dtype"] = float8_e5m2
 
-        unet_path = folder_paths.get_full_path("unet", unet_name)
+        unet_path = get_full_path(path, unet_name)
         model = load_diffusion_model(unet_path, model_options=model_options)
         return (model,)
