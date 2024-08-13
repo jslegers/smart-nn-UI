@@ -1,4 +1,4 @@
-from smartdiffusion.samplers import KSampler
+from smartdiffusion.samplers import s_KSampler
 from smartdiffusion.node_helpers import common_ksampler
 
 
@@ -24,8 +24,8 @@ class KSamplerAdvanced:
                         "round": 0.01,
                     },
                 ),
-                "sampler_name": (KSampler.SAMPLERS,),
-                "scheduler": (KSampler.SCHEDULERS,),
+                "sampler_name": (s_KSampler.SAMPLERS,),
+                "scheduler": (s_KSampler.SCHEDULERS,),
                 "positive": ("CONDITIONING",),
                 "negative": ("CONDITIONING",),
                 "latent_image": ("LATENT",),
