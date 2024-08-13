@@ -4,7 +4,7 @@ from setuptools import setup, find_namespace_packages
 
 setup(
     name = "smartdiffusion",
-    version = "0.0.1",
+    version = "0.0.3",
     description = "A library for making it easier to work with neural networks",
     long_description = "A library for making it easier to work with neural networks",
     url ="https://github.com/jslegers/smartdiffusion",
