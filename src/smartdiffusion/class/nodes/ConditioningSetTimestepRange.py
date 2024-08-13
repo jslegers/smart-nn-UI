@@ -1,4 +1,4 @@
-from smartdiffusion import node_helpers
+from smartdiffusion.node_helpers import conditioning_set_values
 
 
 class ConditioningSetTimestepRange:
@@ -24,7 +24,8 @@ class ConditioningSetTimestepRange:
     CATEGORY = "advanced/conditioning"
 
     def set_range(self, conditioning, start, end):
-        c = node_helpers.conditioning_set_values(
-            conditioning, {"start_percent": start, "end_percent": end}
+        return (
+            conditioning_set_values(
+                conditioning, {"start_percent": start, "end_percent": end}
+            ),
         )
-        return (c,)

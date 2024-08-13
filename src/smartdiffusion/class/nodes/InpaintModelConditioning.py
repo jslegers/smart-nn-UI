@@ -1,5 +1,5 @@
-import torch
-from smartdiffusion import node_helpers
+from torch.nn.functional import interpolate
+from smartdiffusion.node_helpers import conditioning_set_values
 
 
 class InpaintModelConditioning:
@@ -24,7 +24,7 @@ class InpaintModelConditioning:
     def encode(self, positive, negative, pixels, vae, mask):
         x = (pixels.shape[1] // 8) * 8
         y = (pixels.shape[2] // 8) * 8
-        mask = torch.nn.functional.interpolate(
+        mask = interpolate(
             mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])),
             size=(pixels.shape[1], pixels.shape[2]),
             mode="bilinear",
@@ -52,7 +52,7 @@ class InpaintModelConditioning:
 
         out = []
         for conditioning in [positive, negative]:
-            c = node_helpers.conditioning_set_values(
+            c = conditioning_set_values(
                 conditioning,
                 {"concat_latent_image": concat_latent, "concat_mask": mask},
             )

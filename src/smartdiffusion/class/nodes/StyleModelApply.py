@@ -1,4 +1,4 @@
-import torch
+from torch import cat
 
 
 class StyleModelApply:
@@ -25,6 +25,6 @@ class StyleModelApply:
         )
         c = []
         for t in conditioning:
-            n = [torch.cat((t[0], cond), dim=1), t[1].copy()]
+            n = [cat((t[0], cond), dim=1), t[1].copy()]
             c.append(n)
         return (c,)

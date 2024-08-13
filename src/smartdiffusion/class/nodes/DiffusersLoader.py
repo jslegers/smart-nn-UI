@@ -1,17 +1,17 @@
-import os
+from os import path
 from safetensors.torch import load_file
-from smartdiffusion import folder_paths
+from smartdiffusion.folder_paths import get_folder_paths
 
 
 class DiffusersLoader:
     @classmethod
     def INPUT_TYPES(cls):
         paths = []
-        for search_path in folder_paths.get_folder_paths("diffusers"):
-            if os.path.exists(search_path):
+        for search_path in get_folder_paths("diffusers"):
+            if path.exists(search_path):
                 for root, subdir, files in os.walk(search_path, followlinks=True):
                     if "model_index.json" in files:
-                        paths.append(os.path.relpath(root, start=search_path))
+                        paths.append(path.relpath(root, start=search_path))
         return {
             "required": {
                 "model_path": (paths,),
@@ -24,15 +24,15 @@ class DiffusersLoader:
     CATEGORY = "advanced/loaders/deprecated"
 
     def load_checkpoint(self, model_path, output_vae=True, output_clip=True):
-        for search_path in folder_paths.get_folder_paths("diffusers"):
-            if os.path.exists(search_path):
-                path = os.path.join(search_path, model_path)
-                if os.path.exists(path):
-                    model_path = path
+        for search_path in get_folder_paths("diffusers"):
+            if path.exists(search_path):
+                full_path = path.join(search_path, model_path)
+                if path.exists(full_path):
+                    model_path = full_path
                     break
         return diffusers_load.load_diffusers(
             model_path,
             output_vae=output_vae,
             output_clip=output_clip,
-            embedding_directory=folder_paths.get_folder_paths("embeddings"),
+            embedding_directory=get_folder_paths("embeddings"),
         )

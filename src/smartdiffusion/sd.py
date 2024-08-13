@@ -590,6 +590,7 @@ class VAE:
         return self.first_stage_model.state_dict()
 
 
+
 class StyleModel:
     def __init__(self, model, device="cpu"):
         self.model = model
@@ -809,7 +810,7 @@ def load_checkpoint_guess_config(
         inital_load_device = model_management.unet_inital_load_device(
             parameters, unet_dtype
         )
-        offload_device = model_management.unet_offload_device()
+        offload_device = model_management.unet_offload_device(parameters, unet_dtype)
         model = model_config.get_model(
             sd, diffusion_model_prefix, device=inital_load_device
         )
@@ -856,7 +857,7 @@ def load_checkpoint_guess_config(
         model_patcher = ModelPatcher(
             model,
             load_device=load_device,
-            offload_device=model_management.unet_offload_device(),
+            offload_device=model_management.unet_offload_device(parameters, unet_dtype),
         )
         if inital_load_device != torch.device("cpu"):
             logging.info("loaded straight to GPU")
@@ -898,7 +899,6 @@ def load_unet_state_dict(sd, dtype=None):  # load unet in diffusers or regular f
                     new_sd[diffusers_keys[k]] = sd.pop(k)
                 else:
                     logging.warning("{} {}".format(diffusers_keys[k], k))
-    offload_device = model_management.unet_offload_device()
     if dtype is None:
         unet_dtype = model_management.unet_dtype(
             model_params=parameters,
@@ -909,6 +909,7 @@ def load_unet_state_dict(sd, dtype=None):  # load unet in diffusers or regular f
     manual_cast_dtype = model_management.unet_manual_cast(
         unet_dtype, load_device, model_config.supported_inference_dtypes
     )
+    offload_device = model_management.unet_offload_device(parameters, unet_dtype)
     model_config.set_inference_dtype(unet_dtype, manual_cast_dtype)
     model = model_config.get_model(new_sd, "")
     model = model.to(offload_device)

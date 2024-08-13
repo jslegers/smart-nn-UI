@@ -1,4 +1,4 @@
-from smartdiffusion import utils
+from smartdiffusion.utils import common_upscale
 
 
 class LatentUpscaleBy:
@@ -24,9 +24,11 @@ class LatentUpscaleBy:
 
     def upscale(self, samples, upscale_method, scale_by):
         s = samples.copy()
-        width = round(samples["samples"].shape[3] * scale_by)
-        height = round(samples["samples"].shape[2] * scale_by)
-        s["samples"] = utils.common_upscale(
-            samples["samples"], width, height, upscale_method, "disabled"
+        s["samples"] = common_upscale(
+            samples["samples"],
+            round(samples["samples"].shape[3] * scale_by),
+            round(samples["samples"].shape[2] * scale_by),
+            upscale_method,
+            "disabled",
         )
         return (s,)

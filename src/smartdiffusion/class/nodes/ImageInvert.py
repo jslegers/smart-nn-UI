@@ -10,5 +10,4 @@ class ImageInvert:
     CATEGORY = "image"
 
     def invert(self, image):
-        s = 1.0 - image
-        return (s,)
+        return (1.0 - image,)

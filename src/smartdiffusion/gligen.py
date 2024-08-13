@@ -4,14 +4,6 @@ from smartdiffusion.ldm.modules.attention import CrossAttention
 from inspect import isfunction
 from smartdiffusion import ops
 
-def default(val, d):
-    if val is not None:
-        return val
-    return d() if isfunction(d) else d
-
-
-# feedforward
-
 
 class GEGLU(nn.Module):
     def __init__(self, dim_in, dim_out):
@@ -29,7 +21,6 @@ class FeedForward(nn.Module):
         inner_dim = int(dim * mult)
         if not dim_out:
             dim_out = dim() if isfunction(dim) else dim
-
         project_in = (
             nn.Sequential(ops.manual_cast.Linear(dim, inner_dim), nn.GELU())
             if not glu

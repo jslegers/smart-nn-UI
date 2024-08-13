@@ -1,4 +1,5 @@
-#taken from https://github.com/TencentARC/T2I-Adapter
+# taken from https://github.com/TencentARC/T2I-Adapter
+
 import torch
 import torch.nn as nn
 from collections import OrderedDict
@@ -48,7 +49,12 @@ class Downsample(nn.Module):
         stride = 2 if dims != 3 else (1, 2, 2)
         if use_conv:
             self.op = conv_nd(
-                dims, self.channels, self.out_channels, 3, stride=stride, padding=padding
+                dims,
+                self.channels,
+                self.out_channels,
+                3,
+                stride=stride,
+                padding=padding,
             )
         else:
             assert self.channels == self.out_channels
@@ -59,7 +65,6 @@ class Downsample(nn.Module):
         if not self.use_conv:
             padding = [x.shape[2] % 2, x.shape[3] % 2]
             self.op.padding = padding
-
         x = self.op(x)
         return x
 
@@ -72,6 +77,7 @@ class ResnetBlock(nn.Module):
             self.in_conv = nn.Conv2d(in_c, out_c, ksize, 1, ps)
         else:
             # print('n_in')
+
             self.in_conv = None
         self.block1 = nn.Conv2d(out_c, out_c, 3, 1, 1)
         self.act = nn.ReLU()
@@ -80,7 +86,6 @@ class ResnetBlock(nn.Module):
             self.skep = nn.Conv2d(in_c, out_c, ksize, 1, ps)
         else:
             self.skep = None
-
         self.down = down
         if self.down == True:
             self.down_opt = Downsample(in_c, use_conv=use_conv)
@@ -90,7 +95,6 @@ class ResnetBlock(nn.Module):
             x = self.down_opt(x)
         if self.in_conv is not None:  # edit
             x = self.in_conv(x)
-
         h = self.block1(x)
         h = self.act(h)
         h = self.block2(h)
@@ -101,7 +105,16 @@ class ResnetBlock(nn.Module):
 
 
 class Adapter(nn.Module):
-    def __init__(self, channels=[320, 640, 1280, 1280], nums_rb=3, cin=64, ksize=3, sk=False, use_conv=True, xl=True):
+    def __init__(
+        self,
+        channels=[320, 640, 1280, 1280],
+        nums_rb=3,
+        cin=64,
+        ksize=3,
+        sk=False,
+        use_conv=True,
+        xl=True,
+    ):
         super(Adapter, self).__init__()
         self.unshuffle_amount = 8
         resblock_no_downsample = []
@@ -111,7 +124,6 @@ class Adapter(nn.Module):
             self.unshuffle_amount = 16
             resblock_no_downsample = [1]
             resblock_downsample = [2]
-
         self.input_channels = cin // (self.unshuffle_amount * self.unshuffle_amount)
         self.unshuffle = nn.PixelUnshuffle(self.unshuffle_amount)
         self.channels = channels
@@ -121,20 +133,46 @@ class Adapter(nn.Module):
             for j in range(nums_rb):
                 if (i in resblock_downsample) and (j == 0):
                     self.body.append(
-                        ResnetBlock(channels[i - 1], channels[i], down=True, ksize=ksize, sk=sk, use_conv=use_conv))
+                        ResnetBlock(
+                            channels[i - 1],
+                            channels[i],
+                            down=True,
+                            ksize=ksize,
+                            sk=sk,
+                            use_conv=use_conv,
+                        )
+                    )
                 elif (i in resblock_no_downsample) and (j == 0):
                     self.body.append(
-                        ResnetBlock(channels[i - 1], channels[i], down=False, ksize=ksize, sk=sk, use_conv=use_conv))
+                        ResnetBlock(
+                            channels[i - 1],
+                            channels[i],
+                            down=False,
+                            ksize=ksize,
+                            sk=sk,
+                            use_conv=use_conv,
+                        )
+                    )
                 else:
                     self.body.append(
-                        ResnetBlock(channels[i], channels[i], down=False, ksize=ksize, sk=sk, use_conv=use_conv))
+                        ResnetBlock(
+                            channels[i],
+                            channels[i],
+                            down=False,
+                            ksize=ksize,
+                            sk=sk,
+                            use_conv=use_conv,
+                        )
+                    )
         self.body = nn.ModuleList(self.body)
         self.conv_in = nn.Conv2d(cin, channels[0], 3, 1, 1)
 
     def forward(self, x):
         # unshuffle
+
         x = self.unshuffle(x)
         # extract features
+
         features = []
         x = self.conv_in(x)
         for i in range(len(self.channels)):
@@ -152,14 +190,12 @@ class Adapter(nn.Module):
                 features.append(None)
                 features.append(None)
             features.append(x)
-
         features = features[::-1]
 
         if self.xl:
             return {"input": features[1:], "middle": features[:1]}
         else:
             return {"input": features}
-
 
 
 class LayerNorm(nn.LayerNorm):
@@ -185,13 +221,23 @@ class ResidualAttentionBlock(nn.Module):
         self.attn = nn.MultiheadAttention(d_model, n_head)
         self.ln_1 = LayerNorm(d_model)
         self.mlp = nn.Sequential(
-            OrderedDict([("c_fc", nn.Linear(d_model, d_model * 4)), ("gelu", QuickGELU()),
-                         ("c_proj", nn.Linear(d_model * 4, d_model))]))
+            OrderedDict(
+                [
+                    ("c_fc", nn.Linear(d_model, d_model * 4)),
+                    ("gelu", QuickGELU()),
+                    ("c_proj", nn.Linear(d_model * 4, d_model)),
+                ]
+            )
+        )
         self.ln_2 = LayerNorm(d_model)
         self.attn_mask = attn_mask
 
     def attention(self, x: torch.Tensor):
-        self.attn_mask = self.attn_mask.to(dtype=x.dtype, device=x.device) if self.attn_mask is not None else None
+        self.attn_mask = (
+            self.attn_mask.to(dtype=x.dtype, device=x.device)
+            if self.attn_mask is not None
+            else None
+        )
         return self.attn(x, x, x, need_weights=False, attn_mask=self.attn_mask)[0]
 
     def forward(self, x: torch.Tensor):
@@ -205,8 +251,10 @@ class StyleAdapter(nn.Module):
     def __init__(self, width=1024, context_dim=768, num_head=8, n_layes=3, num_token=4):
         super().__init__()
 
-        scale = width ** -0.5
-        self.transformer_layes = nn.Sequential(*[ResidualAttentionBlock(width, num_head) for _ in range(n_layes)])
+        scale = width**-0.5
+        self.transformer_layes = nn.Sequential(
+            *[ResidualAttentionBlock(width, num_head) for _ in range(n_layes)]
+        )
         self.num_token = num_token
         self.style_embedding = nn.Parameter(torch.randn(1, num_token, width) * scale)
         self.ln_post = LayerNorm(width)
@@ -215,15 +263,18 @@ class StyleAdapter(nn.Module):
 
     def forward(self, x):
         # x shape [N, HW+1, C]
+
         style_embedding = self.style_embedding + torch.zeros(
-            (x.shape[0], self.num_token, self.style_embedding.shape[-1]), device=x.device)
+            (x.shape[0], self.num_token, self.style_embedding.shape[-1]),
+            device=x.device,
+        )
         x = torch.cat([x, style_embedding], dim=1)
         x = self.ln_pre(x)
         x = x.permute(1, 0, 2)  # NLD -> LND
         x = self.transformer_layes(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
 
-        x = self.ln_post(x[:, -self.num_token:, :])
+        x = self.ln_post(x[:, -self.num_token :, :])
         x = x @ self.proj
 
         return x
@@ -280,20 +331,37 @@ class Adapter_light(nn.Module):
 
         for i in range(len(channels)):
             if i == 0:
-                self.body.append(extractor(in_c=cin, inter_c=channels[i]//4, out_c=channels[i], nums_rb=nums_rb, down=False))
+                self.body.append(
+                    extractor(
+                        in_c=cin,
+                        inter_c=channels[i] // 4,
+                        out_c=channels[i],
+                        nums_rb=nums_rb,
+                        down=False,
+                    )
+                )
             else:
-                self.body.append(extractor(in_c=channels[i-1], inter_c=channels[i]//4, out_c=channels[i], nums_rb=nums_rb, down=True))
+                self.body.append(
+                    extractor(
+                        in_c=channels[i - 1],
+                        inter_c=channels[i] // 4,
+                        out_c=channels[i],
+                        nums_rb=nums_rb,
+                        down=True,
+                    )
+                )
         self.body = nn.ModuleList(self.body)
 
     def forward(self, x):
         # unshuffle
+
         x = self.unshuffle(x)
         # extract features
+
         features = []
         for i in range(len(self.channels)):
             x = self.body[i](x)
             features.append(None)
             features.append(None)
             features.append(x)
-
         return {"input": features[::-1]}

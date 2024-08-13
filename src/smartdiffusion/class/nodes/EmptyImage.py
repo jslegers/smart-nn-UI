@@ -1,4 +1,4 @@
-import torch
+from torch import full, cat
 from smartdiffusion.config import MAX_RESOLUTION
 
 
@@ -38,7 +38,7 @@ class EmptyImage:
     CATEGORY = "image"
 
     def generate(self, width, height, batch_size=1, color=0):
-        r = torch.full([batch_size, height, width, 1], ((color >> 16) & 0xFF) / 0xFF)
-        g = torch.full([batch_size, height, width, 1], ((color >> 8) & 0xFF) / 0xFF)
-        b = torch.full([batch_size, height, width, 1], ((color) & 0xFF) / 0xFF)
-        return (torch.cat((r, g, b), dim=-1),)
+        r = full([batch_size, height, width, 1], ((color >> 16) & 0xFF) / 0xFF)
+        g = full([batch_size, height, width, 1], ((color >> 8) & 0xFF) / 0xFF)
+        b = full([batch_size, height, width, 1], ((color) & 0xFF) / 0xFF)
+        return (cat((r, g, b), dim=-1),)

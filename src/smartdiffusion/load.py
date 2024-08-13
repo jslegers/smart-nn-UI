@@ -127,7 +127,7 @@ def get_caller_module(depth: int = 1) -> ModuleType:
 
 
 def get_module_from_code(code):
-    #print(code)
+    # print(code)
 
     def run_code(fullname, source_code=None):
         spec = util.spec_from_loader(fullname, loader=None)
@@ -142,8 +142,10 @@ def get_module_from_code(code):
         sys.modules[code] = mod
         return mod
 
-def camel_to_snake(s : str) -> str :
-  return ''.join(['_'+c.lower() if c.isupper() else c for c in s]).lstrip('_')
+
+def camel_to_snake(s: str) -> str:
+    return "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")
+
 
 def all_files_in_path(*args, **kwargs):
     if not args[0]:
@@ -161,7 +163,7 @@ def all_files_in_path(*args, **kwargs):
     )
     if extensions is not None:
         extensions = [extension.lower() for extension in extensions]
-    path_from_package_dot_notation = '.'.join(PurePath(path_from_package).parts)
+    path_from_package_dot_notation = ".".join(PurePath(path_from_package).parts)
     dict = {}
     entries = scandir(path)
     for entry in entries:
@@ -170,8 +172,8 @@ def all_files_in_path(*args, **kwargs):
             kwargs["path_from_package"] = join(path_from_package, entry_name)
             if isfile(join(package_path, kwargs["path_from_package"], package_file)):
                 dict[
-                    '.'
-                    + '.'.join(
+                    "."
+                    + ".".join(
                         filter(None, [path_from_package_dot_notation, entry_name])
                     )
                 ] = [entry_name]
@@ -181,13 +183,13 @@ def all_files_in_path(*args, **kwargs):
             file_name, file_extension = splitext(entry_name)
             file_extension = file_extension.lower()
             if extensions is None or file_extension in extensions:
-                if file_extension == '.py' and skip_snakecase_python_files:
+                if file_extension == ".py" and skip_snakecase_python_files:
                     file_name_snake = camel_to_snake(file_name)
-                    if file_name == file_name_snake :
+                    if file_name == file_name_snake:
                         continue
                 dict[
-                    '.'
-                    + '.'.join(
+                    "."
+                    + ".".join(
                         filter(None, [path_from_package_dot_notation, file_name])
                     )
                 ] = [file_name]
@@ -229,7 +231,7 @@ class LazyModule(ModuleType):
         self.__file__ = module.__file__
         self.__loader__ = module.__loader__
         self.__path__ = [module_dir]
-        self.__package__ = module.__name__.split('.')[0]
+        self.__package__ = module.__name__.split(".")[0]
         self.__LAZY_MODULE__import_structure = import_structure
         self.__LAZY_MODULE__objects = {} if extra_objects is None else extra_objects
 
@@ -246,23 +248,23 @@ class LazyModule(ModuleType):
         return result
 
     def load(self, name: str):
-        if hasattr(self, '__LAZY_MODULE__module__' + name):
-            return getattr(self, '__LAZY_MODULE__module__' + name)
+        if hasattr(self, "__LAZY_MODULE__module__" + name):
+            return getattr(self, "__LAZY_MODULE__module__" + name)
         if name in self.__LAZY_MODULE__class_to_module.keys():
             module_name = self.__LAZY_MODULE__class_to_module[name]
-            if module_name[0] != '.':
+            if module_name[0] != ".":
                 source_code = f"from {module_name} import {name}"
-                module = import_from_string(module_name + '.' + name, source_code)
+                module = import_from_string(module_name + "." + name, source_code)
                 value = getattr(module, name)
-                sys.modules[self.__name__ + '.' + name] = module
-                setattr(self, '__LAZY_MODULE__module__' + name, value)
+                sys.modules[self.__name__ + "." + name] = module
+                setattr(self, "__LAZY_MODULE__module__" + name, value)
                 return value
-        return getattr(self, '__LAZY_MODULE__module__' + name)
+        return getattr(self, "__LAZY_MODULE__module__" + name)
 
     def __getattr__(self, name: str):
         if name in self.__LAZY_MODULE__objects:
             return self.__LAZY_MODULE__objects[name]
-        full_name = name if name[0] != '.' else self.__name__ + name
+        full_name = name if name[0] != "." else self.__name__ + name
         if full_name in sys.modules:
             return sys.modules[full_name]
         if name in self.__LAZY_MODULE__class_to_module.keys():
@@ -305,39 +307,39 @@ def autoload(**kwargs):
     return module
 
 
-
-
-def get_mod(fullname, attrs = None):
-  if not attrs :
-    code = f"from {fullname} import *"
+def get_mod(fullname, attrs=None):
+    if not attrs:
+        code = f"from {fullname} import *"
+        return get_module_from_code(code)
+    if isinstance(attrs, str):
+        code = f"from {fullname} import {attrs}"
+        return get_module_from_code(code)
+    code = f"from {fullname} import {', '.join(attrs)}"
     return get_module_from_code(code)
-  if isinstance(attrs, str) :
-    code = f"from {fullname} import {attrs}"
-    return get_module_from_code(code)
-  code = f"from {fullname} import {', '.join(attrs)}"
-  return get_module_from_code(code)
+
 
 def module(module, attrs=None):
     class Module_Attr:
-        __slots__ = ['name']
+        __slots__ = ["name"]
 
         def __init__(self, value):
             self.name = value
-            #print(f"INIT --  self.name = {value}")
+            # print(f"INIT --  self.name = {value}")
 
         def __get__(self, instance, owner):
-            #print(f"GET --  instance.__dict__[{self.name}]")
+            # print(f"GET --  instance.__dict__[{self.name}]")
+
             return instance.__storage__.get_by_proxy(self.name)
 
     class Module_proxy_shared:
         __slots__ = [
-            'dependency',
-            'activated',
-            'module_name',
-            'module_name',
-            'attribute_names',
-            'attributes_proxy',
-            'proxy',
+            "dependency",
+            "activated",
+            "module_name",
+            "module_name",
+            "attribute_names",
+            "attributes_proxy",
+            "proxy",
         ]
 
         def get_by_proxy(self, value):
@@ -371,7 +373,8 @@ def module(module, attrs=None):
             return self.dependency[key]
 
         def get_first_attr(self):
-            #print(dir(self))
+            # print(dir(self))
+
             return self.get_attr(self.attribute_names[0])
 
         def get_attr(self, attr):
@@ -381,7 +384,8 @@ def module(module, attrs=None):
         def activate(self):
             if not self.activated:
                 self.activated = True
-                #print("ACTIVATE")
+                # print("ACTIVATE")
+
                 mod = get_mod(self.module_name, self.attribute_names)
                 if not self.attribute_names:
                     self.dependency = mod
@@ -393,26 +397,28 @@ def module(module, attrs=None):
                         setattr(self.dependency, key, attr)
                     self.attributes_proxy = None
                     self.proxy = None
-                #print(self.dependency)
+                # print(self.dependency)
             return
 
     class Module_proxy_child:
-        __slots__ = ['__storage__', '__name__']
+        __slots__ = ["__storage__", "__name__"]
 
         def __init__(self, name, storage=None):
             self.__name__ = name
             self.__storage__ = storage
 
         def __getattr__(self, key):
-            #print('child.__getitem__')
-            #print(key)
+            # print('child.__getitem__')
+            # print(key)
+
             return getattr(self.__storage__.get_attr(self.__name__), key)
 
         def __str__(self):
             return str(self.__storage__.get_attr(self.__name__))
 
         def __call__(self, *args, **kwargs):
-            #print('child.__call__')
+            # print('child.__call__')
+
             return self.__storage__.get_attr(self.__name__)(*args, **kwargs)
 
     class Module_proxy:
@@ -422,15 +428,17 @@ def module(module, attrs=None):
 
         def __getattr__(self, key):
             try:
-                #print('parent.__getattr__')
-                #print(key)
+                # print('parent.__getattr__')
+                # print(key)
+
                 return self.__storage__.get_attr(key)
             except Exception as e:
                 return getattr(self.__storage__.get_first_attr(), key)
 
         def __getitem__(self, key):
-            #print('parent.__getitem__')
-            #print(key)
+            # print('parent.__getitem__')
+            # print(key)
+
             return self.__storage__.get_item(key)
 
         def __call__(self, *args, **kwargs):

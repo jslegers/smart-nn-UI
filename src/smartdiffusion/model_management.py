@@ -42,6 +42,7 @@ class CPUState(Enum):
 
 # Determine VRAM State
 
+
 vram_state = VRAMState.NORMAL_VRAM
 set_vram_to = VRAMState.NORMAL_VRAM
 cpu_state = CPUState.GPU
@@ -86,9 +87,11 @@ try:
 except:
     pass
 
+
 def is_nvidia():
     global cpu_state
     return cpu_state == CPUState.GPU and torch.cuda.is_available()
+
 
 def is_intel_xpu():
     global cpu_state
@@ -97,6 +100,7 @@ def is_intel_xpu():
         if xpu_available:
             return True
     return False
+
 
 if args.cpu or (not is_nvidia() and not is_intel_xpu()):
     cpu_state = CPUState.CPU
@@ -147,23 +151,22 @@ def get_total_memory(dev=None, torch_total_too=False):
     else:
         return mem_total
 
+
 total_ram = psutil.virtual_memory().total
 total_vram = get_total_memory(get_torch_device())
 logging.info(
     "Total VRAM {:0.0f} MB, total RAM {:0.0f} MB".format(
-        total_vram / (1024 * 1024),
-        total_ram / (1024 * 1024)
+        total_vram / (1024 * 1024), total_ram / (1024 * 1024)
     )
 )
 
 
 if cpu_state != CPUState.CPU:
-    if total_ram < 6 * (1024 * 1024 * 1024) :
+    if total_ram < 6 * (1024 * 1024 * 1024):
         set_vram_to = VRAMState.LOW_VRAM
         lowvram_available = True
-    if total_ram > 48 * (1024 * 1024 * 1024) :
+    if total_ram > 48 * (1024 * 1024 * 1024):
         vram_state = VRAMState.HIGH_VRAM
-
 try:
     logging.info("pytorch version: {}".format(torch.version.__version__))
 except:
@@ -203,7 +206,6 @@ else:
             pass
     except:
         XFORMERS_IS_AVAILABLE = False
-
 ENABLE_PYTORCH_ATTENTION = False
 if args.use_pytorch_cross_attention:
     ENABLE_PYTORCH_ATTENTION = True
@@ -606,6 +608,7 @@ def load_model_gpu(model):
     return load_models_gpu([model])
 
 
+
 def loaded_models(only_currently_used=False):
     output = []
     for m in current_loaded_models:
@@ -648,9 +651,26 @@ def dtype_size(dtype):
     return dtype_size
 
 
-def unet_offload_device():
-    if vram_state == VRAMState.HIGH_VRAM or total_ram < total_vram:
-        return get_torch_device()
+def unet_offload_device(parameters = None, dtype = None):
+    if parameters is not None and dtype is not None:
+        torch_dev = get_torch_device()
+        if vram_state == VRAMState.HIGH_VRAM:
+            return torch_dev
+
+        cpu_dev = torch.device("cpu")
+        if DISABLE_SMART_MEMORY:
+            return cpu_dev
+
+        model_size = dtype_size(dtype) * parameters
+        mem_cpu = get_free_memory(cpu_dev)
+        if mem_cpu < model_size:
+            return torch_dev
+        else:
+            return cpu_dev
+
+    print("BOOOOH")
+    #if vram_state == VRAMState.HIGH_VRAM or total_ram < total_vram:
+    #    return get_torch_device()
     return torch.device("cpu")
 
 
@@ -1150,7 +1170,9 @@ def soft_empty_cache(force=False):
         torch.mps.empty_cache()
     elif is_intel_xpu():
         torch.xpu.empty_cache()
-    elif force or is_nvidia():  # This seems to make things worse on ROCm so I only do it for cuda
+    elif (
+        force or is_nvidia()
+    ):  # This seems to make things worse on ROCm so I only do it for cuda
         torch.cuda.empty_cache()
         torch.cuda.ipc_collect()
 
@@ -1167,6 +1189,7 @@ def resolve_lowvram_weight(weight, model, key):  # TODO: remove
 
 
 # TODO: might be cleaner to put this somewhere else
+
 
 import threading
 

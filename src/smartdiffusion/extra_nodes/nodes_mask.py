@@ -1,7 +1,7 @@
-import numpy as np
-import scipy.ndimage
+from numpy import array
+from scipy.ndimage import grey_erosion, grey_dilation
 import torch
-from smartdiffusion import utils
+from smartdiffusion.utils import repeat_to_batch_size
 from smartdiffusion.config import MAX_RESOLUTION
 
 
@@ -11,7 +11,7 @@ def composite(destination, source, x, y, mask=None, multiplier=8, resize_source=
         source = torch.nn.functional.interpolate(
             source, size=(destination.shape[2], destination.shape[3]), mode="bilinear"
         )
-    source = utils.repeat_to_batch_size(source, destination.shape[0])
+    source = repeat_to_batch_size(source, destination.shape[0])
 
     x = max(-source.shape[3] * multiplier, min(x, destination.shape[3] * multiplier))
     y = max(-source.shape[2] * multiplier, min(y, destination.shape[2] * multiplier))
@@ -31,7 +31,7 @@ def composite(destination, source, x, y, mask=None, multiplier=8, resize_source=
             size=(source.shape[2], source.shape[3]),
             mode="bilinear",
         )
-        mask = utils.repeat_to_batch_size(mask, source.shape[0])
+        mask = repeat_to_batch_size(mask, source.shape[0])
     # calculate the bounds of the source that will be overlapping the destination
     # this prevents the source trying to overwrite latent pixels that are out of bounds
     # of the destination
@@ -190,7 +190,7 @@ class ImageColorToMask:
     FUNCTION = "image_to_mask"
 
     def image_to_mask(self, image, color):
-        temp = (torch.clamp(image, 0, 1.0) * 255.0).round().to(torch.int)
+        temp = (torch.clamp(image, 0, 1.0) * 255.0).round().to(torch.int32)
         temp = (
             torch.bitwise_left_shift(temp[:, :, :, 0], 16)
             + torch.bitwise_left_shift(temp[:, :, :, 1], 8)
@@ -439,16 +439,16 @@ class GrowMask:
 
     def expand_mask(self, mask, expand, tapered_corners):
         c = 0 if tapered_corners else 1
-        kernel = np.array([[c, 1, c], [1, 1, 1], [c, 1, c]])
+        kernel = array([[c, 1, c], [1, 1, 1], [c, 1, c]])
         mask = mask.reshape((-1, mask.shape[-2], mask.shape[-1]))
         out = []
         for m in mask:
             output = m.numpy()
             for _ in range(abs(expand)):
                 if expand < 0:
-                    output = scipy.ndimage.grey_erosion(output, footprint=kernel)
+                    output = grey_erosion(output, footprint=kernel)
                 else:
-                    output = scipy.ndimage.grey_dilation(output, footprint=kernel)
+                    output = grey_dilation(output, footprint=kernel)
             output = torch.from_numpy(output)
             out.append(output)
         return (torch.stack(out, dim=0),)

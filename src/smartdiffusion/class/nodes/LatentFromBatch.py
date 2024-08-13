@@ -1,4 +1,4 @@
-import math
+from math import ceil
 
 
 class LatentFromBatch:
@@ -29,9 +29,9 @@ class LatentFromBatch:
                 s["noise_mask"] = masks.clone()
             else:
                 if masks.shape[0] < s_in.shape[0]:
-                    masks = masks.repeat(
-                        math.ceil(s_in.shape[0] / masks.shape[0]), 1, 1, 1
-                    )[: s_in.shape[0]]
+                    masks = masks.repeat(ceil(s_in.shape[0] / masks.shape[0]), 1, 1, 1)[
+                        : s_in.shape[0]
+                    ]
                 s["noise_mask"] = masks[batch_index : batch_index + length].clone()
         if "batch_index" not in s:
             s["batch_index"] = [x for x in range(batch_index, batch_index + length)]

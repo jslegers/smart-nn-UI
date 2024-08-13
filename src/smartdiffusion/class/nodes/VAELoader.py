@@ -1,14 +1,14 @@
-import torch
-from smartdiffusion import sd
-from smartdiffusion import utils
-from smartdiffusion import folder_paths
+from torch import tensor
+from smartdiffusion.sd import VAE
+from smartdiffusion.utils import load_torch_file
+from smartdiffusion.folder_paths import get_filename_list, get_full_path
 
 
 class VAELoader:
     @staticmethod
     def vae_list():
-        vaes = folder_paths.get_filename_list("vae")
-        approx_vaes = folder_paths.get_filename_list("vae_approx")
+        vaes = get_filename_list("vae")
+        approx_vaes = get_filename_list("vae_approx")
         sdxl_taesd_enc = False
         sdxl_taesd_dec = False
         sd1_taesd_enc = False
@@ -40,30 +40,40 @@ class VAELoader:
     @staticmethod
     def load_taesd(name):
         taesd = {}
-        approx_vaes = folder_paths.get_filename_list("vae_approx")
-
-        encoder = next(
-            filter(lambda a: a.startswith("{}_encoder.".format(name)), approx_vaes)
+        approx_vaes = get_filename_list("vae_approx")
+        enc = load_torch_file(
+            get_full_path(
+                "vae_approx",
+                next(
+                    filter(
+                        lambda a: a.startswith("{}_encoder.".format(name)), approx_vaes
+                    )
+                ),
+            )
         )
-        decoder = next(
-            filter(lambda a: a.startswith("{}_decoder.".format(name)), approx_vaes)
-        )
-
-        enc = utils.load_torch_file(folder_paths.get_full_path("vae_approx", encoder))
         for k in enc:
             taesd["taesd_encoder.{}".format(k)] = enc[k]
-        dec = utils.load_torch_file(folder_paths.get_full_path("vae_approx", decoder))
+        dec = load_torch_file(
+            get_full_path(
+                "vae_approx",
+                next(
+                    filter(
+                        lambda a: a.startswith("{}_decoder.".format(name)), approx_vaes
+                    )
+                ),
+            )
+        )
         for k in dec:
             taesd["taesd_decoder.{}".format(k)] = dec[k]
         if name == "taesd":
-            taesd["vae_scale"] = torch.tensor(0.18215)
-            taesd["vae_shift"] = torch.tensor(0.0)
+            taesd["vae_scale"] = tensor(0.18215)
+            taesd["vae_shift"] = tensor(0.0)
         elif name == "taesdxl":
-            taesd["vae_scale"] = torch.tensor(0.13025)
-            taesd["vae_shift"] = torch.tensor(0.0)
+            taesd["vae_scale"] = tensor(0.13025)
+            taesd["vae_shift"] = tensor(0.0)
         elif name == "taesd3":
-            taesd["vae_scale"] = torch.tensor(1.5305)
-            taesd["vae_shift"] = torch.tensor(0.0609)
+            taesd["vae_scale"] = tensor(1.5305)
+            taesd["vae_shift"] = tensor(0.0609)
         return taesd
 
     @classmethod
@@ -81,7 +91,5 @@ class VAELoader:
         if vae_name in ["taesd", "taesdxl", "taesd3"]:
             vae = self.load_taesd(vae_name)
         else:
-            vae_path = folder_paths.get_full_path("vae", vae_name)
-            vae = utils.load_torch_file(vae_path)
-        vae = sd.VAE(sd=vae)
-        return (vae,)
+            vae = load_torch_file(get_full_path("vae", vae_name))
+        return (VAE(sd=vae),)

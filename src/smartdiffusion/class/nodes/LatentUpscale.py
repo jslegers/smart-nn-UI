@@ -1,4 +1,4 @@
-from smartdiffusion import utils
+from smartdiffusion.utils import common_upscale
 from smartdiffusion.config import MAX_RESOLUTION
 
 
@@ -58,7 +58,7 @@ class LatentUpscale:
             else:
                 width = max(64, width)
                 height = max(64, height)
-            s["samples"] = utils.common_upscale(
+            s["samples"] = common_upscale(
                 samples["samples"], width // 8, height // 8, upscale_method, crop
             )
         return (s,)

@@ -1,6 +1,6 @@
-import torch
-from smartdiffusion import sd
-from smartdiffusion import folder_paths
+from torch import float8_e4m3fn, float8_e5m2
+from smartdiffusion.sd import load_unet
+from smartdiffusion.folder_paths import get_full_path, get_filename_list
 
 
 class UNETLoader:
@@ -8,7 +8,7 @@ class UNETLoader:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "unet_name": (folder_paths.get_filename_list("unet"),),
+                "unet_name": (get_filename_list("unet"),),
                 "weight_dtype": (["default", "fp8_e4m3fn", "fp8_e5m2"],),
             }
         }
@@ -19,11 +19,8 @@ class UNETLoader:
     CATEGORY = "advanced/loaders"
 
     def load_unet(self, unet_name, weight_dtype, path="unet"):
-        dtype = None
         if weight_dtype == "fp8_e4m3fn":
-            dtype = torch.float8_e4m3fn
+            dtype = float8_e4m3fn
         elif weight_dtype == "fp8_e5m2":
-            dtype = torch.float8_e5m2
-        unet_path = folder_paths.get_full_path(path, unet_name)
-        model = sd.load_unet(unet_path, dtype=dtype)
-        return (model,)
+            dtype = float8_e5m2
+        return (load_unet(get_full_path(path, unet_name), dtype=dtype),)

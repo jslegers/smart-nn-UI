@@ -1,4 +1,4 @@
-from smartdiffusion import folder_paths
+from smartdiffusion.folder_paths import get_filename_list
 
 
 class LoraLoaderModelOnly(LoraLoader):
@@ -7,7 +7,7 @@ class LoraLoaderModelOnly(LoraLoader):
         return {
             "required": {
                 "model": ("MODEL",),
-                "lora_name": (folder_paths.get_filename_list("loras"),),
+                "lora_name": (get_filename_list("loras"),),
                 "strength_model": (
                     "FLOAT",
                     {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01},

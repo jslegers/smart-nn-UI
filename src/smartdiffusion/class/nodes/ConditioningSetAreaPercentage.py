@@ -1,4 +1,4 @@
-from smartdiffusion import node_helpers
+from smartdiffusion.node_helpers import conditioning_set_values
 
 
 class ConditioningSetAreaPercentage:
@@ -30,12 +30,13 @@ class ConditioningSetAreaPercentage:
     CATEGORY = "conditioning"
 
     def append(self, conditioning, width, height, x, y, strength):
-        c = node_helpers.conditioning_set_values(
-            conditioning,
-            {
-                "area": ("percentage", height, width, y, x),
-                "strength": strength,
-                "set_area_to_bounds": False,
-            },
+        return (
+            conditioning_set_values(
+                conditioning,
+                {
+                    "area": ("percentage", height, width, y, x),
+                    "strength": strength,
+                    "set_area_to_bounds": False,
+                },
+            ),
         )
-        return (c,)

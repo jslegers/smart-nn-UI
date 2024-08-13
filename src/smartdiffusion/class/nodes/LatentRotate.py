@@ -1,4 +1,4 @@
-import torch
+from torch import rot90
 
 
 class LatentRotate:
@@ -25,5 +25,5 @@ class LatentRotate:
             rotate_by = 2
         elif rotation.startswith("270"):
             rotate_by = 3
-        s["samples"] = torch.rot90(samples["samples"], k=rotate_by, dims=[3, 2])
+        s["samples"] = rot90(samples["samples"], k=rotate_by, dims=[3, 2])
         return (s,)

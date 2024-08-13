@@ -1,5 +1,9 @@
-from smartdiffusion import sd
-from smartdiffusion import folder_paths
+from smartdiffusion.sd import load_checkpoint
+from smartdiffusion.folder_paths import (
+    get_full_path,
+    get_filename_list,
+    get_folder_paths,
+)
 
 
 class CheckpointLoader:
@@ -7,8 +11,8 @@ class CheckpointLoader:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "config_name": (folder_paths.get_filename_list("configs"),),
-                "ckpt_name": (folder_paths.get_filename_list("checkpoints"),),
+                "config_name": (get_filename_list("configs"),),
+                "ckpt_name": (get_filename_list("checkpoints"),),
             }
         }
 
@@ -18,12 +22,10 @@ class CheckpointLoader:
     CATEGORY = "advanced/loaders"
 
     def load_checkpoint(self, config_name, ckpt_name):
-        config_path = folder_paths.get_full_path("configs", config_name)
-        ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
-        return sd.load_checkpoint(
-            config_path,
-            ckpt_path,
+        return load_checkpoint(
+            get_full_path("configs", config_name),
+            get_full_path("checkpoints", ckpt_name),
             output_vae=True,
             output_clip=True,
-            embedding_directory=folder_paths.get_folder_paths("embeddings"),
+            embedding_directory=get_folder_paths("embeddings"),
         )

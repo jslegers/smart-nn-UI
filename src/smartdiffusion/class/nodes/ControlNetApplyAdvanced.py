@@ -1,6 +1,3 @@
-from PIL import Image
-
-
 class ControlNetApplyAdvanced:
     @classmethod
     def INPUT_TYPES(s):

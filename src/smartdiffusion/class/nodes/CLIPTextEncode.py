@@ -14,7 +14,8 @@ class CLIPTextEncode:
     CATEGORY = "conditioning"
 
     def encode(self, clip, text):
-        tokens = clip.tokenize(text)
-        output = clip.encode_from_tokens(tokens, return_pooled=True, return_dict=True)
+        output = clip.encode_from_tokens(
+            clip.tokenize(text), return_pooled=True, return_dict=True
+        )
         cond = output.pop("cond")
         return ([[cond, output]],)

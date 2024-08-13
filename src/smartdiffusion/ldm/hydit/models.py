@@ -1,7 +1,5 @@
-from typing import Any
-
-import torch
-import torch.nn as nn
+from torch import where, cat, empty, zeros, einsum, int32
+from torch.nn import Module, GELU, Sequential, SiLU, Parameter
 
 from smartdiffusion.ldm.modules.diffusionmodules.mmdit import Mlp, TimestepEmbedder, PatchEmbed, RMSNorm
 from smartdiffusion.ldm.modules.diffusionmodules.util import timestep_embedding
@@ -26,7 +24,7 @@ def modulate(x, shift, scale):
     return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
 
 
-class HunYuanDiTBlock(nn.Module):
+class HunYuanDiTBlock(Module):
     """
     A HunYuanDiT block with `add` conditioning.
     """
@@ -61,13 +59,13 @@ class HunYuanDiTBlock(nn.Module):
         # ========================= FFN =========================
         self.norm2 = norm_layer(hidden_size, elementwise_affine=use_ele_affine, eps=1e-6, dtype=dtype, device=device)
         mlp_hidden_dim = int(hidden_size * mlp_ratio)
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+        approx_gelu = lambda: GELU(approximate="tanh")
         self.mlp = Mlp(in_features=hidden_size, hidden_features=mlp_hidden_dim, act_layer=approx_gelu, drop=0, dtype=dtype, device=device, operations=operations)
 
         # ========================= Add =========================
         # Simply use add like SDXL.
-        self.default_modulation = nn.Sequential(
-            nn.SiLU(),
+        self.default_modulation = Sequential(
+            SiLU(),
             operations.Linear(c_emb_size, hidden_size, bias=True, dtype=dtype, device=device)
         )
 
@@ -88,7 +86,7 @@ class HunYuanDiTBlock(nn.Module):
     def _forward(self, x, c=None, text_states=None, freq_cis_img=None, skip=None):
         # Long Skip Connection
         if self.skip_linear is not None:
-            cat = torch.cat([x, skip], dim=-1)
+            cat = cat([x, skip], dim=-1)
             cat = self.skip_norm(cat)
             x = self.skip_linear(cat)
 
@@ -117,7 +115,7 @@ class HunYuanDiTBlock(nn.Module):
         return self._forward(x, c, text_states, freq_cis_img, skip)
 
 
-class FinalLayer(nn.Module):
+class FinalLayer(Module):
     """
     The final layer of HunYuanDiT.
     """
@@ -125,8 +123,8 @@ class FinalLayer(nn.Module):
         super().__init__()
         self.norm_final = operations.LayerNorm(final_hidden_size, elementwise_affine=False, eps=1e-6, dtype=dtype, device=device)
         self.linear = operations.Linear(final_hidden_size, patch_size * patch_size * out_channels, bias=True, dtype=dtype, device=device)
-        self.adaLN_modulation = nn.Sequential(
-            nn.SiLU(),
+        self.adaLN_modulation = Sequential(
+            SiLU(),
             operations.Linear(c_emb_size, 2 * final_hidden_size, bias=True, dtype=dtype, device=device)
         )
 
@@ -137,7 +135,7 @@ class FinalLayer(nn.Module):
         return x
 
 
-class HunYuanDiT(nn.Module):
+class HunYuanDiT(Module):
     """
     HunYuanDiT: Diffusion model with a Transformer backbone.
 
@@ -211,14 +209,14 @@ class HunYuanDiT(nn.Module):
         #import pdb
         #pdb.set_trace()
 
-        self.mlp_t5 = nn.Sequential(
+        self.mlp_t5 = Sequential(
             operations.Linear(self.text_states_dim_t5, self.text_states_dim_t5 * 4, bias=True, dtype=dtype, device=device),
-            nn.SiLU(),
+            SiLU(),
             operations.Linear(self.text_states_dim_t5 * 4, self.text_states_dim, bias=True, dtype=dtype, device=device),
         )
         # learnable replace
-        self.text_embedding_padding = nn.Parameter(
-            torch.empty(self.text_len + self.text_len_t5, self.text_states_dim, dtype=dtype, device=device))
+        self.text_embedding_padding = Parameter(
+            empty(self.text_len + self.text_len_t5, self.text_states_dim, dtype=dtype, device=device))
 
         # Attention pooling
         pooler_out_dim = 1024
@@ -239,9 +237,9 @@ class HunYuanDiT(nn.Module):
         # Text embedding for `add`
         self.x_embedder = PatchEmbed(input_size, patch_size, in_channels, hidden_size, dtype=dtype, device=device, operations=operations)
         self.t_embedder = TimestepEmbedder(hidden_size, dtype=dtype, device=device, operations=operations)
-        self.extra_embedder = nn.Sequential(
+        self.extra_embedder = Sequential(
             operations.Linear(self.extra_in_dim, hidden_size * 4, dtype=dtype, device=device),
-            nn.SiLU(),
+            SiLU(),
             operations.Linear(hidden_size * 4, hidden_size, bias=True, dtype=dtype, device=device),
         )
 
@@ -249,7 +247,7 @@ class HunYuanDiT(nn.Module):
         num_patches = self.x_embedder.num_patches
 
         # HUnYuanDiT Blocks
-        self.blocks = nn.ModuleList([
+        self.blocks = ModuleList([
             HunYuanDiTBlock(hidden_size=hidden_size,
                             c_emb_size=hidden_size,
                             num_heads=num_heads,
@@ -322,11 +320,11 @@ class HunYuanDiT(nn.Module):
 
         padding = cast_to_input(self.text_embedding_padding, text_states)
 
-        text_states[:,-self.text_len:] = torch.where(text_states_mask[:,-self.text_len:].unsqueeze(2), text_states[:,-self.text_len:], padding[:self.text_len])
-        text_states_t5[:,-self.text_len_t5:] = torch.where(text_states_t5_mask[:,-self.text_len_t5:].unsqueeze(2), text_states_t5[:,-self.text_len_t5:], padding[self.text_len:])
+        text_states[:,-self.text_len:] = where(text_states_mask[:,-self.text_len:].unsqueeze(2), text_states[:,-self.text_len:], padding[:self.text_len])
+        text_states_t5[:,-self.text_len_t5:] = where(text_states_t5_mask[:,-self.text_len_t5:].unsqueeze(2), text_states_t5[:,-self.text_len_t5:], padding[self.text_len:])
 
-        text_states = torch.cat([text_states, text_states_t5], dim=1)  # 2,205，1024
-        # clip_t5_mask = torch.cat([text_states_mask, text_states_t5_mask], dim=-1)
+        text_states = cat([text_states, text_states_t5], dim=1)  # 2,205，1024
+        # clip_t5_mask = cat([text_states_mask, text_states_t5_mask], dim=-1)
 
         _, _, oh, ow = x.shape
         th, tw = (oh + (self.patch_size // 2)) // self.patch_size, (ow + (self.patch_size // 2)) // self.patch_size
@@ -347,14 +345,14 @@ class HunYuanDiT(nn.Module):
         if self.size_cond:
             image_meta_size = timestep_embedding(image_meta_size.view(-1), 256).to(x.dtype)   # [B * 6, 256]
             image_meta_size = image_meta_size.view(-1, 6 * 256)
-            extra_vec = torch.cat([extra_vec, image_meta_size], dim=1)  # [B, D + 6 * 256]
+            extra_vec = cat([extra_vec, image_meta_size], dim=1)  # [B, D + 6 * 256]
 
         # Build style tokens
         if self.use_style_cond:
             if style is None:
-                style = torch.zeros((extra_vec.shape[0],), device=x.device, dtype=torch.int)
+                style = zeros((extra_vec.shape[0],), device=x.device, dtype=int32)
             style_embedding = self.style_embedder(style, out_dtype=x.dtype)
-            extra_vec = torch.cat([extra_vec, style_embedding], dim=1)
+            extra_vec = cat([extra_vec, style_embedding], dim=1)
 
         # Concatenate all extra vectors
         c = t + self.extra_embedder(extra_vec)  # [B, D]
@@ -398,6 +396,6 @@ class HunYuanDiT(nn.Module):
         assert h * w == x.shape[1]
 
         x = x.reshape(shape=(x.shape[0], h, w, p, p, c))
-        x = torch.einsum('nhwpqc->nchpwq', x)
+        x = einsum('nhwpqc->nchpwq', x)
         imgs = x.reshape(shape=(x.shape[0], c, h * p, w * p))
         return imgs

@@ -24,8 +24,12 @@ class ImageScaleBy:
 
     def upscale(self, image, upscale_method, scale_by):
         samples = image.movedim(-1, 1)
-        width = round(samples.shape[3] * scale_by)
-        height = round(samples.shape[2] * scale_by)
-        s = utils.common_upscale(samples, width, height, upscale_method, "disabled")
-        s = s.movedim(1, -1)
-        return (s,)
+        return (
+            common_upscale(
+                samples,
+                round(samples.shape[3] * scale_by),
+                round(samples.shape[2] * scale_by),
+                upscale_method,
+                "disabled",
+            ).movedim(1, -1),
+        )

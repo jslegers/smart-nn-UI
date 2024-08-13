@@ -1,4 +1,4 @@
-import torch
+from torch import ones, float32, zeros
 from smartdiffusion.config import MAX_RESOLUTION
 
 
@@ -41,21 +41,21 @@ class ImagePadForOutpaint:
         d1, d2, d3, d4 = image.size()
 
         new_image = (
-            torch.ones(
+            ones(
                 (d1, d2 + top + bottom, d3 + left + right, d4),
-                dtype=torch.float32,
+                dtype=float32,
             )
             * 0.5
         )
 
         new_image[:, top : top + d2, left : left + d3, :] = image
 
-        mask = torch.ones(
+        mask = ones(
             (d2 + top + bottom, d3 + left + right),
-            dtype=torch.float32,
+            dtype=float32,
         )
 
-        t = torch.zeros((d2, d3), dtype=torch.float32)
+        t = zeros((d2, d3), dtype=float32)
 
         if feathering > 0 and feathering * 2 < d2 and feathering * 2 < d3:
 
