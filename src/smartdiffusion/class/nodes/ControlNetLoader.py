@@ -1,4 +1,4 @@
-from smartdiffusion.controlnet import load_controlnet
+from smartdiffusion.controlnet import c_load_controlnet
 from smartdiffusion.folder_paths import get_full_path, get_filename_list
 
 
@@ -13,4 +13,4 @@ class ControlNetLoader:
     CATEGORY = "loaders"
 
     def load_controlnet(self, control_net_name):
-        return (load_controlnet(get_full_path("controlnet", control_net_name)),)
+        return (c_load_controlnet(get_full_path("controlnet", control_net_name)),)

@@ -1,6 +1,7 @@
-from os import path
+from os import path, walk
 from safetensors.torch import load_file
 from smartdiffusion.folder_paths import get_folder_paths
+from smartdiffusion.diffusers_load import load_diffusers
 
 
 class DiffusersLoader:
@@ -30,7 +31,7 @@ class DiffusersLoader:
                 if path.exists(full_path):
                     model_path = full_path
                     break
-        return diffusers_load.load_diffusers(
+        return load_diffusers(
             model_path,
             output_vae=output_vae,
             output_clip=output_clip,
