@@ -231,6 +231,8 @@ class LazyModule(ModuleType):
         self.__path__ = [module_dir]
         self.__package__ = module.__name__.split('.')[0]
         self.__LAZY_MODULE__import_structure = import_structure
+        print("INIT")
+        print(extra_objects)
         self.__LAZY_MODULE__objects = {} if extra_objects is None else extra_objects
 
     # Needed for autocompletion in an IDE
@@ -260,6 +262,9 @@ class LazyModule(ModuleType):
         return getattr(self, '__LAZY_MODULE__module__' + name)
 
     def __getattr__(self, name: str):
+        print("__getattr__")
+        print(name)
+        print(self.__LAZY_MODULE__objects)
         if name in self.__LAZY_MODULE__objects:
             return self.__LAZY_MODULE__objects[name]
         full_name = name if name[0] != '.' else self.__name__ + name
