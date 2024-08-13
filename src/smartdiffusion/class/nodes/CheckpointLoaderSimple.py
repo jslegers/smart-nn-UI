@@ -1,5 +1,5 @@
 from smartdiffusion.sd import load_checkpoint_guess_config
-from smartdiffusion.folder_paths import get_filename_list, get_folder_paths
+from smartdiffusion.folder_paths import get_filename_list, get_folder_paths, get_full_path
 
 
 class CheckpointLoaderSimple:
