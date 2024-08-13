@@ -89,24 +89,24 @@ parser.add_argument(
     "--output-directory",
     type=str,
     default=None,
-    help="Set the smartdiffusionui output directory.",
+    help="Set the smartdiffusion output directory.",
 )
 parser.add_argument(
     "--temp-directory",
     type=str,
     default=None,
-    help="Set the smartdiffusionui temp directory (default is in the smartdiffusionui directory).",
+    help="Set the smartdiffusion temp directory (default is in the smartdiffusion directory).",
 )
 parser.add_argument(
     "--input-directory",
     type=str,
     default=None,
-    help="Set the smartdiffusionui input directory.",
+    help="Set the smartdiffusion input directory.",
 )
 parser.add_argument(
     "--auto-launch",
     action="store_true",
-    help="Automatically launch smartdiffusionui in the default browser.",
+    help="Automatically launch smartdiffusion in the default browser.",
 )
 parser.add_argument(
     "--disable-auto-launch",
@@ -292,7 +292,7 @@ parser.add_argument(
 parser.add_argument(
     "--disable-smart-memory",
     action="store_true",
-    help="Force smartdiffusionui to agressively offload to regular ram instead of keeping models in vram when it can.",
+    help="Force smartdiffusion to agressively offload to regular ram instead of keeping models in vram when it can.",
 )
 parser.add_argument(
     "--deterministic",

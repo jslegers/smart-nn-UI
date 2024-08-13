@@ -1,7 +1,7 @@
 # Modified/simplified version of the node from: https://github.com/pamparamm/sd-perturbed-attention
 # If you want the one with more options see the above repo.
 
-# My modified one here is more basic but has less chances of breaking with smartdiffusionui updates.
+# My modified one here is more basic but has less chances of breaking with smartdiffusion updates.
 
 
 from smartdiffusion.model_patcher import set_model_options_patch_replace
