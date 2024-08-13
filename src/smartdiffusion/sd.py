@@ -19,7 +19,7 @@ from smartdiffusion.utils import (
     unet_to_diffusers,
     clip_text_transformers_convert,
     calculate_parameters,
-    weight_dtype,
+    weight_dtype as u_weight_dtype,
 )
 
 from smartdiffusion import clip_vision
@@ -782,7 +782,7 @@ def load_checkpoint_guess_config(
 
     diffusion_model_prefix = model_detection.unet_prefix_from_state_dict(sd)
     parameters = calculate_parameters(sd, diffusion_model_prefix)
-    weight_dtype = weight_dtype(sd, diffusion_model_prefix)
+    weight_dtype = u_weight_dtype(sd, diffusion_model_prefix)
     load_device = model_management.get_torch_device()
 
     model_config = model_detection.model_config_from_unet(sd, diffusion_model_prefix)
