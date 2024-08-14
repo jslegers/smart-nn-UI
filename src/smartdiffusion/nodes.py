@@ -351,4 +351,6 @@ def init_extra_nodes(init_custom_nodes=True):
             logging.warning("Please do a: pip install -r requirements.txt")
         logging.warning("")
 
+sys.modules["comfy"] = smartdiffusion
+sys.modules["comfy_extras"] = smartdiffusion
 add_to_env("SMARTDIFFUSION_NODES_PATH")
