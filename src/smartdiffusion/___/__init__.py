@@ -1,4 +1,4 @@
-from ..__.load import autoload
+from load import autoload
 autoload()
 
 def test(str = "Hello world"):

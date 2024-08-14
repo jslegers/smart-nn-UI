@@ -2,7 +2,7 @@ import sys
 import os
 import .node.extra_nodes as extra_nodes
 sys.modules["comfy_extras"] = extra_nodes
-import ..__
+from .. import __
 __.load.add_to_env(__)
 import nodes
 
