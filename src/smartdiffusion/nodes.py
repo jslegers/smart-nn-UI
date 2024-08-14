@@ -182,7 +182,7 @@ def init_builtin_nodes(*args):
     Returns:
         None
     """
-    location = os.path.join(args)
+    location = os.path.join(*args)
     extras_dir = os.path.abspath(os.path.join(
         os.path.dirname(os.path.realpath(__file__)), location
     ))
