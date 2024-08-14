@@ -91,7 +91,7 @@ def load_custom_node(
             and getattr(module, "NODE_CLASS_MAPPINGS") is not None
         ):
             me = sys.modules[__name__]
-            me = sys.modules["smartdiffusion"]
+            papa = sys.modules["smartdiffusion"]
             for name, node_cls in module.NODE_CLASS_MAPPINGS.items():
                 if name not in ignore:
                     NODE_CLASS_MAPPINGS[name] = node_cls
