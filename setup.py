@@ -20,6 +20,7 @@ setup(
         "torchsde>=0.2.6",
         "torchvision>=0.18.1",
         "torchaudio>=2.3.1",
+        "bitsandbytes>=0.43.3"
         "einops>=0.8.0",
         "transformers>=4.28.1",
         "tokenizers>=0.13.3",
