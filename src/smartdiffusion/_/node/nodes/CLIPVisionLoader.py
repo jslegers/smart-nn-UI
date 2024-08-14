@@ -1,5 +1,5 @@
-from smartdiffusion.clip_vision import load
-from smartdiffusion.folder_paths import get_full_path, get_filename_list
+from comfy.clip_vision import load
+from folder_paths import get_full_path, get_filename_list
 
 
 class CLIPVisionLoader:

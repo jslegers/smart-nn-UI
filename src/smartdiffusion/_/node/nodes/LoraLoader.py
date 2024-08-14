@@ -1,6 +1,6 @@
-from smartdiffusion.sd import load_lora_for_models
-from smartdiffusion.utils import load_torch_file
-from smartdiffusion.folder_paths import get_filename_list, get_full_path
+from comfy.sd import load_lora_for_models
+from comfy.utils import load_torch_file
+from folder_paths import get_filename_list, get_full_path
 
 
 class LoraLoader:

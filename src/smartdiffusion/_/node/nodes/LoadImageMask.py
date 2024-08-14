@@ -2,12 +2,12 @@ import os
 import hashlib
 from PIL import Image, ImageOps
 from numpy import array, float32
-from smartdiffusion.folder_paths import (
+from folder_paths import (
     get_input_directory,
     get_annotated_filepath,
     exists_annotated_filepath,
 )
-from smartdiffusion.node_helpers import pillow
+from comfy.node_helpers import pillow
 
 
 class LoadImageMask:

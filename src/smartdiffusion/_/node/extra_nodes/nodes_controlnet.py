@@ -1,15 +1,11 @@
-from smartdiffusion.cldm.control_types import UNION_CONTROLNET_TYPES
-
+from comfy.cldm.control_types import UNION_CONTROLNET_TYPES
 
 class SetUnionControlNetType:
     @classmethod
     def INPUT_TYPES(s):
-        return {
-            "required": {
-                "control_net": ("CONTROL_NET",),
-                "type": (["auto"] + list(UNION_CONTROLNET_TYPES.keys()),),
-            }
-        }
+        return {"required": {"control_net": ("CONTROL_NET", ),
+                             "type": (["auto"] + list(UNION_CONTROLNET_TYPES.keys()),)
+                             }}
 
     CATEGORY = "conditioning/controlnet"
     RETURN_TYPES = ("CONTROL_NET",)
@@ -23,8 +19,8 @@ class SetUnionControlNetType:
             control_net.set_extra_arg("control_type", [type_number])
         else:
             control_net.set_extra_arg("control_type", [])
-        return (control_net,)
 
+        return (control_net,)
 
 NODE_CLASS_MAPPINGS = {
     "SetUnionControlNetType": SetUnionControlNetType,

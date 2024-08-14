@@ -1,5 +1,5 @@
-from smartdiffusion.sd import load_gligen
-from smartdiffusion.folder_paths import get_full_path, get_filename_list
+from comfy.sd import load_gligen
+from folder_paths import get_full_path, get_filename_list
 
 
 class GLIGENLoader:

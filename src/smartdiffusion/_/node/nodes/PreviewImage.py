@@ -1,6 +1,6 @@
 from random import choice
-from smartdiffusion.folder_paths import get_temp_directory
-from smartdiffusion import SaveImage
+from folder_paths import get_temp_directory
+from comfy import SaveImage
 
 
 class PreviewImage(SaveImage):

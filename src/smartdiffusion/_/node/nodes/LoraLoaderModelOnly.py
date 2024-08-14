@@ -1,5 +1,5 @@
-from smartdiffusion.folder_paths import get_filename_list
-from smartdiffusion import LoraLoader
+from folder_paths import get_filename_list
+from comfy import LoraLoader
 
 
 class LoraLoaderModelOnly(LoraLoader):

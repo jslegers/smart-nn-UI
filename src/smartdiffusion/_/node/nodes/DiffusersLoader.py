@@ -1,7 +1,7 @@
 from os import path, walk
 from safetensors.torch import load_file
-from smartdiffusion.folder_paths import get_folder_paths
-from smartdiffusion.diffusers_load import load_diffusers
+from folder_paths import get_folder_paths
+from comfy.diffusers_load import load_diffusers
 
 
 class DiffusersLoader:

@@ -1,8 +1,8 @@
 # sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "smartdiffusion"))
 
 
-from smartdiffusion import model_management
-from smartdiffusion.load import module
+from comfy import model_management
+from load import module
 
 
 def before_node_execution():
@@ -90,29 +90,22 @@ def load_custom_node(
             hasattr(module, "NODE_CLASS_MAPPINGS")
             and getattr(module, "NODE_CLASS_MAPPINGS") is not None
         ):
-            if(module_parent):
-                me = sys.modules[__name__]
-                papa = sys.modules[__name__.split('.')[0]]
-                for name, node_cls in module.NODE_CLASS_MAPPINGS.items():
-                    if name not in ignore:
-                        NODE_CLASS_MAPPINGS[name] = node_cls
-                        cls = module.NODE_CLASS_MAPPINGS[name]
-                        print("WHOOHOO")
-                        setattr(me, name, cls)
-                        setattr(papa, name, cls)
-                        node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
-                            module_parent, get_module_name(module_path)
-                        )
-                if (
-                    hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS")
-                    and getattr(module, "NODE_DISPLAY_NAME_MAPPINGS") is not None
-                ):
-                    NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
-            else:
-                print("MADE IT")
-                print(module_name)
-                print(module)
-                sys.modules[module_name] = module
+            me = sys.modules[__name__]
+            me = sys.modules["stablediffusion"]
+            for name, node_cls in module.NODE_CLASS_MAPPINGS.items():
+                if name not in ignore:
+                    NODE_CLASS_MAPPINGS[name] = node_cls
+                    cls = module.NODE_CLASS_MAPPINGS[name]
+                    setattr(me, name, cls)
+                    setattr(papa, name, cls)
+                    node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
+                        module_parent, get_module_name(module_path)
+                    )
+            if (
+                hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS")
+                and getattr(module, "NODE_DISPLAY_NAME_MAPPINGS") is not None
+            ):
+                NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
             return True
         else:
             logging.warning(

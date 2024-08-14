@@ -1,5 +1,5 @@
-from smartdiffusion.utils import common_upscale
-from smartdiffusion.config import MAX_RESOLUTION
+from comfy.utils import common_upscale
+from comfy.config import MAX_RESOLUTION
 
 
 class LatentUpscale:

@@ -1,5 +1,5 @@
-from smartdiffusion.controlnet import load_controlnet as c_load_controlnet
-from smartdiffusion.folder_paths import get_full_path, get_filename_list
+from comfy.controlnet import load_controlnet as c_load_controlnet
+from folder_paths import get_full_path, get_filename_list
 
 
 class ControlNetLoader:

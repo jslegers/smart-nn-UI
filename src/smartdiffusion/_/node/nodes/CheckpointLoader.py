@@ -1,5 +1,5 @@
-from smartdiffusion.sd import load_checkpoint
-from smartdiffusion.folder_paths import (
+from comfy.sd import load_checkpoint
+from folder_paths import (
     get_full_path,
     get_filename_list,
     get_folder_paths,

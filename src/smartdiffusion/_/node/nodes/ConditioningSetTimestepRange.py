@@ -1,4 +1,4 @@
-from smartdiffusion.node_helpers import conditioning_set_values
+from comfy.node_helpers import conditioning_set_values
 
 
 class ConditioningSetTimestepRange:

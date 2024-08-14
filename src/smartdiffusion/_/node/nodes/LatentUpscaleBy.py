@@ -1,4 +1,4 @@
-from smartdiffusion.utils import common_upscale
+from comfy.utils import common_upscale
 
 
 class LatentUpscaleBy:

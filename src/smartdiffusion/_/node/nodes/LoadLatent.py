@@ -1,7 +1,7 @@
 from os import path, listdir
 from hashlib import sha256
 from safetensors.torch import load_file
-from smartdiffusion.folder_paths import (
+from folder_paths import (
     get_input_directory,
     get_annotated_filepath,
     exists_annotated_filepath,

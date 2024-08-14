@@ -1,7 +1,7 @@
 from torch import tensor
-from smartdiffusion.sd import VAE
-from smartdiffusion.utils import load_torch_file
-from smartdiffusion.folder_paths import get_filename_list, get_full_path
+from comfy.sd import VAE
+from comfy.utils import load_torch_file
+from folder_paths import get_filename_list, get_full_path
 
 
 class VAELoader:

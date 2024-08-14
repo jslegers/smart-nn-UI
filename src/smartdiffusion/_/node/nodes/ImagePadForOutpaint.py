@@ -1,5 +1,5 @@
 from torch import ones, float32, zeros
-from smartdiffusion.config import MAX_RESOLUTION
+from comfy.config import MAX_RESOLUTION
 
 
 class ImagePadForOutpaint:

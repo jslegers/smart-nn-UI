@@ -1,25 +1,20 @@
-from smartdiffusion.config import MAX_RESOLUTION
-from smartdiffusion import folder_paths, LoadImage
+import nodes
+import folder_paths
+
+MAX_RESOLUTION = nodes.MAX_RESOLUTION
 
 
-class WebcamCapture(LoadImage):
+class WebcamCapture(nodes.LoadImage):
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": {
                 "image": ("WEBCAM", {}),
-                "width": (
-                    "INT",
-                    {"default": 0, "min": 0, "max": MAX_RESOLUTION, "step": 1},
-                ),
-                "height": (
-                    "INT",
-                    {"default": 0, "min": 0, "max": MAX_RESOLUTION, "step": 1},
-                ),
+                "width": ("INT", {"default": 0, "min": 0, "max": MAX_RESOLUTION, "step": 1}),
+                "height": ("INT", {"default": 0, "min": 0, "max": MAX_RESOLUTION, "step": 1}),
                 "capture_on_queue": ("BOOLEAN", {"default": True}),
             }
         }
-
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "load_capture"
 

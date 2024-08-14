@@ -1,4 +1,4 @@
-from smartdiffusion import utils
+from comfy import utils
 
 
 class ImageScaleBy:

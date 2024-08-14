@@ -1,5 +1,5 @@
-from smartdiffusion.sd import CLIPType, load_clip
-from smartdiffusion.folder_paths import (
+from comfy.sd import CLIPType, load_clip
+from folder_paths import (
     get_filename_list,
     get_full_path,
     get_folder_paths,

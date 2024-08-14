@@ -1,6 +1,6 @@
 from torch import float8_e4m3fn, float8_e5m2
-from smartdiffusion.sd import load_unet
-from smartdiffusion.folder_paths import get_full_path, get_filename_list
+from comfy.sd import load_unet
+from folder_paths import get_full_path, get_filename_list
 
 
 class UNETLoader:

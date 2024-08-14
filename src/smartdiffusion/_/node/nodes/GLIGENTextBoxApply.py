@@ -1,4 +1,4 @@
-from smartdiffusion.config import MAX_RESOLUTION
+from comfy.config import MAX_RESOLUTION
 
 
 class GLIGENTextBoxApply:

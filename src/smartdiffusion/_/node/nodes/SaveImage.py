@@ -3,8 +3,8 @@ from json import dumps
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 from numpy import clip, uint8
-from smartdiffusion.cli_args import args
-from smartdiffusion.folder_paths import get_output_directory, get_save_image_path
+from comfy.cli_args import args
+from folder_paths import get_output_directory, get_save_image_path
 
 
 class SaveImage:
@@ -19,7 +19,7 @@ class SaveImage:
         return {
             "required": {
                 "images": ("IMAGE",),
-                "filename_prefix": ("STRING", {"default": "smartdiffusion"}),
+                "filename_prefix": ("STRING", {"default": "comfy"}),
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
@@ -34,7 +34,7 @@ class SaveImage:
     def save_images(
         self,
         images,
-        filename_prefix="smartdiffusion",
+        filename_prefix="comfy",
         prompt=None,
         extra_pnginfo=None,
     ):

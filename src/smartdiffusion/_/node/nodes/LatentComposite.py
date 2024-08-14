@@ -1,5 +1,5 @@
 from torch import ones_like
-from smartdiffusion.config import MAX_RESOLUTION
+from comfy.config import MAX_RESOLUTION
 
 
 class LatentComposite:

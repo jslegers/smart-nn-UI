@@ -1,8 +1,8 @@
 from os import path
 from json import dumps
-from smartdiffusion.utils import save_torch_file
-from smartdiffusion.cli_args import args
-from smartdiffusion.folder_paths import get_output_directory, get_save_image_path
+from comfy.utils import save_torch_file
+from comfy.cli_args import args
+from folder_paths import get_output_directory, get_save_image_path
 
 
 class SaveLatent:
@@ -14,7 +14,7 @@ class SaveLatent:
         return {
             "required": {
                 "samples": ("LATENT",),
-                "filename_prefix": ("STRING", {"default": "latents/smartdiffusion"}),
+                "filename_prefix": ("STRING", {"default": "latents/comfy"}),
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
@@ -29,7 +29,7 @@ class SaveLatent:
     def save(
         self,
         samples,
-        filename_prefix="smartdiffusion",
+        filename_prefix="comfy",
         prompt=None,
         extra_pnginfo=None,
     ):
