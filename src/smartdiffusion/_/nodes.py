@@ -185,8 +185,8 @@ def init_builtin_nodes(*args):
     """
     location = os.path.join(*args)
     extras_dir = os.path.abspath(os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), location
-    ))
+        os.path.dirname(os.path.dirname(os.path.realpath(__file__)), location
+    )))
     extras_files = os.listdir(extras_dir)
     if "__pycache__" in extras_files:
         extras_files.remove("__pycache__")
