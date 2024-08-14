@@ -1,5 +1,5 @@
 import sys
-from os import scandir
+from os import scandir, environ
 from os.path import join, dirname, abspath, splitext, isfile, isdir
 from pathlib import PurePath
 from importlib import import_module, util
@@ -301,7 +301,7 @@ def add_to_env(*args):
     path = abspath(dirname(module.__file__))
     sys.path.append(path)
     if len(args) > 0:
-        new_env = os.environ.copy()
+        new_env = environ.copy()
         for arg in args:
             new_env[arg] = path
 
