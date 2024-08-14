@@ -1,7 +1,8 @@
 def __init():
     from .__ import load, nodes
     me = load.autoload(extra_objects = [nodes])
-    from . import _
+    from ._ import _nodes
+    nodes.update(_nodes)
     from . import ___
     me.update(___)
     del me._

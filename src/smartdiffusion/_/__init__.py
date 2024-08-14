@@ -4,7 +4,6 @@ import .node.extra_nodes as extra_nodes
 sys.modules["comfy_extras"] = extra_nodes
 from .. import __
 __.load.add_to_env(__)
-import nodes
 
 def init_builtin_nodes(*args):
     """
@@ -33,3 +32,5 @@ def init_builtin_nodes(*args):
 
 init_builtin_nodes("node", "nodes")
 init_builtin_nodes("node", "extra_nodes")
+
+from . import nodes as _nodes
