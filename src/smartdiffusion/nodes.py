@@ -183,10 +183,7 @@ import importlib
 def load_custom_node(
     module_path: str, ignore=set(), module_parent="custom_nodes"
 ) -> bool:
-    module_name = os.path.basename(module_path)
-    if os.path.isfile(module_path):
-        sp = os.path.splitext(module_path)
-        module_name = sp[0]
+    module_name = get_module_name(module_path)
     try:
         logging.debug("Trying to load custom node {}".format(module_path))
         if os.path.isfile(module_path):
@@ -201,7 +198,6 @@ def load_custom_node(
             module_dir = module_path
         module = importlib.util.module_from_spec(module_spec)
         sys.modules[module_name] = module
-        globals()[module_name] = module
         module_spec.loader.exec_module(module)
 
         if (
@@ -228,16 +224,16 @@ def load_custom_node(
                 and getattr(module, "NODE_DISPLAY_NAME_MAPPINGS") is not None
             ):
                 NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
-            return True
+            return (name, module)
         else:
             logging.warning(
                 f"Skip {module_path} module for custom nodes due to the lack of NODE_CLASS_MAPPINGS."
             )
-            return False
+            return None
     except Exception as e:
         logging.warning(traceback.format_exc())
         logging.warning(f"Cannot import {module_path} module for custom nodes: {e}")
-        return False
+        return None
 
 
 import os
@@ -273,11 +269,11 @@ def init_external_custom_nodes():
             if module_path.endswith(".disabled"):
                 continue
             time_before = time.perf_counter()
-            success = load_custom_node(
+            custom_node = load_custom_node(
                 module_path, base_node_names, module_parent="custom_nodes"
             )
             node_import_times.append(
-                (time.perf_counter() - time_before, module_path, success)
+                (time.perf_counter() - time_before, module_path, custom_node is not None)
             )
     if len(node_import_times) > 0:
         logging.info("\nImport times for custom nodes:")
@@ -312,10 +308,13 @@ def init_builtin_extra_nodes():
 
     import_failed = []
     for node_file in extras_files:
-        if not load_custom_node(
+        node = load_custom_node(
             os.path.join(extras_dir, node_file), module_parent="extra_nodes"
-        ):
+        )
+        if node is None:
             import_failed.append(node_file)
+        else:
+            globals()[node[0]] = getattr(node[1], node[0])
     return import_failed
 
 
