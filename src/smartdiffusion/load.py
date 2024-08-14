@@ -298,7 +298,7 @@ class LazyModule(ModuleType):
 
 def add_to_env(*args):
     module = get_caller_module()
-    path = abspath(dirname(module.__file__)
+    path = abspath(dirname(module.__file__))
     sys.path.append(path)
     if len(args) > 0:
         new_env = os.environ.copy()
