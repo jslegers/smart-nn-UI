@@ -172,7 +172,7 @@ def init_external_custom_nodes():
 import os
 
 
-def init_builtin_nodes(*args, no_parent = True):
+def init_builtin_nodes(*args):
     """
     Initializes the built-in nodes in Smart Diffusion Server.
 
@@ -192,7 +192,7 @@ def init_builtin_nodes(*args, no_parent = True):
     import_failed = []
     for node_file in extras_files:
         if not load_custom_node(
-            os.path.join(extras_dir, node_file), module_parent= None if no_parent else location
+            os.path.join(extras_dir, node_file), module_parent=location
         ):
             import_failed.append(node_file)
     return import_failed
