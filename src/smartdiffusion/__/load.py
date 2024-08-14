@@ -233,7 +233,13 @@ class LazyModule(ModuleType):
         self.__path__ = [module_dir]
         self.__package__ = module.__name__.split(".")[0]
         self.__LAZY_MODULE__import_structure = import_structure
-        self.__LAZY_MODULE__objects = {} if extra_objects is None else extra_objects
+        if extra_objects is None :
+            self.__LAZY_MODULE__objects = [{}]
+            return
+        if type(extra_objects)==list :
+            self.__LAZY_MODULE__objects = extra_objects
+            return
+        self.__LAZY_MODULE__objects = [extra_objects]
 
     # Needed for autocompletion in an IDE
 
@@ -261,9 +267,29 @@ class LazyModule(ModuleType):
                 return value
         return getattr(self, "__LAZY_MODULE__module__" + name)
 
+    def __setitem__(self, key, value):
+        self.__dict__[key] = value
+    def __getitem__(self, key):
+        return self.__dict__[key]
+    def __delitem__(self, key):
+        del self.__dict__[key]
+    def __iter__(self):
+        return iter(self.__dict__)
+    def __len__(self):
+        return len(self.__dict__)
+
+    def __str__(self):
+        '''returns simple dict representation of the mapping'''
+        return str(self.__dict__)
+
+    def __repr__(self):
+        '''echoes class, id, & reproducible representation in the REPL'''
+        return '{}, D({})'.format(super(D, self).__repr__(), self.__dict__)
+
     def __getattr__(self, name: str):
-        if name in self.__LAZY_MODULE__objects:
-            return self.__LAZY_MODULE__objects[name]
+        for o in self.__LAZY_MODULE__objects:
+            if name in o:
+                return o[name]
         full_name = name if name[0] != "." else self.__name__ + name
         if full_name in sys.modules:
             return sys.modules[full_name]
@@ -297,7 +323,6 @@ class LazyModule(ModuleType):
         )
 
 def add_to_env(module, *args):
-    module = get_caller_module()
     path = abspath(dirname(module.__file__))
     sys.path.append(path)
     if len(args) > 0:

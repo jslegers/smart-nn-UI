@@ -1,8 +1,9 @@
 # sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "smartdiffusion"))
 
+from load import autoload
+load.autoload()
 
 from comfy import model_management
-from load import module
 
 from config import MAX_RESOLUTION
 
@@ -165,36 +166,6 @@ def init_external_custom_nodes():
             logging.info("{:6.1f} seconds{}: {}".format(n[0], import_message, n[1]))
         logging.info("")
 
-
-import os
-
-
-def init_builtin_nodes(*args):
-    """
-    Initializes the built-in nodes in Smart Diffusion Server.
-
-    This function loads the extra node files located in the "nodes" and "extra_nodes" directories and import them into Smart Diffusion Server.
-    If any of the extra node files fail to import, a warning message is logged.
-
-    Returns:
-        None
-    """
-    location = os.path.join(*args)
-    extras_dir = os.path.abspath(
-        os.path.join(
-            os.path.dirname(os.path.dirname(os.path.realpath(__file__))), location
-        )
-    )
-    extras_files = os.listdir(extras_dir)
-    if "__pycache__" in extras_files:
-        extras_files.remove("__pycache__")
-    import_failed = []
-    for node_file in extras_files:
-        if not load_custom_node(
-            os.path.join(extras_dir, node_file), module_parent=location
-        ):
-            import_failed.append(node_file)
-    return import_failed
 
 
 import logging
