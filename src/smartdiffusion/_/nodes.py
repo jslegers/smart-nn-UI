@@ -90,12 +90,12 @@ def load_custom_node(
             hasattr(module, "NODE_CLASS_MAPPINGS")
             and getattr(module, "NODE_CLASS_MAPPINGS") is not None
         ):
-            #me = sys.modules[__name__]
+            me = sys.modules[__name__]
             for name, node_cls in module.NODE_CLASS_MAPPINGS.items():
                 if name not in ignore:
                     NODE_CLASS_MAPPINGS[name] = node_cls
                     cls = module.NODE_CLASS_MAPPINGS[name]
-                    #setattr(me, name, cls)
+                    setattr(me, name, cls)
                     node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
                         module_parent, get_module_name(module_path)
                     )
