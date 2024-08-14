@@ -325,10 +325,10 @@ from smartdiffusion.cli_args import args
 from smartdiffusion.load import add_to_env
 
 
-def init_extra_nodes(init=True):
+def init_extra_nodes(init_custom_nodes=True):
     import_failed = init_builtin_nodes("nodes") + init_builtin_nodes("extra_nodes")
 
-    if init:
+    if init_custom_nodes:
         init_external_custom_nodes()
     else:
         logging.info("Skipping loading of custom nodes")
