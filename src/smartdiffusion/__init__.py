@@ -1,11 +1,17 @@
 import sys
+import os
 from . import _
 import nodes as _nodes
-from .node import nodes, extra_nodes
+from node import extra_nodes
 sys.modules["comfy_extras"] = extra_nodes
 sys.modules[__name__] = _
-for node in dir(nodes):
+current_dir = os.path.dirname(os.path.realpath(__file__))
+nodes_dir = os.path.abspath(os.path.join(current_dir, "node", "nodes"))
+nodes = os.listdir(nodes_dir)
+for file in nodes:
     if(not node.startswith('__')):
-        setattr(sys.modules[__name__], node, _.load.module("nodes", node))
+        module_name = _nodes.get_module_name(file)
+        print(module_name)
+        setattr(sys.modules[__name__], module_name, _.load.module("nodes", module_name))
 _nodes.init_builtin_nodes("node", "nodes")
 _nodes.init_builtin_nodes("node", "extra_nodes")

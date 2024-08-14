@@ -61,8 +61,6 @@ def load_custom_node(
     if os.path.isfile(module_path):
         sp = os.path.splitext(module_path)
         module_name = sp[0]
-    print(module_name)
-    print(module_path)
     try:
         logging.debug("Trying to load custom node {}".format(module_path))
         if os.path.isfile(module_path):
