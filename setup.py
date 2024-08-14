@@ -31,7 +31,6 @@ setup(
         "tqdm",
         "psutil",
         "accelerate",
-        "huggingface_hub",
-        "xformers>=0.0.27"
+        "huggingface_hub"
     ]
 )

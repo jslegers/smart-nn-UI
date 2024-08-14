@@ -15,7 +15,6 @@ psutil
 
 accelerate
 huggingface_hub
-xformers>=0.0.27
 
 #non essential dependencies:
 #kornia>=0.7.1
