@@ -221,7 +221,6 @@ def load_custom_node(
                     NODE_CLASS_MAPPINGS[name] = node_cls
                     cls = getattr(module, name)
                     setattr(sys.modules[module_parent], name) = cls
-                    setattr(sys.modules["smartdiffusion"], name) = cls
                     node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
                         module_parent, get_module_name(module_path)
                     )
@@ -323,6 +322,7 @@ def init_builtin_nodes(location):
 
 import logging
 from smartdiffusion.cli_args import args
+from smartdiffusion.load import add_to_env
 
 
 def init_extra_nodes(init=True):
@@ -348,3 +348,5 @@ def init_extra_nodes(init=True):
         else:
             logging.warning("Please do a: pip install -r requirements.txt")
         logging.warning("")
+
+add_to_env("SMARTDIFFUSION_NODES_PATH")
