@@ -9,7 +9,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 nodes_dir = os.path.abspath(os.path.join(current_dir, "node", "nodes"))
 nodes = os.listdir(nodes_dir)
 for file in nodes:
-    if(not node.startswith('__')):
+    if(not file.startswith('__')):
         module_name = _nodes.get_module_name(file)
         print(module_name)
         setattr(sys.modules[__name__], module_name, _.load.module(".node", module_name))
