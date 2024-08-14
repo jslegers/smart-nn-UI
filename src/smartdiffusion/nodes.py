@@ -220,7 +220,7 @@ def load_custom_node(
                 if name not in ignore:
                     NODE_CLASS_MAPPINGS[name] = node_cls
                     cls = getattr(module, name)
-                    setattr(sys.modules[module_parent], name) = cls
+                    setattr(sys.modules[module_parent], name, cls)
                     node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
                         module_parent, get_module_name(module_path)
                     )
