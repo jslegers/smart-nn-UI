@@ -183,7 +183,10 @@ import importlib
 def load_custom_node(
     module_path: str, ignore=set(), module_parent="custom_nodes"
 ) -> bool:
-    module_name = get_module_name(module_path)
+    module_name = os.path.basename(module_path)
+    if os.path.isfile(module_path):
+        sp = os.path.splitext(module_path)
+        module_name = sp[0]
     try:
         logging.debug("Trying to load custom node {}".format(module_path))
         if os.path.isfile(module_path):
@@ -216,6 +219,9 @@ def load_custom_node(
             for name, node_cls in module.NODE_CLASS_MAPPINGS.items():
                 if name not in ignore:
                     NODE_CLASS_MAPPINGS[name] = node_cls
+                    cls = getattr(module, name)
+                    setattr(sys.modules[module_parent], name) = cls
+                    setattr(sys.modules["smartdiffusion"], name) = cls
                     node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
                         module_parent, get_module_name(module_path)
                     )
@@ -224,16 +230,16 @@ def load_custom_node(
                 and getattr(module, "NODE_DISPLAY_NAME_MAPPINGS") is not None
             ):
                 NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
-            return (name, module)
+            return True
         else:
             logging.warning(
                 f"Skip {module_path} module for custom nodes due to the lack of NODE_CLASS_MAPPINGS."
             )
-            return None
+            return False
     except Exception as e:
         logging.warning(traceback.format_exc())
         logging.warning(f"Cannot import {module_path} module for custom nodes: {e}")
-        return None
+        return False
 
 
 import os
@@ -269,11 +275,11 @@ def init_external_custom_nodes():
             if module_path.endswith(".disabled"):
                 continue
             time_before = time.perf_counter()
-            custom_node = load_custom_node(
+            success = load_custom_node(
                 module_path, base_node_names, module_parent="custom_nodes"
             )
             node_import_times.append(
-                (time.perf_counter() - time_before, module_path, custom_node is not None)
+                (time.perf_counter() - time_before, module_path, success)
             )
     if len(node_import_times) > 0:
         logging.info("\nImport times for custom nodes:")
@@ -289,18 +295,18 @@ def init_external_custom_nodes():
 import os
 
 
-def init_builtin_extra_nodes():
+def init_builtin_nodes(location):
     """
-    Initializes the built-in extra nodes in Smart Diffusion Server.
+    Initializes the built-in nodes in Smart Diffusion Server.
 
-    This function loads the extra node files located in the "extra_nodes" directory and imports them into Smart Diffusion Server.
+    This function loads the extra node files located in the "nodes" and "extra_nodes" directories and import them into Smart Diffusion Server.
     If any of the extra node files fail to import, a warning message is logged.
 
     Returns:
         None
     """
     extras_dir = os.path.join(
-        os.path.abspath(os.path.dirname(os.path.realpath(__file__))), "extra_nodes"
+        os.path.abspath(os.path.dirname(os.path.realpath(__file__))), location
     )
     extras_files = os.listdir(extras_dir)
     if "__pycache__" in extras_files:
@@ -308,13 +314,10 @@ def init_builtin_extra_nodes():
 
     import_failed = []
     for node_file in extras_files:
-        node = load_custom_node(
-            os.path.join(extras_dir, node_file), module_parent="extra_nodes"
-        )
-        if node is None:
+        if not load_custom_node(
+            os.path.join(extras_dir, node_file), module_parent=os.path.join("node", location)
+        ):
             import_failed.append(node_file)
-        else:
-            globals()[node[0]] = getattr(node[1], node[0])
     return import_failed
 
 
@@ -322,16 +325,16 @@ import logging
 from smartdiffusion.cli_args import args
 
 
-def init_extra_nodes(init_custom_nodes=True):
-    import_failed = init_builtin_extra_nodes()
+def init_extra_nodes(init=True):
+    import_failed = init_builtin_nodes("nodes") + init_builtin_nodes("extra_nodes")
 
-    if init_custom_nodes:
+    if init:
         init_external_custom_nodes()
     else:
         logging.info("Skipping loading of custom nodes")
     if len(import_failed) > 0:
         logging.warning(
-            "WARNING: some extra_nodes/ nodes did not import correctly. This may be because they are missing some dependencies.\n"
+            "WARNING: some nodes did not import correctly. This may be because they are missing some dependencies.\n"
         )
         for node in import_failed:
             logging.warning("IMPORT FAILED: {}".format(node))
