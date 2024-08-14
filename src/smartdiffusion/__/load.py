@@ -278,6 +278,10 @@ class LazyModule(ModuleType):
     def __len__(self):
         return len(self.__dict__)
 
+    def __add__(self, val2):
+        self.__dict__.append(val2)
+        return self
+
     def __str__(self):
         '''returns simple dict representation of the mapping'''
         return str(self.__dict__)

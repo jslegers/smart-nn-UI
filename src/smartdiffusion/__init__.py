@@ -2,9 +2,9 @@ def __init():
     from .__ import load, nodes
     me = load.autoload(extra_objects = [nodes])
     from ._ import _nodes
-    nodes.update(_nodes)
+    me = me + _nodes
     from . import ___
-    me.update(___)
+    me = me + ___
     del me._
     del me.__
     del me.___
