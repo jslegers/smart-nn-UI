@@ -218,11 +218,13 @@ def load_custom_node(
             and getattr(module, "NODE_CLASS_MAPPINGS") is not None
         ):
             me = sys.modules[__name__]
+            papa = sys.modules[__name__.split('.')[0]]
             for name, node_cls in module.NODE_CLASS_MAPPINGS.items():
                 if name not in ignore:
                     NODE_CLASS_MAPPINGS[name] = node_cls
-                    cls = getattr(module, name)
+                    cls = module.NODE_CLASS_MAPPINGS[name]
                     setattr(me, name, cls)
+                    setattr(papa, name, cls)
                     node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
                         module_parent, get_module_name(module_path)
                     )
@@ -328,12 +330,14 @@ from smartdiffusion.load import add_to_env
 
 
 def init_extra_nodes(init_custom_nodes=True):
-    import_failed = init_builtin_nodes("nodes") + init_builtin_nodes("extra_nodes")
-
     if init_custom_nodes:
         init_external_custom_nodes()
     else:
         logging.info("Skipping loading of custom nodes")
+
+def init_nodes():
+    import_failed = init_builtin_nodes("nodes") + init_builtin_nodes("extra_nodes")
+
     if len(import_failed) > 0:
         logging.warning(
             "WARNING: some nodes did not import correctly. This may be because they are missing some dependencies.\n"
@@ -351,4 +355,4 @@ def init_extra_nodes(init_custom_nodes=True):
             logging.warning("Please do a: pip install -r requirements.txt")
         logging.warning("")
 
-add_to_env("SMARTDIFFUSION_NODES_PATH")
+    add_to_env("SMARTDIFFUSION_NODES_PATH")
