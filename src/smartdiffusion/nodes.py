@@ -304,9 +304,9 @@ def init_builtin_nodes(location):
     Returns:
         None
     """
-    extras_dir = os.path.join(
-        os.path.abspath(os.path.dirname(os.path.realpath(__file__))), location
-    )
+    extras_dir = os.path.abspath(os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "node", location
+    ))
     extras_files = os.listdir(extras_dir)
     if "__pycache__" in extras_files:
         extras_files.remove("__pycache__")
@@ -314,7 +314,7 @@ def init_builtin_nodes(location):
     import_failed = []
     for node_file in extras_files:
         if not load_custom_node(
-            os.path.join(extras_dir, node_file), module_parent=os.path.join("node", location)
+            os.path.join(extras_dir, node_file), module_parent=location
         ):
             import_failed.append(node_file)
     return import_failed
