@@ -19,3 +19,12 @@ class CLIPTextEncode:
         )
         cond = output.pop("cond")
         return ([[cond, output]],)
+
+NODE_CLASS_MAPPINGS = {
+    "CLIPTextEncode": CLIPTextEncode
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "CLIPTextEncode": "CLIP Text Encode (Prompt)",
+}

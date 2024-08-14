@@ -65,3 +65,12 @@ class ControlNetApplyAdvanced:
                 c.append(n)
             out.append(c)
         return (out[0], out[1])
+
+NODE_CLASS_MAPPINGS = {
+    "ControlNetApplyAdvanced": ControlNetApplyAdvanced
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "ControlNetApplyAdvanced": "Apply ControlNet (Advanced)",
+}

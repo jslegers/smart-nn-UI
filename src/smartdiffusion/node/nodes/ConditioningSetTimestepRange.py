@@ -29,3 +29,12 @@ class ConditioningSetTimestepRange:
                 conditioning, {"start_percent": start, "end_percent": end}
             ),
         )
+
+NODE_CLASS_MAPPINGS = {
+    "ConditioningSetTimestepRange": ConditioningSetTimestepRange
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "ConditioningSetTimestepRange": "Conditioning (Set Timestep Range)",
+}

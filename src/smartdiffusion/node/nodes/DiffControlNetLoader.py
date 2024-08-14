@@ -19,3 +19,12 @@ class DiffControlNetLoader:
 
     def load_controlnet(self, model, control_net_name):
         return (load_controlnet(get_full_path("controlnet", control_net_name), model),)
+
+NODE_CLASS_MAPPINGS = {
+    "DiffControlNetLoader": DiffControlNetLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Loaders
+    "DiffControlNetLoader": "Load ControlNet Model (diff)",
+}

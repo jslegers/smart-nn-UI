@@ -49,3 +49,11 @@ class LatentCrop:
         to_y = new_height + y
         s["samples"] = samples[:, :, y:to_y, x:to_x]
         return (s,)
+
+NODE_CLASS_MAPPINGS = {
+    "LatentCrop": LatentCrop
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LatentCrop": "Crop Latent",
+}

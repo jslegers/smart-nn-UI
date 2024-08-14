@@ -42,3 +42,11 @@ class ImageScale:
             s = common_upscale(samples, width, height, upscale_method, crop)
             s = s.movedim(1, -1)
         return (s,)
+
+NODE_CLASS_MAPPINGS = {
+    "ImageScale": ImageScale
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "ImageScale": "Upscale Image",
+}

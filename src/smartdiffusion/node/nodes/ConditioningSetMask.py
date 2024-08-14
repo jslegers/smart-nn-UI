@@ -32,3 +32,12 @@ class ConditioningSetMask:
                 },
             ),
         )
+
+NODE_CLASS_MAPPINGS = {
+    "ConditioningSetMask": ConditioningSetMask
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "ConditioningSetMask": "Conditioning (Set Mask)",
+}

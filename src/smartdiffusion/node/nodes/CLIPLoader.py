@@ -41,3 +41,12 @@ class CLIPLoader:
                 clip_type=__getClipType(type),
             ),
         )
+
+NODE_CLASS_MAPPINGS = {
+    "CLIPLoader": CLIPLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Loaders
+    "CLIPLoader": "Load CLIP",
+}

@@ -62,3 +62,11 @@ class KSampler:
             latent_image,
             denoise=denoise,
         )
+
+NODE_CLASS_MAPPINGS = {
+    "KSampler": KSampler
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "KSampler": "KSampler",
+}

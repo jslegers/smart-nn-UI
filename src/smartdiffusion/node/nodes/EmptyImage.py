@@ -42,3 +42,12 @@ class EmptyImage:
         g = full([batch_size, height, width, 1], ((color >> 8) & 0xFF) / 0xFF)
         b = full([batch_size, height, width, 1], ((color) & 0xFF) / 0xFF)
         return (cat((r, g, b), dim=-1),)
+
+NODE_CLASS_MAPPINGS = {
+    "EmptyImage": EmptyImage
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Image
+    "EmptyImage": "Empty Image",
+}

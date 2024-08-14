@@ -46,3 +46,11 @@ class LoraLoader:
             lora = load_torch_file(lora_path, safe_load=True)
             self.loaded_lora = (lora_path, lora)
         return load_lora_for_models(model, clip, lora, strength_model, strength_clip)
+
+NODE_CLASS_MAPPINGS = {
+    "LoraLoader": LoraLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LoraLoader": "Load Lora",
+}

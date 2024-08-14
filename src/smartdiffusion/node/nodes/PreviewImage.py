@@ -20,3 +20,11 @@ class PreviewImage(SaveImage):
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
+
+NODE_CLASS_MAPPINGS = {
+    "PreviewImage": PreviewImage
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "PreviewImage": "Preview Image",
+}

@@ -27,3 +27,11 @@ class VAEEncodeTiled:
                 )
             },
         )
+
+NODE_CLASS_MAPPINGS = {
+    "VAEEncodeTiled": VAEEncodeTiled
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "VAEEncodeTiled": "VAE Encode (Tiled)",
+}

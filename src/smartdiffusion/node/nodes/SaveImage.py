@@ -68,3 +68,11 @@ class SaveImage:
             )
             counter += 1
         return {"ui": {"images": results}}
+
+NODE_CLASS_MAPPINGS = {
+    "SaveImage": SaveImage
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "SaveImage": "Save Image",
+}

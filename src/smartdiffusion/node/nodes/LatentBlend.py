@@ -44,3 +44,11 @@ class LatentBlend:
             return img2
         else:
             raise ValueError(f"Unsupported blend mode: {mode}")
+
+NODE_CLASS_MAPPINGS = {
+    "LatentBlend": LatentBlend
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LatentBlend": "Latent Blend",
+}

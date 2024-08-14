@@ -19,3 +19,12 @@ class CheckpointLoaderSimple:
             output_clip=True,
             embedding_directory=get_folder_paths("embeddings"),
         )[:3]
+
+NODE_CLASS_MAPPINGS = {
+    "CheckpointLoaderSimple": CheckpointLoaderSimple
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Loaders
+    "CheckpointLoaderSimple": "Load Checkpoint",
+}

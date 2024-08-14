@@ -21,3 +21,11 @@ class LoraLoaderModelOnly(LoraLoader):
 
     def load_lora_model_only(self, model, lora_name, strength_model):
         return (self.load_lora(model, None, lora_name, strength_model, 0)[0],)
+
+NODE_CLASS_MAPPINGS = {
+    "LoraLoaderModelOnly": LoraLoaderModelOnly
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LoraLoaderModelOnly": "Load Lora (Model only)",
+}

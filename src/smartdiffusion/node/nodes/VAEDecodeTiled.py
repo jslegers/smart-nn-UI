@@ -25,3 +25,11 @@ class VAEDecodeTiled:
                 tile_y=tile_size // 8,
             ),
         )
+
+NODE_CLASS_MAPPINGS = {
+    "VAEDecodeTiled": VAEDecodeTiled
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "VAEDecodeTiled": "VAE Decode (Tiled)",
+}

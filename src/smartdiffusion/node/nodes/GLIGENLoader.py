@@ -14,3 +14,12 @@ class GLIGENLoader:
 
     def load_gligen(self, gligen_name):
         return (load_gligen(get_full_path("gligen", gligen_name)),)
+
+NODE_CLASS_MAPPINGS = {
+    "GLIGENLoader": GLIGENLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Loaders
+    "GLIGENLoader": "GLIGEN Loader",
+}

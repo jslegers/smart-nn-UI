@@ -14,3 +14,12 @@ class CLIPVisionLoader:
 
     def load_clip(self, clip_name):
         return (load(get_full_path("clip_vision", clip_name)),)
+
+NODE_CLASS_MAPPINGS = {
+    "CLIPVisionLoader": CLIPVisionLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Loaders
+    "CLIPVisionLoader": "Load CLIP Vision",
+}

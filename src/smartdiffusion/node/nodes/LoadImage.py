@@ -78,3 +78,11 @@ class LoadImage:
         if not exists_annotated_filepath(image):
             return "Invalid image file: {}".format(image)
         return True
+
+NODE_CLASS_MAPPINGS = {
+    "LoadImage": LoadImage
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LoadImage": "Load Image",
+}

@@ -18,3 +18,12 @@ class CLIPSetLastLayer:
 
     def set_last_layer(self, clip, stop_at_clip_layer):
         return (clip.clone().clip_layer(stop_at_clip_layer),)
+
+NODE_CLASS_MAPPINGS = {
+    "CLIPSetLastLayer": CLIPSetLastLayer
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "CLIPSetLastLayer": "CLIP Set Last Layer",
+}

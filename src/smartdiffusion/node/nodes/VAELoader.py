@@ -93,3 +93,11 @@ class VAELoader:
         else:
             vae = load_torch_file(get_full_path("vae", vae_name))
         return (VAE(sd=vae),)
+
+NODE_CLASS_MAPPINGS = {
+    "VAELoader": VAELoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "VAELoader": "Load VAE",
+}

@@ -62,3 +62,11 @@ class LatentUpscale:
                 samples["samples"], width // 8, height // 8, upscale_method, crop
             )
         return (s,)
+
+NODE_CLASS_MAPPINGS = {
+    "LatentUpscale": LatentUpscale
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LatentUpscale": "Upscale Latent",
+}

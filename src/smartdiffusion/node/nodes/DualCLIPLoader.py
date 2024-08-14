@@ -40,3 +40,12 @@ class DualCLIPLoader:
                 clip_type=clip_type,
             ),
         )
+
+NODE_CLASS_MAPPINGS = {
+    "DualCLIPLoader": DualCLIPLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Loaders
+    "DualCLIPLoader": "Load Two Clip Models",
+}

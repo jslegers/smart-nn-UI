@@ -50,3 +50,12 @@ class GLIGENTextBoxApply:
             n[1]["gligen"] = ("position", gligen_textbox_model, prev + position_params)
             c.append(n)
         return (c,)
+
+NODE_CLASS_MAPPINGS = {
+    "GLIGENTextBoxApply": GLIGENTextBoxApply
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "GLIGENTextBoxApply": "GLIGEN Text Box Apply",
+}

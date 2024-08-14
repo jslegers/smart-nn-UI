@@ -29,3 +29,12 @@ class CheckpointLoader:
             output_clip=True,
             embedding_directory=get_folder_paths("embeddings"),
         )
+
+NODE_CLASS_MAPPINGS = {
+    "CheckpointLoader": CheckpointLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Loaders
+    "CheckpointLoader": "Load Checkpoint With Config (DEPRECATED)",
+}

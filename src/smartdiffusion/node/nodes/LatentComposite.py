@@ -70,3 +70,11 @@ class LatentComposite:
             )
         samples_out["samples"] = s
         return (samples_out,)
+
+NODE_CLASS_MAPPINGS = {
+    "LatentComposite": LatentComposite
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LatentComposite": "Latent Composite",
+}

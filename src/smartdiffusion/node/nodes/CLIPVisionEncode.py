@@ -10,3 +10,12 @@ class CLIPVisionEncode:
 
     def encode(self, clip_vision, image):
         return (clip_vision.encode_image(image),)
+
+NODE_CLASS_MAPPINGS = {
+    "CLIPVisionEncode": CLIPVisionEncode
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "CLIPVisionEncode": "CLIP Vision Encode",
+}

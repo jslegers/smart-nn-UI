@@ -24,3 +24,11 @@ class UNETLoader:
         elif weight_dtype == "fp8_e5m2":
             dtype = float8_e5m2
         return (load_unet(get_full_path(path, unet_name), dtype=dtype),)
+
+NODE_CLASS_MAPPINGS = {
+    "UNETLoader": UNETLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "UNETLoader": "Load Diffusion Model",
+}

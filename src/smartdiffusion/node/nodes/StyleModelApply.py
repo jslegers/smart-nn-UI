@@ -28,3 +28,11 @@ class StyleModelApply:
             n = [cat((t[0], cond), dim=1), t[1].copy()]
             c.append(n)
         return (c,)
+
+NODE_CLASS_MAPPINGS = {
+    "StyleModelApply": StyleModelApply
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "StyleModelApply": "Apply Style Model",
+}

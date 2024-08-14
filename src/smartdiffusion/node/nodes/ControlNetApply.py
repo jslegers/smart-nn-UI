@@ -32,3 +32,12 @@ class ControlNetApply:
             n[1]["control_apply_to_uncond"] = True
             c.append(n)
         return (c,)
+
+NODE_CLASS_MAPPINGS = {
+    "ControlNetApply": ControlNetApply
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "ControlNetApply": "Apply ControlNet",
+}

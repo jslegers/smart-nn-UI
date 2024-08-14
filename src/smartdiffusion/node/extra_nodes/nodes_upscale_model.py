@@ -113,3 +113,8 @@ NODE_CLASS_MAPPINGS = {
     "UpscaleModelLoader": UpscaleModelLoader,
     "ImageUpscaleWithModel": ImageUpscaleWithModel,
 }
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "UpscaleModelLoader": "Load Upscale Model",
+    "ImageUpscaleWithModel": "Upscale Image (using Model)",
+}

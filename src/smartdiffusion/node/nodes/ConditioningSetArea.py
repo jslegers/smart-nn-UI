@@ -47,3 +47,12 @@ class ConditioningSetArea:
                 },
             ),
         )
+
+NODE_CLASS_MAPPINGS = {
+    "ConditioningSetArea": ConditioningSetArea
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "ConditioningSetArea": "Conditioning (Set Area)",
+}

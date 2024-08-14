@@ -40,3 +40,11 @@ class LatentFromBatch:
                 batch_index : batch_index + length
             ]
         return (s,)
+
+NODE_CLASS_MAPPINGS = {
+    "LatentFromBatch": LatentFromBatch
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LatentFromBatch": "Latent From Batch",
+}

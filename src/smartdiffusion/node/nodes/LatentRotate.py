@@ -27,3 +27,11 @@ class LatentRotate:
             rotate_by = 3
         s["samples"] = rot90(samples["samples"], k=rotate_by, dims=[3, 2])
         return (s,)
+
+NODE_CLASS_MAPPINGS = {
+    "LatentRotate": LatentRotate
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LatentRotate": "Rotate Latent",
+}

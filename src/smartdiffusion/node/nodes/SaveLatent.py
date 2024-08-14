@@ -63,3 +63,11 @@ class SaveLatent:
         )
 
         return {"ui": {"latents": results}}
+
+NODE_CLASS_MAPPINGS = {
+    "SaveLatent": SaveLatent
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "SaveLatent": "Save Latent",
+}

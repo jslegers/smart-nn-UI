@@ -24,3 +24,11 @@ class ImageBatch:
             ).movedim(1, -1)
         s = cat((image1, image2), dim=0)
         return (s,)
+
+NODE_CLASS_MAPPINGS = {
+    "ImageBatch": ImageBatch
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "ImageBatch": "Batch Images",
+}

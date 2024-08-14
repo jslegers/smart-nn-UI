@@ -65,3 +65,11 @@ class LoadImageMask:
         if not exists_annotated_filepath(image):
             return "Invalid image file: {}".format(image)
         return True
+
+NODE_CLASS_MAPPINGS = {
+    "LoadImageMask": LoadImageMask
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LoadImageMask": "Load Image (as Mask)",
+}

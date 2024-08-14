@@ -28,3 +28,11 @@ class unCLIPCheckpointLoader:
             output_clipvision=True,
             embedding_directory=get_folder_paths("embeddings"),
         )
+
+NODE_CLASS_MAPPINGS = {
+    "unCLIPCheckpointLoader": unCLIPCheckpointLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "unCLIPCheckpointLoader": "unCLIP Checkpoint Loader",
+}

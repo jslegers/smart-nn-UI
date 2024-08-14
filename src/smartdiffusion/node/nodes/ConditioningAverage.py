@@ -56,3 +56,12 @@ class ConditioningAverage:
             n = [tw, t_to]
             out.append(n)
         return (out,)
+
+NODE_CLASS_MAPPINGS = {
+    "ConditioningAverage": ConditioningAverage
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "ConditioningAverage": "Conditioning (Average)",
+}

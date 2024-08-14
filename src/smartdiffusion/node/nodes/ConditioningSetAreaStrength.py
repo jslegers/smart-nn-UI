@@ -21,3 +21,12 @@ class ConditioningSetAreaStrength:
 
     def append(self, conditioning, strength):
         return (conditioning_set_values(conditioning, {"strength": strength}),)
+
+NODE_CLASS_MAPPINGS = {
+    "ConditioningSetAreaStrength": ConditioningSetAreaStrength
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "ConditioningSetAreaStrength": "Conditioning (Set Area Strength)",
+}

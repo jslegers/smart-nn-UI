@@ -11,3 +11,11 @@ class ImageInvert:
 
     def invert(self, image):
         return (1.0 - image,)
+
+NODE_CLASS_MAPPINGS = {
+    "ImageInvert": ImageInvert
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "ImageInvert": "Invert Image",
+}

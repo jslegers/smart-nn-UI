@@ -14,3 +14,11 @@ class StyleModelLoader:
 
     def load_style_model(self, style_model_name):
         return (load_style_model(get_full_path("style_models", style_model_name)),)
+
+NODE_CLASS_MAPPINGS = {
+    "StyleModelLoader": StyleModelLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "StyleModelLoader": "Load Style Model",
+}

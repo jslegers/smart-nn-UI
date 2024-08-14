@@ -52,3 +52,11 @@ class LoadLatent:
         if not exists_annotated_filepath(latent):
             return "Invalid latent file: {}".format(latent)
         return True
+
+NODE_CLASS_MAPPINGS = {
+    "LoadLatent": LoadLatent
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LoadLatent": "Load Latent"
+}

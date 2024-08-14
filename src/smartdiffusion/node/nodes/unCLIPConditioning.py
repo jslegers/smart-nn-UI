@@ -39,3 +39,11 @@ class unCLIPConditioning:
             n = [t[0], o]
             c.append(n)
         return (c,)
+
+NODE_CLASS_MAPPINGS = {
+    "unCLIPConditioning": unCLIPConditioning
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "unCLIPConditioning": "unCLIP Conditioning",
+}

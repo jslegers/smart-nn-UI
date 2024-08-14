@@ -296,7 +296,7 @@ class LazyModule(ModuleType):
             (self.__name__, self.__file__, self.__LAZY_MODULE__import_structure),
         )
 
-def add_to_env(*args):
+def add_to_env(module, *args):
     module = get_caller_module()
     path = abspath(dirname(module.__file__))
     sys.path.append(path)

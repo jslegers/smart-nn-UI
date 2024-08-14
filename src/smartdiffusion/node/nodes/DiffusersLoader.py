@@ -37,3 +37,12 @@ class DiffusersLoader:
             output_clip=output_clip,
             embedding_directory=get_folder_paths("embeddings"),
         )
+
+NODE_CLASS_MAPPINGS = {
+    "DiffusersLoader": DiffusersLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Loaders
+    "DiffusersLoader": "Load Diffusers Model (deprecated)",
+}

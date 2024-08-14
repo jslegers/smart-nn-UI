@@ -10,3 +10,11 @@ class VAEDecode:
 
     def decode(self, vae, samples):
         return (vae.decode(samples["samples"]),)
+
+NODE_CLASS_MAPPINGS = {
+    "VAEDecode": VAEDecode
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "VAEDecode": "VAE Decode",
+}

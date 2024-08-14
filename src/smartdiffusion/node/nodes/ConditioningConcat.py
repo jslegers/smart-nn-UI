@@ -33,3 +33,12 @@ class ConditioningConcat:
             n = [tw, conditioning_to[i][1].copy()]
             out.append(n)
         return (out,)
+
+NODE_CLASS_MAPPINGS = {
+    "ConditioningConcat": ConditioningConcat
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "ConditioningConcat": "Conditioning (Concat)",
+}

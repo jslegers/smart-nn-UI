@@ -40,3 +40,12 @@ class ConditioningSetAreaPercentage:
                 },
             ),
         )
+
+NODE_CLASS_MAPPINGS = {
+    "ConditioningSetAreaPercentage": ConditioningSetAreaPercentage
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "ConditioningSetAreaPercentage": "Conditioning (Set Area with Percentage)",
+}

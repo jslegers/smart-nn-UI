@@ -36,3 +36,12 @@ class EmptyLatentImage:
                 )
             },
         )
+
+NODE_CLASS_MAPPINGS = {
+    "EmptyLatentImage": EmptyLatentImage
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Latent
+    "EmptyLatentImage": "Empty Latent Image",
+}

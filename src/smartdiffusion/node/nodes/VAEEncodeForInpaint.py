@@ -56,3 +56,11 @@ class VAEEncodeForInpaint:
         t = vae.encode(pixels)
 
         return ({"samples": t, "noise_mask": (mask_erosion[:, :, :x, :y].round())},)
+
+NODE_CLASS_MAPPINGS = {
+    "VAEEncodeForInpaint": VAEEncodeForInpaint
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "VAEEncodeForInpaint": "VAE Encode (for Inpainting)",
+}

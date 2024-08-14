@@ -33,3 +33,11 @@ class ImageScaleBy:
                 "disabled",
             ).movedim(1, -1),
         )
+
+NODE_CLASS_MAPPINGS = {
+    "ImageScaleBy": ImageScaleBy
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "ImageScaleBy": "Upscale Image By",
+}

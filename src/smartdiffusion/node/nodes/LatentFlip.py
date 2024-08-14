@@ -23,3 +23,11 @@ class LatentFlip:
         elif flip_method.startswith("y"):
             s["samples"] = flip(samples["samples"], dims=[3])
         return (s,)
+
+NODE_CLASS_MAPPINGS = {
+    "LatentFlip": LatentFlip
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LatentFlip": "Flip Latent",
+}

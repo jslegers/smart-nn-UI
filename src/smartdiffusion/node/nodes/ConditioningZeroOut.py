@@ -21,3 +21,12 @@ class ConditioningZeroOut:
             n = [zeros_like(t[0]), d]
             c.append(n)
         return (c,)
+
+NODE_CLASS_MAPPINGS = {
+    "ConditioningZeroOut": ConditioningZeroOut
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Conditioning
+    "ConditioningZeroOut": "Conditioning (Zero Out)",
+}

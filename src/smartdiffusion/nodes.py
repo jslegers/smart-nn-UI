@@ -13,140 +13,11 @@ def interrupt_processing(value=True):
     model_management.interrupt_current_processing(value)
 
 
-NODE_CLASS_MAPPINGS = {
-    "KSampler": module("smartdiffusion", "KSampler"),
-    "CheckpointLoaderSimple": module("smartdiffusion", "CheckpointLoaderSimple"),
-    "CLIPTextEncode": module("smartdiffusion", "CLIPTextEncode"),
-    "CLIPSetLastLayer": module("smartdiffusion", "CLIPSetLastLayer"),
-    "VAEDecode": module("smartdiffusion", "VAEDecode"),
-    "VAEEncode": module("smartdiffusion", "VAEEncode"),
-    "VAEEncodeForInpaint": module("smartdiffusion", "VAEEncodeForInpaint"),
-    "VAELoader": module("smartdiffusion", "VAELoader"),
-    "EmptyLatentImage": module("smartdiffusion", "EmptyLatentImage"),
-    "LatentUpscale": module("smartdiffusion", "LatentUpscale"),
-    "LatentUpscaleBy": module("smartdiffusion", "LatentUpscaleBy"),
-    "LatentFromBatch": module("smartdiffusion", "LatentFromBatch"),
-    "RepeatLatentBatch": module("smartdiffusion", "RepeatLatentBatch"),
-    "SaveImage": module("smartdiffusion", "SaveImage"),
-    "PreviewImage": module("smartdiffusion", "PreviewImage"),
-    "LoadImage": module("smartdiffusion", "LoadImage"),
-    "LoadImageMask": module("smartdiffusion", "LoadImageMask"),
-    "ImageScale": module("smartdiffusion", "ImageScale"),
-    "ImageScaleBy": module("smartdiffusion", "ImageScaleBy"),
-    "ImageInvert": module("smartdiffusion", "ImageInvert"),
-    "ImageBatch": module("smartdiffusion", "ImageBatch"),
-    "ImagePadForOutpaint": module("smartdiffusion", "ImagePadForOutpaint"),
-    "EmptyImage": module("smartdiffusion", "EmptyImage"),
-    "ConditioningAverage": module("smartdiffusion", "ConditioningAverage"),
-    "ConditioningCombine": module("smartdiffusion", "ConditioningCombine"),
-    "ConditioningConcat": module("smartdiffusion", "ConditioningConcat"),
-    "ConditioningSetArea": module("smartdiffusion", "ConditioningSetArea"),
-    "ConditioningSetAreaPercentage": module(
-        "smartdiffusion", "ConditioningSetAreaPercentage"
-    ),
-    "ConditioningSetAreaStrength": module(
-        "smartdiffusion", "ConditioningSetAreaStrength"
-    ),
-    "ConditioningSetMask": module("smartdiffusion", "ConditioningSetMask"),
-    "KSamplerAdvanced": module("smartdiffusion", "KSamplerAdvanced"),
-    "SetLatentNoiseMask": module("smartdiffusion", "SetLatentNoiseMask"),
-    "LatentComposite": module("smartdiffusion", "LatentComposite"),
-    "LatentBlend": module("smartdiffusion", "LatentBlend"),
-    "LatentRotate": module("smartdiffusion", "LatentRotate"),
-    "LatentFlip": module("smartdiffusion", "LatentFlip"),
-    "LatentCrop": module("smartdiffusion", "LatentCrop"),
-    "LoraLoader": module("smartdiffusion", "LoraLoader"),
-    "CLIPLoader": module("smartdiffusion", "CLIPLoader"),
-    "UNETLoader": module("smartdiffusion", "UNETLoader"),
-    "DualCLIPLoader": module("smartdiffusion", "DualCLIPLoader"),
-    "CLIPVisionEncode": module("smartdiffusion", "CLIPVisionEncode"),
-    "StyleModelApply": module("smartdiffusion", "StyleModelApply"),
-    "unCLIPConditioning": module("smartdiffusion", "unCLIPConditioning"),
-    "ControlNetApply": module("smartdiffusion", "ControlNetApply"),
-    "ControlNetApplyAdvanced": module("smartdiffusion", "ControlNetApplyAdvanced"),
-    "ControlNetLoader": module("smartdiffusion", "ControlNetLoader"),
-    "DiffControlNetLoader": module("smartdiffusion", "DiffControlNetLoader"),
-    "StyleModelLoader": module("smartdiffusion", "StyleModelLoader"),
-    "CLIPVisionLoader": module("smartdiffusion", "CLIPVisionLoader"),
-    "VAEDecodeTiled": module("smartdiffusion", "VAEDecodeTiled"),
-    "VAEEncodeTiled": module("smartdiffusion", "VAEEncodeTiled"),
-    "unCLIPCheckpointLoader": module("smartdiffusion", "unCLIPCheckpointLoader"),
-    "GLIGENLoader": module("smartdiffusion", "GLIGENLoader"),
-    "GLIGENTextBoxApply": module("smartdiffusion", "GLIGENTextBoxApply"),
-    "InpaintModelConditioning": module("smartdiffusion", "InpaintModelConditioning"),
-    "CheckpointLoader": module("smartdiffusion", "CheckpointLoader"),
-    "DiffusersLoader": module("smartdiffusion", "DiffusersLoader"),
-    "LoadLatent": module("smartdiffusion", "LoadLatent"),
-    "SaveLatent": module("smartdiffusion", "SaveLatent"),
-    "ConditioningZeroOut": module("smartdiffusion", "ConditioningZeroOut"),
-    "ConditioningSetTimestepRange": module(
-        "smartdiffusion", "ConditioningSetTimestepRange"
-    ),
-    "LoraLoaderModelOnly": module("smartdiffusion", "LoraLoaderModelOnly"),
-}
+NODE_CLASS_MAPPINGS = {}
 
-NODE_DISPLAY_NAME_MAPPINGS = {
-    # Sampling
-    "KSampler": "KSampler",
-    "KSamplerAdvanced": "KSampler (Advanced)",
-    # Loaders
-    "CheckpointLoader": "Load Checkpoint With Config (DEPRECATED)",
-    "CheckpointLoaderSimple": "Load Checkpoint",
-    "VAELoader": "Load VAE",
-    "LoraLoader": "Load LoRA",
-    "CLIPLoader": "Load CLIP",
-    "ControlNetLoader": "Load ControlNet Model",
-    "DiffControlNetLoader": "Load ControlNet Model (diff)",
-    "StyleModelLoader": "Load Style Model",
-    "CLIPVisionLoader": "Load CLIP Vision",
-    "UpscaleModelLoader": "Load Upscale Model",
-    "UNETLoader": "Load Diffusion Model",
-    # Conditioning
-    "CLIPVisionEncode": "CLIP Vision Encode",
-    "StyleModelApply": "Apply Style Model",
-    "CLIPTextEncode": "CLIP Text Encode (Prompt)",
-    "CLIPSetLastLayer": "CLIP Set Last Layer",
-    "ConditioningCombine": "Conditioning (Combine)",
-    "ConditioningAverage ": "Conditioning (Average)",
-    "ConditioningConcat": "Conditioning (Concat)",
-    "ConditioningSetArea": "Conditioning (Set Area)",
-    "ConditioningSetAreaPercentage": "Conditioning (Set Area with Percentage)",
-    "ConditioningSetMask": "Conditioning (Set Mask)",
-    "ControlNetApply": "Apply ControlNet",
-    "ControlNetApplyAdvanced": "Apply ControlNet (Advanced)",
-    # Latent
-    "VAEEncodeForInpaint": "VAE Encode (for Inpainting)",
-    "SetLatentNoiseMask": "Set Latent Noise Mask",
-    "VAEDecode": "VAE Decode",
-    "VAEEncode": "VAE Encode",
-    "LatentRotate": "Rotate Latent",
-    "LatentFlip": "Flip Latent",
-    "LatentCrop": "Crop Latent",
-    "EmptyLatentImage": "Empty Latent Image",
-    "LatentUpscale": "Upscale Latent",
-    "LatentUpscaleBy": "Upscale Latent By",
-    "LatentComposite": "Latent Composite",
-    "LatentBlend": "Latent Blend",
-    "LatentFromBatch": "Latent From Batch",
-    "RepeatLatentBatch": "Repeat Latent Batch",
-    # Image
-    "SaveImage": "Save Image",
-    "PreviewImage": "Preview Image",
-    "LoadImage": "Load Image",
-    "LoadImageMask": "Load Image (as Mask)",
-    "ImageScale": "Upscale Image",
-    "ImageScaleBy": "Upscale Image By",
-    "ImageUpscaleWithModel": "Upscale Image (using Model)",
-    "ImageInvert": "Invert Image",
-    "ImagePadForOutpaint": "Pad Image for Outpainting",
-    "ImageBatch": "Batch Images",
-    # _for_testing
-    "VAEDecodeTiled": "VAE Decode (Tiled)",
-    "VAEEncodeTiled": "VAE Encode (Tiled)",
-}
+NODE_DISPLAY_NAME_MAPPINGS = {}
 
 EXTENSION_WEB_DIRS = {}
-
 
 import os
 
@@ -217,22 +88,25 @@ def load_custom_node(
             hasattr(module, "NODE_CLASS_MAPPINGS")
             and getattr(module, "NODE_CLASS_MAPPINGS") is not None
         ):
-            me = sys.modules[__name__]
-            papa = sys.modules[__name__.split('.')[0]]
-            for name, node_cls in module.NODE_CLASS_MAPPINGS.items():
-                if name not in ignore:
-                    NODE_CLASS_MAPPINGS[name] = node_cls
-                    cls = module.NODE_CLASS_MAPPINGS[name]
-                    setattr(me, name, cls)
-                    setattr(papa, name, cls)
-                    node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
-                        module_parent, get_module_name(module_path)
-                    )
-            if (
-                hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS")
-                and getattr(module, "NODE_DISPLAY_NAME_MAPPINGS") is not None
-            ):
-                NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
+            if(module_parent):
+                me = sys.modules[__name__]
+                papa = sys.modules[__name__.split('.')[0]]
+                for name, node_cls in module.NODE_CLASS_MAPPINGS.items():
+                    if name not in ignore:
+                        NODE_CLASS_MAPPINGS[name] = node_cls
+                        cls = module.NODE_CLASS_MAPPINGS[name]
+                        setattr(me, name, cls)
+                        setattr(papa, name, cls)
+                        node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
+                            module_parent, get_module_name(module_path)
+                        )
+                if (
+                    hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS")
+                    and getattr(module, "NODE_DISPLAY_NAME_MAPPINGS") is not None
+                ):
+                    NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
+            else:
+                sys.modules[module_name] = module
             return True
         else:
             logging.warning(
@@ -298,7 +172,7 @@ def init_external_custom_nodes():
 import os
 
 
-def init_builtin_nodes(location):
+def init_builtin_nodes(*args, no_parent = True):
     """
     Initializes the built-in nodes in Smart Diffusion Server.
 
@@ -309,7 +183,7 @@ def init_builtin_nodes(location):
         None
     """
     extras_dir = os.path.abspath(os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "node", location
+        os.path.dirname(os.path.realpath(__file__)), *args
     ))
     extras_files = os.listdir(extras_dir)
     if "__pycache__" in extras_files:
@@ -318,7 +192,7 @@ def init_builtin_nodes(location):
     import_failed = []
     for node_file in extras_files:
         if not load_custom_node(
-            os.path.join(extras_dir, node_file), module_parent=location
+            os.path.join(extras_dir, node_file), module_parent= None if no_parent else location
         ):
             import_failed.append(node_file)
     return import_failed
@@ -335,24 +209,5 @@ def init_extra_nodes(init_custom_nodes=True):
     else:
         logging.info("Skipping loading of custom nodes")
 
-def init_nodes():
-    import_failed = init_builtin_nodes("nodes") + init_builtin_nodes("extra_nodes")
-
-    if len(import_failed) > 0:
-        logging.warning(
-            "WARNING: some nodes did not import correctly. This may be because they are missing some dependencies.\n"
-        )
-        for node in import_failed:
-            logging.warning("IMPORT FAILED: {}".format(node))
-        logging.warning(
-            "\nThis issue might be caused by new missing dependencies added the last time you updated Smart Diffusion Server."
-        )
-        if args.windows_standalone_build:
-            logging.warning(
-                "Please run the update script: update/update_smartdiffusionserver.bat"
-            )
-        else:
-            logging.warning("Please do a: pip install -r requirements.txt")
-        logging.warning("")
-
-    add_to_env("SMARTDIFFUSION_NODES_PATH")
+nodes.init_builtin_nodes("node", "nodes")
+nodes.init_builtin_nodes("node", "extra_nodes")

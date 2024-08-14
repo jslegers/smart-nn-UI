@@ -34,3 +34,11 @@ class RepeatLatentBatch:
                 x + (i * offset) for i in range(1, amount) for x in s["batch_index"]
             ]
         return (s,)
+
+NODE_CLASS_MAPPINGS = {
+    "RepeatLatentBatch": RepeatLatentBatch
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "RepeatLatentBatch": "Repeat Latent Batch",
+}

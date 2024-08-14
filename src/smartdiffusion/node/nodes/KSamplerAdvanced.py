@@ -73,3 +73,11 @@ class KSamplerAdvanced:
             last_step=end_at_step,
             force_full_denoise=return_with_leftover_noise != "enable",
         )
+
+NODE_CLASS_MAPPINGS = {
+    "KSamplerAdvanced": KSamplerAdvanced
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "KSamplerAdvanced": "KSampler (Advanced)",
+}

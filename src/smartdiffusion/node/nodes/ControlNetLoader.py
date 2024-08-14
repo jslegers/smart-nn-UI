@@ -14,3 +14,12 @@ class ControlNetLoader:
 
     def load_controlnet(self, control_net_name):
         return (c_load_controlnet(get_full_path("controlnet", control_net_name)),)
+
+NODE_CLASS_MAPPINGS = {
+    "ControlNetLoader": ControlNetLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    # Loaders
+    "ControlNetLoader": "Load ControlNet Model",
+}

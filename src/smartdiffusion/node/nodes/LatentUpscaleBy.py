@@ -32,3 +32,11 @@ class LatentUpscaleBy:
             "disabled",
         )
         return (s,)
+
+NODE_CLASS_MAPPINGS = {
+    "LatentUpscaleBy": LatentUpscaleBy
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LatentUpscaleBy": "Upscale Latent By",
+}

@@ -10,3 +10,11 @@ class VAEEncode:
 
     def encode(self, vae, pixels):
         return ({"samples": vae.encode(pixels[:, :, :, :3])},)
+
+NODE_CLASS_MAPPINGS = {
+    "VAEEncode": VAEEncode
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "VAEEncode": "VAE Encode",
+}

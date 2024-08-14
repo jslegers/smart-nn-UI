@@ -77,3 +77,11 @@ class ImagePadForOutpaint:
         mask[top : top + d2, left : left + d3] = t
 
         return (new_image, mask)
+
+NODE_CLASS_MAPPINGS = {
+    "ImagePadForOutpaint": ImagePadForOutpaint
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "ImagePadForOutpaint": "Pad Image for Outpainting",
+}

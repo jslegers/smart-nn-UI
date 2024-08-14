@@ -58,3 +58,11 @@ class InpaintModelConditioning:
             )
             out.append(c)
         return (out[0], out[1], out_latent)
+
+NODE_CLASS_MAPPINGS = {
+    "InpaintModelConditioning": InpaintModelConditioning
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "InpaintModelConditioning": "Inpaint Model Conditioning",
+}
