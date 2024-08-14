@@ -1,5 +1,5 @@
 from folder_paths import get_filename_list
-from . import LoraLoader
+from smartdiffusion import LoraLoader
 
 
 class LoraLoaderModelOnly(LoraLoader):
