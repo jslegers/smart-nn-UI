@@ -1,11 +1,11 @@
 import sys
 from . import _
-import nodes
+import nodes as _nodes
 from .node import nodes, extra_nodes
 sys.modules["comfy_extras"] = extra_nodes
-sys.modules['smartdiffusion'] = _
+sys.modules[__name__] = _
 for node in dir(nodes):
     if(not node.startswith('__')):
-        sys.modules['smartdiffusion.'+ node] = _.load.module("nodes", node)
-nodes.init_builtin_nodes("node", "nodes")
-nodes.init_builtin_nodes("node", "extra_nodes")
+        setattr(sys.modules[__name__], node, _.load.module("nodes", node))
+_nodes.init_builtin_nodes("node", "nodes")
+_nodes.init_builtin_nodes("node", "extra_nodes")
