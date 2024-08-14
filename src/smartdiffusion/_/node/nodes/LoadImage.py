@@ -8,7 +8,7 @@ from folder_paths import (
     get_annotated_filepath,
     exists_annotated_filepath,
 )
-from comfy.node_helpers import pillow
+from node_helpers import pillow
 
 
 class LoadImage:

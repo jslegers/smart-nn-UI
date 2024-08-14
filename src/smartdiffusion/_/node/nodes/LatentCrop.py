@@ -1,4 +1,4 @@
-from comfy.config import MAX_RESOLUTION
+from config import MAX_RESOLUTION
 
 
 class LatentCrop:

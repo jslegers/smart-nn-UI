@@ -4,6 +4,8 @@
 from comfy import model_management
 from load import module
 
+from config import MAX_RESOLUTION
+
 
 def before_node_execution():
     model_management.throw_exception_if_processing_interrupted()

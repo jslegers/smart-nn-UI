@@ -1,6 +1,6 @@
 from torch import zeros
 from comfy.model_management import intermediate_device
-from comfy.config import MAX_RESOLUTION
+from config import MAX_RESOLUTION
 
 
 class EmptyLatentImage:

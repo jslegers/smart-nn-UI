@@ -1,5 +1,5 @@
 from comfy.utils import common_upscale
-from comfy.config import MAX_RESOLUTION
+from config import MAX_RESOLUTION
 
 
 class ImageScale:

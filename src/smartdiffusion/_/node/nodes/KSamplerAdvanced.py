@@ -1,5 +1,5 @@
 from comfy.samplers import KSampler as s_KSampler
-from comfy.node_helpers import common_ksampler
+from node_helpers import common_ksampler
 
 
 class KSamplerAdvanced:

@@ -1,5 +1,5 @@
 from torch import full, cat
-from comfy.config import MAX_RESOLUTION
+from config import MAX_RESOLUTION
 
 
 class EmptyImage:

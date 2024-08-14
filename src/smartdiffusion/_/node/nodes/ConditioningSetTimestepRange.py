@@ -1,4 +1,4 @@
-from comfy.node_helpers import conditioning_set_values
+from node_helpers import conditioning_set_values
 
 
 class ConditioningSetTimestepRange:

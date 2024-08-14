@@ -1,5 +1,5 @@
-from comfy.config import MAX_RESOLUTION
-from comfy.node_helpers import conditioning_set_values
+from config import MAX_RESOLUTION
+from node_helpers import conditioning_set_values
 
 
 class ConditioningSetArea:
