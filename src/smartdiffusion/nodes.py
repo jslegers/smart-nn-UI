@@ -183,9 +183,9 @@ import importlib
 def load_custom_node(
     module_path: str, ignore=set(), module_parent="custom_nodes"
 ) -> bool:
+    module_name = os.path.basename(module_path)
     print(module_path)
     print(module_name)
-    module_name = os.path.basename(module_path)
     if os.path.isfile(module_path):
         sp = os.path.splitext(module_path)
         module_name = sp[0]
