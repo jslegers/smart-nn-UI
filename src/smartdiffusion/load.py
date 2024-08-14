@@ -296,6 +296,15 @@ class LazyModule(ModuleType):
             (self.__name__, self.__file__, self.__LAZY_MODULE__import_structure),
         )
 
+def add_to_env(*args):
+    module = get_caller_module()
+    path = abspath(dirname(module.__file__)
+    sys.path.append(path)
+    if len(args) > 0:
+        new_env = os.environ.copy()
+        for arg in args:
+            new_env[arg] = path
+
 
 def autoload(**kwargs):
     module = get_caller_module()
