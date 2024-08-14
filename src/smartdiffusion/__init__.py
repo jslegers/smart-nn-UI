@@ -10,7 +10,7 @@ nodes_dir = os.path.abspath(os.path.join(current_dir, "node", "nodes"))
 nodes = os.listdir(nodes_dir)
 for file in nodes:
     if(not file.startswith('__')):
-        module_name = _nodes.get_module_name(file)
+        module_name = _nodes.get_module_name(os.path.join(nodes_dir, file))
         print(module_name)
         setattr(sys.modules[__name__], module_name, _.load.module(".node", module_name))
 _nodes.init_builtin_nodes("node", "nodes")
