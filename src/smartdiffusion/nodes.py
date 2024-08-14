@@ -184,8 +184,6 @@ def load_custom_node(
     module_path: str, ignore=set(), module_parent="custom_nodes"
 ) -> bool:
     module_name = os.path.basename(module_path)
-    print(module_path)
-    print(module_name)
     if os.path.isfile(module_path):
         sp = os.path.splitext(module_path)
         module_name = sp[0]
@@ -203,6 +201,7 @@ def load_custom_node(
             module_dir = module_path
         module = importlib.util.module_from_spec(module_spec)
         sys.modules[module_name] = module
+        globals()[module_name] = module
         module_spec.loader.exec_module(module)
 
         if (
