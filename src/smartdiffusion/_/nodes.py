@@ -121,7 +121,7 @@ def load_custom_node(
 import os
 import time
 import logging
-from smartdiffusion import folder_paths
+import folder_paths
 
 
 def init_external_custom_nodes():
@@ -199,9 +199,6 @@ def init_builtin_nodes(*args):
 
 
 import logging
-from smartdiffusion.cli_args import args
-from smartdiffusion.load import add_to_env
-
 
 def init_extra_nodes(init_custom_nodes=True):
     if init_custom_nodes:
