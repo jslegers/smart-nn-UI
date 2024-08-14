@@ -59,6 +59,8 @@ def load_custom_node(
     if os.path.isfile(module_path):
         sp = os.path.splitext(module_path)
         module_name = sp[0]
+    print(module_name)
+    print(module_path)
     try:
         logging.debug("Trying to load custom node {}".format(module_path))
         if os.path.isfile(module_path):
@@ -95,6 +97,7 @@ def load_custom_node(
                     if name not in ignore:
                         NODE_CLASS_MAPPINGS[name] = node_cls
                         cls = module.NODE_CLASS_MAPPINGS[name]
+                        print("WHOOHOO")
                         setattr(me, name, cls)
                         setattr(papa, name, cls)
                         node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
@@ -106,6 +109,9 @@ def load_custom_node(
                 ):
                     NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
             else:
+                print("MADE IT")
+                print(module_name)
+                print(module)
                 sys.modules[module_name] = module
             return True
         else:
