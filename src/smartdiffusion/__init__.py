@@ -1,3 +1,3 @@
 import sys
-from smartdiffusion import _
+from . import _
 sys.modules['smartdiffusion'] = _
