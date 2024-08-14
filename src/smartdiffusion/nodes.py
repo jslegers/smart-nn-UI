@@ -209,5 +209,5 @@ def init_extra_nodes(init_custom_nodes=True):
     else:
         logging.info("Skipping loading of custom nodes")
 
-nodes.init_builtin_nodes("node", "nodes")
-nodes.init_builtin_nodes("node", "extra_nodes")
+init_builtin_nodes("node", "nodes")
+init_builtin_nodes("node", "extra_nodes")
