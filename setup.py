@@ -17,7 +17,6 @@ setup(
     include_package_data = True,
     install_requires = [
         "torch>=2.3.1",
-        "torchsde>=0.2.6",
         "torchvision>=0.18.1",
         "torchaudio>=2.3.1",
         "bitsandbytes>=0.43.3"
@@ -33,6 +32,6 @@ setup(
         "psutil>=6.0.0",
         "accelerate>=0.33.0",
         "huggingface_hub>=0.24.5",
-        "xformers>=0.0.26"
+        "xformers>=0.0.27"
     ]
 )
