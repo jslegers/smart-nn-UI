@@ -1,7 +1,7 @@
 import torch
 from smartdiffusion import utils, sd, folder_paths
 from smartdiffusion.config import MAX_RESOLUTION
-from smartdiffusion.extra_nodes.nodes_model_merging import CheckpointSave
+import CheckpointSave
 
 
 class ImageOnlyCheckpointLoader:

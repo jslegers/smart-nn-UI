@@ -1,4 +1,4 @@
-from smartdiffusion.extra_nodes.nodes_model_merging import ModelMergeBlocks
+import ModelMergeBlocks
 
 
 class ModelMergeSD1(ModelMergeBlocks):
