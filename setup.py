@@ -20,18 +20,16 @@ setup(
         "torchvision>=0.18.1",
         "torchaudio>=2.3.1",
         "bitsandbytes>=0.43.3",
-        "einops>=0.8.0",
         "transformers>=4.44.0",
         "tokenizers>=0.19.1",
-        "sentencepiece>=0.2.0",
         "safetensors>=0.4.4",
         "pyyaml>=6.0.2",
         "Pillow>=10.4.0",
         "scipy>=1.14.0",
-        "tqdm>=4.66.5",
-        "psutil>=6.0.0",
         "accelerate>=0.33.0",
         "huggingface_hub>=0.24.5",
         "xformers>=0.0.27"
+        "scipy>=1.14.0",
+        "opencv-contrib-python>=4.10"
     ]
 )
