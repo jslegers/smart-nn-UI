@@ -279,7 +279,10 @@ class LazyModule(ModuleType):
         return len(self.__dict__)
 
     def __add__(self, val2):
-        self.__dict__.append(val2)
+        try:
+            self.__dict__.update(val2)
+        except:
+            self.__dict__.update(val2.__dict__)
         return self
 
     def __str__(self):

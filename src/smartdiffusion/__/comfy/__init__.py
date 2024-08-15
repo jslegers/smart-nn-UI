@@ -1,2 +1,2 @@
 from load import autoload
-load.autoload()
+autoload()
