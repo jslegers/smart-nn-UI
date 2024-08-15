@@ -4,7 +4,8 @@ from config import MAX_RESOLUTION
 import sys
 import os
 
-parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+parent_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(parent_dir, "node"))
 
 
 def before_node_execution():
@@ -20,6 +21,8 @@ NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
 
 EXTENSION_WEB_DIRS = {}
+
+me = globals()
 
 import os
 
@@ -93,7 +96,7 @@ def load_custom_node(
                 if name not in ignore:
                     NODE_CLASS_MAPPINGS[name] = node_cls
                     cls = module.NODE_CLASS_MAPPINGS[name]
-                    globals()[name] = cls
+                    me[name] = cls
                     node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
                         module_parent, get_module_name(module_path)
                     )
@@ -122,7 +125,7 @@ import folder_paths
 
 def init_external_custom_nodes():
     """
-    Initializes the external custom nodes.
+    Initializes the external custom
 
     This function loads custom nodes from the specified folder paths and imports them into the application.
     It measures the import times for each custom node and logs the results.
@@ -190,6 +193,8 @@ def __init_builtin_nodes(*args):
     extras_files = os.listdir(extras_dir)
     if "__pycache__" in extras_files:
         extras_files.remove("__pycache__")
+    if "__init__" in extras_files:
+        extras_files.remove("__init__")
     import_failed = []
     for node_file in extras_files:
         if not load_custom_node(
@@ -198,5 +203,6 @@ def __init_builtin_nodes(*args):
             import_failed.append(node_file)
     return import_failed
 
-__init_builtin_nodes("_", "node", "nodes")
-__init_builtin_nodes("_", "node", "extra_nodes")
+
+__init_builtin_nodes("node", "nodes")
+__init_builtin_nodes("node", "comfy_extras")

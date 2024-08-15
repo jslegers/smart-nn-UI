@@ -1,5 +1,5 @@
 import sys
-from os import scandir, environ
+from os import scandir
 from os.path import join, dirname, abspath, splitext, isfile, isdir
 from pathlib import PurePath
 from importlib import import_module, util
@@ -328,14 +328,6 @@ class LazyModule(ModuleType):
             self.__class__,
             (self.__name__, self.__file__, self.__LAZY_MODULE__import_structure),
         )
-
-def add_to_env(module, *args):
-    path = abspath(dirname(module.__file__))
-    sys.path.append(path)
-    if len(args) > 0:
-        new_env = environ.copy()
-        for arg in args:
-            new_env[arg] = path
 
 
 def autoload(**kwargs):

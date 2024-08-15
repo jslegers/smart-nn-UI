@@ -1,6 +1,5 @@
 from folder_paths import get_filename_list
-import load
-LoraLoader = load.module("smartdiffusion").LoraLoader
+from nodes import LoraLoader
 
 
 class LoraLoaderModelOnly(LoraLoader):

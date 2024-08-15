@@ -1,7 +1,6 @@
 from random import choice
 from folder_paths import get_temp_directory
-import load
-SaveImage = load.module("smartdiffusion").SaveImage
+from nodes import SaveImage
 
 
 class PreviewImage(SaveImage):
