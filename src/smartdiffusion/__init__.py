@@ -4,13 +4,10 @@ def __init(self):
     import sys
     import os
     parent_dir = os.path.dirname(os.path.realpath(__file__))
-    sys.path.append(os.path.join(parent_dir, '_'))
     sys.path.append(os.path.join(parent_dir, '__'))
+    sys.path.append(os.path.join(parent_dir, '_'))
     new_env = os.environ.copy()
     new_env["SMARTDIFFUSION_PATH"] = parent_dir
-
-
-    parent_dir = os.path.dirname(os.path.realpath(__file__))
     nodes_dir = os.path.join(parent_dir, "__", "nodes", "node")
     sys.path.append(nodes_dir)
     import nodes
