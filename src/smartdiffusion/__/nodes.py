@@ -1,6 +1,12 @@
 from comfy import model_management
 from config import MAX_RESOLUTION
 
+import sys
+import os
+
+parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+
 def before_node_execution():
     model_management.throw_exception_if_processing_interrupted()
 
@@ -167,3 +173,30 @@ def init_extra_nodes(init_custom_nodes=True):
         init_external_custom_nodes()
     else:
         logging.info("Skipping loading of custom nodes")
+
+
+def __init_builtin_nodes(*args):
+    """
+    Initializes the built-in nodes in Smart Diffusion Server.
+
+    This function loads the extra node files located in the "nodes" and "extra_nodes" directories and import them into Smart Diffusion Server.
+    If any of the extra node files fail to import, a warning message is logged.
+
+    Returns:
+        None
+    """
+    location = os.path.join(*args)
+    extras_dir = os.path.abspath(os.path.join(parent_dir, location))
+    extras_files = os.listdir(extras_dir)
+    if "__pycache__" in extras_files:
+        extras_files.remove("__pycache__")
+    import_failed = []
+    for node_file in extras_files:
+        if not load_custom_node(
+            os.path.join(extras_dir, node_file), module_parent=args[-1]
+        ):
+            import_failed.append(node_file)
+    return import_failed
+
+__init_builtin_nodes("_", "node", "nodes")
+__init_builtin_nodes("_", "node", "extra_nodes")
