@@ -1,11 +1,10 @@
 from comfy import model_management
 from config import MAX_RESOLUTION
+import pprint
+import smartdiffusion
 
 import sys
 import os
-
-parent_dir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(parent_dir, "node"))
 
 
 def before_node_execution():
@@ -59,24 +58,25 @@ from types import ModuleType
 def load_custom_node(
     module_path: str, ignore=set(), module_parent="custom_nodes"
 ) -> bool:
-    module_name = os.path.basename(module_path)
-    if os.path.isfile(module_path):
-        sp = os.path.splitext(module_path)
-        module_name = sp[0]
+    if module_path.endswith(".disabled"):
+        return False
+    module_name = get_module_name(module_path)
+    full_module_name = "smartdiffusion.{}".format(module_name)
     try:
         logging.debug("Trying to load custom node {}".format(module_path))
         if os.path.isfile(module_path):
             module_spec = importlib.util.spec_from_file_location(
-                module_name, module_path
+                full_module_name, module_path
             )
             module_dir = os.path.split(module_path)[0]
         else:
             module_spec = importlib.util.spec_from_file_location(
-                module_name, os.path.join(module_path, "__init__.py")
+                full_module_name, os.path.join(module_path, "__init__.py")
             )
             module_dir = module_path
+
         module = importlib.util.module_from_spec(module_spec)
-        sys.modules[module_name] = module
+        sys.modules[full_module_name] = module
         module_spec.loader.exec_module(module)
 
         if (
@@ -98,7 +98,7 @@ def load_custom_node(
                     cls = module.NODE_CLASS_MAPPINGS[name]
                     me[name] = cls
                     node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
-                        module_parent, get_module_name(module_path)
+                        module_parent, module_name
                     )
             if (
                 hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS")
@@ -176,33 +176,3 @@ def init_extra_nodes(init_custom_nodes=True):
         init_external_custom_nodes()
     else:
         logging.info("Skipping loading of custom nodes")
-
-
-def __init_builtin_nodes(*args):
-    """
-    Initializes the built-in nodes in Smart Diffusion Server.
-
-    This function loads the extra node files located in the "nodes" and "extra_nodes" directories and import them into Smart Diffusion Server.
-    If any of the extra node files fail to import, a warning message is logged.
-
-    Returns:
-        None
-    """
-    location = os.path.join(*args)
-    extras_dir = os.path.abspath(os.path.join(parent_dir, location))
-    extras_files = os.listdir(extras_dir)
-    if "__pycache__" in extras_files:
-        extras_files.remove("__pycache__")
-    if "__init__" in extras_files:
-        extras_files.remove("__init__")
-    import_failed = []
-    for node_file in extras_files:
-        if not load_custom_node(
-            os.path.join(extras_dir, node_file), module_parent=args[-1]
-        ):
-            import_failed.append(node_file)
-    return import_failed
-
-
-__init_builtin_nodes("node", "nodes")
-__init_builtin_nodes("node", "comfy_extras")

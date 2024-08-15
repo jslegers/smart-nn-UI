@@ -157,6 +157,7 @@ def all_files_in_path(*args, **kwargs):
     exclude_files = kwargs.setdefault("exclude_files", [package_file])
     skip_snakecase_python_files = kwargs.setdefault("skip_snakecase_python_files", True)
     extensions = kwargs.setdefault("extension", None)
+    stop_at_sub_package = kwargs.setdefault("stop_at_sub_package", True)
     path_from_package = kwargs.setdefault("path_from_package", "")
     path = (
         package_path if not path_from_package else join(package_path, path_from_package)
@@ -170,7 +171,7 @@ def all_files_in_path(*args, **kwargs):
         entry_name = entry.name
         if isdir(entry):
             kwargs["path_from_package"] = join(path_from_package, entry_name)
-            if isfile(join(package_path, kwargs["path_from_package"], package_file)):
+            if stop_at_sub_package and isfile(join(package_path, kwargs["path_from_package"], package_file)):
                 dict[
                     "."
                     + ".".join(
@@ -209,10 +210,15 @@ class LazyModule(ModuleType):
         module, *_ = unpack(*args)
         import_structure = kwargs.get("import_structure", None)
         extra_objects = kwargs.get("extra_objects", None)
+        stop_at_sub_package = kwargs.setdefault("stop_at_sub_package", True)
         module_dir = abspath(dirname(module.__file__))
         super().__init__(module.__name__)
         if import_structure is None:
-            import_structure = all_files_in_path(module_dir, extensions=[".py"])
+            import_structure = all_files_in_path(
+                module_dir,
+                extensions=[".py"],
+                stop_at_sub_package=stop_at_sub_package
+            )
         self.__LAZY_MODULE__class_to_module = {}
         if import_structure:
             modules = import_structure.keys()
@@ -291,7 +297,7 @@ class LazyModule(ModuleType):
 
     def __repr__(self):
         '''echoes class, id, & reproducible representation in the REPL'''
-        return '{}, D({})'.format(super(D, self).__repr__(), self.__dict__)
+        return '{}, D({})'.format(super(type(self), self).__repr__(), self.__dict__)
 
     def __getattr__(self, name: str):
         for o in self.__LAZY_MODULE__objects:
@@ -333,10 +339,13 @@ class LazyModule(ModuleType):
 def autoload(**kwargs):
     module = get_caller_module()
     module_name = module.__name__
+    after_init = kwargs.pop("afer_init", None)
     # module_name = '.'.join(filter(None, [module.__package__, module.__name__]))
 
     module = LazyModule(module, **kwargs)
     sys.modules[module_name] = module
+    if after_init is not None:
+        after_init(module)
     return module
 
 
