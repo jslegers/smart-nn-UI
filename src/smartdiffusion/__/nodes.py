@@ -1,6 +1,3 @@
-from load import autoload
-autoload()
-
 from comfy import model_management
 from config import MAX_RESOLUTION
 
@@ -90,7 +87,7 @@ def load_custom_node(
                 if name not in ignore:
                     NODE_CLASS_MAPPINGS[name] = node_cls
                     cls = module.NODE_CLASS_MAPPINGS[name]
-                    global()[name] = cls
+                    globals()[name] = cls
                     node_cls.RELATIVE_PYTHON_MODULE = "{}.{}".format(
                         module_parent, get_module_name(module_path)
                     )
