@@ -12,7 +12,7 @@ setup(
     license = "GNU v3",
     package_dir={"": "src"},
     packages=find_namespace_packages(where="src"),
-    python_requires=">=3.8.0",
+    python_requires=">=3.11.9",
     setup_requires=['setuptools_scm'],
     include_package_data = True,
     install_requires = [
